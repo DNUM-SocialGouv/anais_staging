@@ -1,0 +1,1 @@
+from .duckdb_pipeline import DuckDBPipeline

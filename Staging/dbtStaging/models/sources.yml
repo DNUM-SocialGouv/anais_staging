@@ -1,0 +1,31 @@
+version: 2
+
+sources:
+  - name: main
+    description: "Schéma contenant les tables brutes de la base de données"
+    tables:
+      - name: sa_insern
+      - name: sa_siicea_missions
+        description: "Table des missions SIICEA"
+      - name: sa_siicea_cibles
+        description: "Table des cibles SIICEA"
+      - name: sa_siicea_suites
+        description: "Table des suites SIICEA"
+      - name: sa_sirec
+        description: "Table des réclamations SIREC"
+      - name: sa_sivss
+        description: "Table des signalements SIVSS"
+      - name: sa_t_finess
+        description: "Table des établissements de santé FINESS"
+      - name: v_comer
+        description: "Table des commerces"
+      - name: v_commune
+        description: "Table des communes"
+      - name: v_commune_comer
+        description: "Table des relations entre commerces et communes"
+      - name: v_commune_depuis
+        description: "Table des changements de communes"
+      - name: v_departement
+        description: "Table des départements"
+      - name: v_region
+        description: "Table des régions"
