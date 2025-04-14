@@ -1,0 +1,27 @@
+# DNUM - Staging (layer de base pour les autres projets métiers)
+dbtStaging:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: ../data/duckdb_database.duckdb
+      schema: main
+
+
+# DNUM - Layer InspectionControle (dépend de la base de Staging)
+dbtInspectionControle:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: ../../Staging/data/duckdb_database.duckdb
+      schema: main
+
+# DNUM - Layer Helios (dépend de la base de Staging)
+dbtHelios:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: ../../Staging/data/duckdb_database.duckdb
+      schema: main
