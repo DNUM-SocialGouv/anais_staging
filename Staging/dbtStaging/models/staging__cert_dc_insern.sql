@@ -9,13 +9,13 @@ WITH insern AS (
 SELECT 
     ROW_NUMBER() OVER () AS index,
     CAST(Annee || '-' || LPAD(Mois::VARCHAR, 2, '0') || '-' || LPAD(Jour::VARCHAR, 2, '0') AS DATE) AS date_deces,
-    Annee AS annee,
-    Mois AS mois,
-    Jour AS jour,
+    Annee AS Annee,
+    Mois AS Mois,
+    Jour AS Jour,
     departement_code,
     commune_code,
     et_finess,
-    lieu_de_deces,
-    source,
+    Lieu_de_deces,
+    Source,
     1 AS deces_nb
 FROM insern

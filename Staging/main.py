@@ -41,6 +41,9 @@ def main(env: str):
         pg_loader.load_all_csv_from_input()
         # run_dbt()
 
+        # Export des tables listées dans .env
+        pg_loader.export_tables_from_env()
+        
     if env == "local":
         loader = DuckDBPipeline()
         loader.run()

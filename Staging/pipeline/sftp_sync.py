@@ -23,7 +23,7 @@ class SFTPSync:
         )
 
         self.files_to_download = [
-            ("/SCN_BDD/INSERN", "sa_insern", f"{self.output_folder}sa_insern.csv"),
+            ("/SCN_BDD/INSERN", "DNUM_TdB_CertDc", f"{self.output_folder}sa_insern.csv"),
             ("/SCN_BDD/SIICEA", "GROUPECIBLES_SCN", f"{self.output_folder}sa_siicea_cibles.csv"),
             ("/SCN_BDD/SIICEA", "MISSIONSPREV_SCN", f"{self.output_folder}sa_siicea_missions.csv"),
             ("/SCN_BDD/SIICEA", "DECISIONS_SCN", f"{self.output_folder}sa_siicea_suites.csv"),
@@ -84,3 +84,46 @@ class SFTPSync:
         sftp.close()
         transport.close()
         logging.info("Connexion SFTP fermée.")
+        
+        
+    def upload_all(self, local_folder="output/"):
+        """Upload tous les fichiers CSV de output/ vers le SFTP dans les bons dossiers."""
+        sftp, transport = self.connect()
+
+        upload_mapping = {
+            "sa_insern.csv": "/SCN_BDD/INSERN",
+            "sa_siicea_cibles.csv": "/SCN_BDD/SIICEA",
+            "sa_siicea_missions.csv": "/SCN_BDD/SIICEA",
+            "sa_siicea_suites.csv": "/SCN_BDD/SIICEA",
+            "sa_sirec.csv": "/SCN_BDD/SIREC",
+            "sa_sivss.csv": "/SCN_BDD/SIVSS",
+            "sa_t_finess.csv": "/SCN_BDD/T_FINESS",
+            "v_comer.csv": "/SCN_BDD/INSEE",
+            "v_commune.csv": "/SCN_BDD/INSEE",
+            "v_commune_comer.csv": "/SCN_BDD/INSEE",
+            "v_commune_depuis.csv": "/SCN_BDD/INSEE",
+            "v_departement.csv": "/SCN_BDD/INSEE",
+            "v_region.csv": "/SCN_BDD/INSEE",
+        }
+
+        for filename in os.listdir(local_folder):
+            if not filename.endswith(".csv"):
+                continue
+
+            local_path = os.path.join(local_folder, filename)
+            remote_dir = upload_mapping.get(filename)
+
+            if not remote_dir:
+                logging.warning(f"❗ Fichier {filename} non mappé à un dossier distant SFTP, upload ignoré.")
+                continue
+
+            try:
+                remote_path = os.path.join(remote_dir, filename)
+                sftp.put(local_path, remote_path)
+                logging.info(f"✅ Upload : {local_path} → {remote_path}")
+            except Exception as e:
+                logging.error(f"❌ Échec de l'upload {filename} → {e}")
+
+        sftp.close()
+        transport.close()
+        logging.info("✅ Upload SFTP terminé et connexion fermée.")

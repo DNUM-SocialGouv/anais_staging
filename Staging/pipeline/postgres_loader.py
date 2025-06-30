@@ -1,3 +1,4 @@
+
 import os
 import csv
 import pandas as pd
@@ -19,8 +20,9 @@ logging.basicConfig(
 )
 
 class PostgreSQLLoader:
-    def __init__(self, input_folder="input/"):
+    def __init__(self, input_folder="input/", export_folder="output/"):
         self.input_folder = input_folder
+        self.export_folder = export_folder
         self.host = os.getenv("PG_HOST")
         self.port = os.getenv("PG_PORT")
         self.user = os.getenv("PG_USER")
@@ -28,6 +30,7 @@ class PostgreSQLLoader:
         self.database = os.getenv("PG_DATABASE")
         self.schema = os.getenv("PG_SCHEMA", "public")
         self.engine = self.init_engine()
+        os.makedirs(export_folder, exist_ok=True)
 
     def init_engine(self):
         try:
@@ -52,7 +55,6 @@ class PostgreSQLLoader:
                 logging.error(f"❌ Erreur d'exécution {sql_file.name} : {e}")
 
     def detect_delimiter(self, filepath, sample_size=4096):
-        """Détecte automatiquement le délimiteur (',' ou ';') du fichier CSV."""
         try:
             with open(filepath, 'r', encoding='utf-8-sig') as f:
                 sample = f.read(sample_size)
@@ -63,9 +65,7 @@ class PostgreSQLLoader:
             logging.warning(f"⚠️ Impossible de détecter le délimiteur pour {filepath} : {e} → ';' utilisé par défaut.")
             return ";"
 
-
     def read_csv_resilient(self, filepath):
-        """Tente de lire un CSV avec détection auto, sinon tente ';' et ','."""
         delimiters_to_try = [self.detect_delimiter(filepath), ";", ","]
         tried = set()
 
@@ -94,7 +94,7 @@ class PostgreSQLLoader:
             with open(filepath, "rb") as f:
                 raw = f.read()
 
-            decoded = raw.decode("utf-8", errors="replace")  # ou "latin1" si besoin
+            decoded = raw.decode("utf-8", errors="replace")
 
             df = pd.read_csv(
                 StringIO(decoded),
@@ -127,7 +127,6 @@ class PostgreSQLLoader:
                 else:
                     df = self.read_csv_resilient(csv_path)
 
-                # Nettoyage des noms de colonnes
                 df.columns = df.columns.str.strip().str.replace(r"[^\w]", "_", regex=True)
 
                 with self.engine.begin() as connection:
@@ -146,3 +145,25 @@ class PostgreSQLLoader:
                 logging.error(f"❌ Erreur pour le fichier {file} → {e}")
 
         logging.info("✅ Chargement PostgreSQL terminé.")
+
+    def export_tables_from_env(self, output_folder="output_export/"):
+        """Exporte en CSV les tables listées dans PG_EXPORT_TABLES du .env"""
+        tables_str = os.getenv("PG_EXPORT_TABLES", "")
+        if not tables_str:
+            logging.warning("⚠️ Aucune table spécifiée dans PG_EXPORT_TABLES")
+            return
+
+        os.makedirs(output_folder, exist_ok=True)
+
+        tables = [t.strip() for t in tables_str.split(",") if t.strip()]
+        for table in tables:
+            try:
+                output_path = os.path.join(output_folder, f"{table}.csv")
+                logging.info(f"📤 Export de la table '{table}' vers {output_path}")
+                with self.engine.begin() as connection:
+                    connection.execute(text(f'SET search_path TO {self.schema}'))
+                    df = pd.read_sql_table(table, connection)
+                    df.to_csv(output_path, index=False, sep=";", encoding="utf-8-sig")
+                logging.info(f"✅ Table '{table}' exportée avec succès.")
+            except Exception as e:
+                logging.error(f"❌ Erreur lors de l'export de '{table}' → {e}")
