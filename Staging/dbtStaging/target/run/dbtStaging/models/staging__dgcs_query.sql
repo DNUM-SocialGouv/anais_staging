@@ -1,6 +1,8 @@
 
-  
-  create view "duckdb_database"."main"."staging__dgcs_query__dbt_tmp" as (
+  create view "staging"."public"."staging__dgcs_query__dbt_tmp"
+    
+    
+  as (
     
 
 WITH finess AS (
@@ -10,7 +12,7 @@ WITH finess AS (
         categ_code,
         categ_lib,
         etat
-    FROM "duckdb_database"."main"."staging__sa_t_finess"
+    FROM "staging"."public"."staging__sa_t_finess"
     WHERE categ_code IN (
         448, 402, 396, 395, 370, 437, 255, 246, 198, 249, 238, 390, 188, 377, 
         192, 183, 186, 195, 194, 196, 379, 445, 221, 190, 189, 182
@@ -23,9 +25,9 @@ WITH finess AS (
         d.libelle AS departement_libelle,
         r.reg AS region_code,
         r.libelle AS region_libelle
-    FROM "duckdb_database"."main"."staging__v_commune" c
-    LEFT JOIN "duckdb_database"."main"."staging__v_departement" d ON c.dep = d.dep
-    LEFT JOIN "duckdb_database"."main"."staging__v_region" r ON d.reg = r.reg
+    FROM "staging"."public"."staging__v_commune" c
+    LEFT JOIN "staging"."public"."staging__v_departement" d ON c.dep = d.dep
+    LEFT JOIN "staging"."public"."staging__v_region" r ON d.reg = r.reg
 )
 
 SELECT 

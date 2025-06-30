@@ -47,7 +47,7 @@ WITH missions_real AS (
             ELSE "Code FINESS"
         END AS cd_finess
 
-    FROM "duckdb_database"."main"."staging__sa_siicea_missions"
+    FROM "staging"."public"."staging__sa_siicea_missions"
     
     WHERE 1=1
     -- Filtrage sur la période des missions réalisées

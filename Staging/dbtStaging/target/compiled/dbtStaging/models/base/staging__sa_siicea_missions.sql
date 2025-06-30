@@ -1,3 +1,3 @@
 
 
-SELECT * FROM "duckdb_database"."main"."sa_siicea_missions"
+SELECT * FROM "staging"."public"."sa_siicea_missions"

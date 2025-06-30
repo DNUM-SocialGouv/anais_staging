@@ -1,10 +1,12 @@
 
-  
-  create view "duckdb_database"."main"."staging__cert_dc_insern__dbt_tmp" as (
+  create view "staging"."public"."staging__cert_dc_insern__dbt_tmp"
+    
+    
+  as (
     
 
 WITH insern AS (
-    SELECT * FROM "duckdb_database"."main"."staging__sa_insern"
+    SELECT * FROM "staging"."public"."staging__sa_insern"
 )
 
 SELECT 

@@ -44,7 +44,7 @@ WITH sivss AS (
         SUBSTRING(date_cloture, 4, 2) || '-' || 
         SUBSTRING(date_cloture, 1, 2) AS date_cloture,
         motif_cloture
-    FROM "duckdb_database"."main"."staging__sa_sivss"
+    FROM "staging"."public"."staging__sa_sivss"
     WHERE (SUBSTRING(date_cloture, 7, 4) || SUBSTRING(date_cloture, 4, 2)) <= '202412'
 )
 

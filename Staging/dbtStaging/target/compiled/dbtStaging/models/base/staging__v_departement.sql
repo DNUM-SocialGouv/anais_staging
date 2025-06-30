@@ -1,3 +1,3 @@
 
 
-SELECT * FROM "duckdb_database"."main"."v_departement"
+SELECT * FROM "staging"."public"."v_departement"

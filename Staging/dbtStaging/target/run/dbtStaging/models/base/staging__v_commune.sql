@@ -1,7 +1,9 @@
 
-  
-  create view "duckdb_database"."main"."staging__v_commune__dbt_tmp" as (
+  create view "staging"."public"."staging__v_commune__dbt_tmp"
+    
+    
+  as (
     
 
-SELECT * FROM "duckdb_database"."main"."v_commune"
+SELECT * FROM "staging"."public"."v_commune"
   );

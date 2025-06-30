@@ -1,6 +1,8 @@
 
-  
-  create view "duckdb_database"."main"."staging__helios_siicea_missions__dbt_tmp" as (
+  create view "staging"."public"."staging__helios_siicea_missions__dbt_tmp"
+    
+    
+  as (
     
 
 WITH missions AS (
@@ -10,7 +12,7 @@ WITH missions AS (
             WHEN LENGTH("Code FINESS") = 8 THEN '0' || "Code FINESS"
             ELSE "Code FINESS"
         END AS cd_finess
-    FROM "duckdb_database"."main"."staging__sa_siicea_missions"
+    FROM "staging"."public"."staging__sa_siicea_missions"
     WHERE "Code thème IGAS" IN (
         'MS634D13', 'MS634N1', 'MS634E1', 'MS634D12', 'MS634R1',
         'MS634D11', 'MS634D15', 'MS634C10'

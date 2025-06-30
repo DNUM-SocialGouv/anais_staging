@@ -1,6 +1,8 @@
 
-  
-  create view "duckdb_database"."main"."staging__ref_regions__dbt_tmp" as (
+  create view "staging"."public"."staging__ref_regions__dbt_tmp"
+    
+    
+  as (
     
 
 WITH regions AS (
@@ -8,7 +10,7 @@ WITH regions AS (
         REG AS reg,
         NCC AS ncc,
         LIBELLE AS libelle
-    FROM "duckdb_database"."main"."staging__v_region"
+    FROM "staging"."public"."staging__v_region"
 
     UNION
 
@@ -16,7 +18,7 @@ WITH regions AS (
         COMER AS reg,
         NCC AS ncc,
         LIBELLE AS libelle
-    FROM "duckdb_database"."main"."staging__v_comer" 
+    FROM "staging"."public"."staging__v_comer" 
 )
 
 SELECT * FROM regions

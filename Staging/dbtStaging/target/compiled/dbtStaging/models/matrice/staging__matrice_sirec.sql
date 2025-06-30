@@ -1,7 +1,7 @@
 
 
 WITH sirec AS (
-    SELECT * FROM "duckdb_database"."main"."staging__sa_sirec"
+    SELECT * FROM "staging"."public"."staging__sa_sirec"
 )
 
 SELECT 

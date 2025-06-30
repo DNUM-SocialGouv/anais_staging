@@ -84,7 +84,7 @@ WITH finess AS (
         geoloc_3857_y,
         geoloc_4326_long,
         geoloc_4326_lat
-    FROM "duckdb_database"."main"."staging__sa_t_finess"
+    FROM "staging"."public"."staging__sa_t_finess"
 )
 
 SELECT 
@@ -92,5 +92,5 @@ SELECT
     c.libelle AS commune_libelle,
     d.libelle AS departement_libelle
 FROM finess
-LEFT JOIN "duckdb_database"."main"."staging__v_commune" c ON finess.com_code = c.com
-LEFT JOIN "duckdb_database"."main"."staging__v_departement" d ON SUBSTRING(finess.com_code, 1, 2) = d.dep
+LEFT JOIN "staging"."public"."staging__v_commune" c ON finess.com_code = c.com
+LEFT JOIN "staging"."public"."staging__v_departement" d ON SUBSTRING(finess.com_code, 1, 2) = d.dep

@@ -1,6 +1,8 @@
 
-  
-  create view "duckdb_database"."main"."staging__tdb_ic_finess_500__dbt_tmp" as (
+  create view "staging"."public"."staging__tdb_ic_finess_500__dbt_tmp"
+    
+    
+  as (
     
 
 WITH finess_500 AS (
@@ -14,7 +16,7 @@ WITH finess_500 AS (
         statut_jur_niv2_code,
         statut_jur_niv2_lib,
         etat
-    FROM "duckdb_database"."main"."staging__sa_t_finess"
+    FROM "staging"."public"."staging__sa_t_finess"
     WHERE categ_code = 500
     AND etat = 'ACTUEL'
 )

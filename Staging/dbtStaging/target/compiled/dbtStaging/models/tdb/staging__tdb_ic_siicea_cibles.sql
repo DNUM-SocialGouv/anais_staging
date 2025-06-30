@@ -15,7 +15,7 @@ WITH siicea_cibles AS (
         "Nombre de missions réalisées " AS nb_missions_realisees,
         "Nombre de missions abondonnées / reportées " AS nb_missions_abandonnees,
         "Nombre de décisions prises" AS nb_decisions_prises
-    FROM "duckdb_database"."main"."staging__sa_siicea_cibles"
+    FROM "staging"."public"."staging__sa_siicea_cibles"
     
     WHERE TRIM("FINESS") != ''  -- Exclure les lignes sans code FINESS
 )

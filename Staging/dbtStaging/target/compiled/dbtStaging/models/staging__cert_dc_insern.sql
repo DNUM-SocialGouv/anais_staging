@@ -1,7 +1,7 @@
 
 
 WITH insern AS (
-    SELECT * FROM "duckdb_database"."main"."staging__sa_insern"
+    SELECT * FROM "staging"."public"."staging__sa_insern"
 )
 
 SELECT 

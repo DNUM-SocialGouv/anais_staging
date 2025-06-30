@@ -1,6 +1,8 @@
 
-  
-  create view "duckdb_database"."main"."staging__sirec_input_test__dbt_tmp" as (
+  create view "staging"."public"."staging__sirec_input_test__dbt_tmp"
+    
+    
+  as (
     
 
 WITH sirec AS (
@@ -8,7 +10,7 @@ WITH sirec AS (
         "Numéro de la réclamation" AS numero_reclamation,
         "Date de réception à l’ARS" AS date_reception_ars,
         CAST("N° FINESS/RPPS" AS VARCHAR) AS numero_finess_rpps
-    FROM "duckdb_database"."main"."staging__sa_sirec"
+    FROM "staging"."public"."staging__sa_sirec"
 )
 
 SELECT 

@@ -1,6 +1,8 @@
 
-  
-  create view "duckdb_database"."main"."staging__tdb_ic_siicea_missions_prog__dbt_tmp" as (
+  create view "staging"."public"."staging__tdb_ic_siicea_missions_prog__dbt_tmp"
+    
+    
+  as (
     
 
 WITH missions_prog AS (
@@ -50,7 +52,7 @@ WITH missions_prog AS (
             ELSE "Code FINESS"
         END AS cd_finess
 
-    FROM "duckdb_database"."main"."staging__sa_siicea_missions"
+    FROM "staging"."public"."staging__sa_siicea_missions"
     
     WHERE 1=1
     -- Filtrage sur la période

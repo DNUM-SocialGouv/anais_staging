@@ -1,6 +1,8 @@
 
-  
-  create view "duckdb_database"."main"."staging__ref_departements__dbt_tmp" as (
+  create view "staging"."public"."staging__ref_departements__dbt_tmp"
+    
+    
+  as (
     
 
 WITH departements AS (
@@ -10,7 +12,7 @@ WITH departements AS (
         REG AS reg,
         NCC AS ncc,
         LIBELLE AS libelle
-    FROM "duckdb_database"."main"."staging__v_departement" 
+    FROM "staging"."public"."staging__v_departement" 
 
     UNION
 
@@ -20,7 +22,7 @@ WITH departements AS (
         COMER AS reg,
         NCC AS ncc,
         LIBELLE AS libelle
-    FROM "duckdb_database"."main"."staging__v_comer"
+    FROM "staging"."public"."staging__v_comer"
 )
 
 SELECT * FROM departements

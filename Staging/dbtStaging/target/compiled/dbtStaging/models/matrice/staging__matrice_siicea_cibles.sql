@@ -7,8 +7,8 @@ WITH cibles AS (
         m."Statut de la mission",
         m."Secteur dintervention",
         m."Type de mission"
-    FROM "duckdb_database"."main"."staging__sa_siicea_cibles" c
-    LEFT JOIN "duckdb_database"."main"."staging__sa_siicea_missions" m
+    FROM "staging"."public"."staging__sa_siicea_cibles" c
+    LEFT JOIN "staging"."public"."staging__sa_siicea_missions" m
         ON c.FINESS = m."Code FINESS"
 ),
 

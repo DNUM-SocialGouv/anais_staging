@@ -1,6 +1,8 @@
 
-  
-  create view "duckdb_database"."main"."staging__siicea_input_test__dbt_tmp" as (
+  create view "staging"."public"."staging__siicea_input_test__dbt_tmp"
+    
+    
+  as (
     
 
 WITH missions AS (
@@ -8,7 +10,7 @@ WITH missions AS (
         "Identifiant de la mission" AS identifiant_mission,
         "Code FINESS" AS code_finess,
         "Date réelle ""Visite""" AS date_reelle_visite
-    FROM "duckdb_database"."main"."staging__sa_siicea_missions"
+    FROM "staging"."public"."staging__sa_siicea_missions"
 )
 
 SELECT 

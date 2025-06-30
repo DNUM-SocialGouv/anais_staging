@@ -2,4 +2,4 @@
     materialized='view'
 ) }}
 
-SELECT * FROM {{ source('main', 'v_departement') }}
+SELECT * FROM {{ source(get_source_schema(), 'v_departement') }}

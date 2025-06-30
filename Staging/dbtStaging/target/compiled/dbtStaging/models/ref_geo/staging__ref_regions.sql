@@ -5,7 +5,7 @@ WITH regions AS (
         REG AS reg,
         NCC AS ncc,
         LIBELLE AS libelle
-    FROM "duckdb_database"."main"."staging__v_region"
+    FROM "staging"."public"."staging__v_region"
 
     UNION
 
@@ -13,7 +13,7 @@ WITH regions AS (
         COMER AS reg,
         NCC AS ncc,
         LIBELLE AS libelle
-    FROM "duckdb_database"."main"."staging__v_comer" 
+    FROM "staging"."public"."staging__v_comer" 
 )
 
 SELECT * FROM regions

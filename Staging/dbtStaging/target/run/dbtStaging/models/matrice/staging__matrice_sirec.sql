@@ -1,10 +1,12 @@
 
-  
-  create view "duckdb_database"."main"."staging__matrice_sirec__dbt_tmp" as (
+  create view "staging"."public"."staging__matrice_sirec__dbt_tmp"
+    
+    
+  as (
     
 
 WITH sirec AS (
-    SELECT * FROM "duckdb_database"."main"."staging__sa_sirec"
+    SELECT * FROM "staging"."public"."staging__sa_sirec"
 )
 
 SELECT 
