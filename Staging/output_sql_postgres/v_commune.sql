@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS v_commune_comer (
+CREATE TABLE IF NOT EXISTS v_commune (
     typecom TEXT,
     com TEXT,
     reg TEXT,

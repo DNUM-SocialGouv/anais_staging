@@ -1,14 +1,10 @@
-CREATE TABLE IF NOT EXISTS v_commune_comer (
-    typecom TEXT,
-    com TEXT,
-    reg TEXT,
-    dep TEXT,
-    ctcd TEXT,
-    arr TEXT,
-    tncc TEXT,
+CREATE TABLE v_commune_comer (
+    com_comer TEXT(50),
+    tncc TEXT(50),
     ncc VARCHAR(50),
     nccenr VARCHAR(50),
     libelle VARCHAR(50),
-    can TEXT,
-    comparent TEXT
+    nature_zonage VARCHAR(50),
+    comer TEXT(50),
+    libelle_comer VARCHAR(50)
 )
