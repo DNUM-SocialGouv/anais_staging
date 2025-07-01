@@ -1,9 +1,9 @@
-CREATE TABLE IF NOT EXISTS "v_departement" (
-	DEP VARCHAR(50),
-	REG INTEGER,
-	CHEFLIEU VARCHAR(50),
-	TNCC INTEGER,
-	NCC VARCHAR(50),
-	NCCENR VARCHAR(50),
-	LIBELLE VARCHAR(50)
+CREATE TABLE IF NOT EXISTS v_departement (
+    dep VARCHAR(50),
+    reg INTEGER,
+    cheflieu VARCHAR(50),
+    tncc INTEGER,
+    ncc VARCHAR(50),
+    nccenr VARCHAR(50),
+    libelle VARCHAR(50)
 )

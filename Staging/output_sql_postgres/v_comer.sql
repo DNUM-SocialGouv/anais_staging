@@ -1,7 +1,7 @@
-CREATE TABLE  IF NOT EXISTS"v_comer" (
-	COMER TEXT,
-	TNCC TEXT,
-	NCC VARCHAR(50),
-	NCCENR VARCHAR(50),
-	LIBELLE VARCHAR(50)
+CREATE TABLE IF NOT EXISTS v_comer (
+    comer TEXT,
+    tncc TEXT,
+    ncc VARCHAR(50),
+    nccenr VARCHAR(50),
+    libelle VARCHAR(50)
 )

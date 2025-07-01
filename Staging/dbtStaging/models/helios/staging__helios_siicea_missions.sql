@@ -6,23 +6,23 @@ WITH missions AS (
     SELECT 
         *,
         CASE 
-            WHEN LENGTH("Code FINESS") = 8 THEN '0' || "Code FINESS"
-            ELSE "Code FINESS"
+            WHEN LENGTH("FINESS_géographique") = 8 THEN '0' || "FINESS_géographique"
+            ELSE "FINESS_géographique"
         END AS cd_finess
     FROM {{ ref('staging__sa_siicea_missions') }}
-    WHERE "Code thème IGAS" IN (
+    WHERE "Code_thème_IGAS" IN (
         'MS634D13', 'MS634N1', 'MS634E1', 'MS634D12', 'MS634R1',
         'MS634D11', 'MS634D15', 'MS634C10'
     )
-    AND "Type de mission" NOT IN (
+    AND "Type_de_mission" NOT IN (
         'Audit', 'Audit franco-wallon', 'Evaluation', 
         'Visites de conformité', 'Enquête administrative'
     )
-    AND "Statut de la mission" IN ('Clôturé', 'Maintenu')
+    AND "Statut_de_la_mission" IN ('Clôturé', 'Maintenu')
     AND (
-        CAST(SUBSTRING("Date réelle ""Visite""", 1, 4) || 
-             SUBSTRING("Date réelle ""Visite""", 6, 2) || 
-             SUBSTRING("Date réelle ""Visite""", 9, 2) AS INTEGER)
+        CAST(SUBSTRING("Date_réelle__Visite_", 1, 4) || 
+             SUBSTRING("Date_réelle__Visite_", 6, 2) || 
+             SUBSTRING("Date_réelle__Visite_", 9, 2) AS INTEGER)
         BETWEEN 20220101 AND 20241231
     )
 )
