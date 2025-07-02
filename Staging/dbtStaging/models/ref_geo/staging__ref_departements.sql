@@ -5,10 +5,10 @@
 WITH departements AS (
     -- Départements métropolitains
     SELECT
-        DEP AS dep,
-        REG AS reg,
-        NCC AS ncc,
-        LIBELLE AS libelle
+        dep,
+        reg,
+        ncc,
+        libelle
     FROM {{ ref('staging__v_departement') }} 
 
     UNION
@@ -17,8 +17,8 @@ WITH departements AS (
     SELECT
         COMER AS dep,
         COMER AS reg,
-        NCC AS ncc,
-        LIBELLE AS libelle
+        ncc,
+        libelle
     FROM {{ ref('staging__v_comer') }}
 )
 

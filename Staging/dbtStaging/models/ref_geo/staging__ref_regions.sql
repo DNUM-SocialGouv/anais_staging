@@ -4,17 +4,17 @@
 
 WITH regions AS (
     SELECT
-        REG AS reg,
-        NCC AS ncc,
-        LIBELLE AS libelle
+        reg,
+        ncc,
+        libelle
     FROM {{ ref('staging__v_region') }}
 
     UNION
 
     SELECT
         COMER AS reg,
-        NCC AS ncc,
-        LIBELLE AS libelle
+        ncc,
+        libelle
     FROM {{ ref('staging__v_comer') }} 
 )
 
