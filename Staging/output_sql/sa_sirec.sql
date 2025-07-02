@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS sa_sirec (
     saisine_du_procureur_par_requerant VARCHAR(50),
     institutions_de_provenance VARCHAR(50),
     date_de_reception_a_l_institution_de_provenance VARCHAR(50),
-    reponse_attendue BIGINT,
+    reponse_attendue VARCHAR(50),
     courrier_signale_oui_non VARCHAR(50),
     le_requerant_est VARCHAR(50),
     le_requerant_est_anonyme VARCHAR(50),

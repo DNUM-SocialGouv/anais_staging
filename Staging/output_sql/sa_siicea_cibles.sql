@@ -1,8 +1,7 @@
 CREATE TABLE IF NOT EXISTS sa_siicea_cibles (
-    column1 TEXT,
     finess TEXT,
     finess_ej TEXT,
-    rppss VARCHAR(50),
+    rpps VARCHAR(50),
     siret TEXT,
     code_ape VARCHAR(50),
     code_uai VARCHAR(50),

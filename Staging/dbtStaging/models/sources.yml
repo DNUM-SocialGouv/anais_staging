@@ -17,6 +17,15 @@ sources:
       - name: v_commune_depuis
       - name: v_departement
       - name: v_region
+      - name: cert_dc_insern_2023_2024
+      - name: cert_dc_insern_n2_n1
+      - name: DC_det
+      - name: sa_esms
+      - name: sa_hubee
+      - name: sa_insee_histo
+      - name: sa_pmsi
+      - name: sa_rpu
+      - name: sa_usld
 
 # Sources pour PostgreSQL
   - name: public
@@ -34,3 +43,12 @@ sources:
       - name: v_commune_depuis
       - name: v_departement
       - name: v_region
+      - name: cert_dc_insern_2023_2024
+      - name: cert_dc_insern_n2_n1
+      - name: DC_det
+      - name: sa_esms
+      - name: sa_hubee
+      - name: sa_insee_histo
+      - name: sa_pmsi
+      - name: sa_rpu
+      - name: sa_usld

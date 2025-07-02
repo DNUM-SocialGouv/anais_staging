@@ -1,5 +1,4 @@
 CREATE TABLE IF NOT EXISTS sa_siicea_suites (
-    Column1 INT,
     type_de_decision TEXT,
     complement TEXT,
     theme_decision TEXT,

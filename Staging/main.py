@@ -22,12 +22,17 @@ def run_dbt(project_dir: str = "./Staging/dbtStaging", profiles_dir: str = "."):
     try:
         project_path = Path(project_dir).resolve()
         profiles_path = Path(profiles_dir).resolve()
+        dbt_logger.info(project_path)
+        dbt_logger.info(profiles_path)
+
 
         result = subprocess.run(
             ["dbt",
             "run",
-            "--project-dir", project_path,
+            "--project-dir", project_dir,
             "--profiles-dir", profiles_path,
+            "--select", "base.staging__v_comer",
+            "--debug"
             ],
             # cwd=project_dir,
             capture_output=True,
