@@ -4,49 +4,49 @@
 
 WITH missions_real AS (
     SELECT 
-        "Identifiant de la mission" AS identifiant_mission,
-        "Code thème IGAS" AS code_theme_igas,
-        "Thème IGAS" AS theme_igas,
-        "Type de mission" AS type_mission,
-        "Modalité dinvestigation" AS modalite_d_investigation,
-        "Type de planification" AS type_planification,
-        "Modalité de la mission" AS modalite_mission,
-        "Mission conjointe avec 1" AS mission_conjointe_1,
-        "Mission conjointe avec 2" AS mission_conjointe_2,
-        "Département" AS departement,
-        "Commune" AS commune,
-        "Adresse" AS adresse,
-        "Groupe de cibles" AS groupe_cibles,
-        "Cible" AS cible,
-        "Caractère juridique" AS caractere_juridique,
-        "Type de cible" AS type_cible,
-        "Code FINESS" AS code_finess,
-        "Statut de la mission" AS statut_mission,
+        identifiant_de_la_mission AS identifiant_mission,
+        code_theme_igas
+        theme_igas,
+        type_de_mission AS type_mission,
+        modalite_d_investigation,
+        type_de_planification,
+        modalite_de_la_mission,
+        mission_conjointe_avec_1 AS mission_conjointe_1,
+        mission_conjointe_avec_2 AS mission_conjointe_2,
+        departement,
+        commune,
+        adresse,
+        groupe_de_cibles AS groupe_cibles,
+        cible,
+        caractere_juridique,
+        type_de_cible,
+        finess_geographique AS code_finess,
+        statut_de_la_mission AS statut_mission,
 
         -- Formatage des dates
         CASE
-            WHEN LENGTH("Date provisoire ""Visite""") = 10 
-            THEN SUBSTRING("Date provisoire ""Visite""", 7, 4) || '-' ||
-                 SUBSTRING("Date provisoire ""Visite""", 4, 2) || '-' ||
-                 SUBSTRING("Date provisoire ""Visite""", 1, 2) || ' 00:00:00'
-            ELSE "Date provisoire ""Visite"""
+            WHEN LENGTH(date_provisoire_visite) = 10 
+            THEN SUBSTRING(date_provisoire_visite, 7, 4) || '-' ||
+                 SUBSTRING(date_provisoire_visite, 4, 2) || '-' ||
+                 SUBSTRING(date_provisoire_visite, 1, 2) || ' 00:00:00'
+            ELSE date_provisoire_visite
         END AS date_provisoire_visite,
 
         CASE
-            WHEN LENGTH("Date réelle ""Visite""") = 10 
-            THEN SUBSTRING("Date réelle ""Visite""", 7, 4) || '-' ||
-                 SUBSTRING("Date réelle ""Visite""", 4, 2) || '-' ||
-                 SUBSTRING("Date réelle ""Visite""", 1, 2) || ' 00:00:00'
-            ELSE "Date réelle ""Visite"""
+            WHEN LENGTH(date_reelle_visite) = 10 
+            THEN SUBSTRING(date_reelle_visite, 7, 4) || '-' ||
+                 SUBSTRING(date_reelle_visite, 4, 2) || '-' ||
+                 SUBSTRING(date_reelle_visite, 1, 2) || ' 00:00:00'
+            ELSE date_reelle_visite
         END AS date_reelle_visite,
 
-        "Date provisoire ""Fin Mission""" AS date_provisoire_fin_mission,
-        "Date réelle ""Fin Mission""" AS date_reelle_fin_mission,
+        date_provisoire_fin_mission,
+        date_reelle_fin_mission,
 
         -- Ajout du zéro devant les codes FINESS de longueur 8
         CASE 
-            WHEN LENGTH("Code FINESS") = 8 THEN '0' || "Code FINESS"
-            ELSE "Code FINESS"
+            WHEN LENGTH(finess_geographique) = 8 THEN '0' || finess_geographique
+            ELSE finess_geographique
         END AS cd_finess
 
     FROM {{ ref('staging__sa_siicea_missions') }}
@@ -55,32 +55,32 @@ WITH missions_real AS (
     -- Filtrage sur la période des missions réalisées
     AND (
         CASE
-            WHEN LENGTH("Date réelle ""Visite""") = 10 
-            THEN SUBSTRING("Date réelle ""Visite""", 7, 4) || '-' ||
-                 SUBSTRING("Date réelle ""Visite""", 4, 2) || '-' ||
-                 SUBSTRING("Date réelle ""Visite""", 1, 2) || ' 00:00:00'
-            ELSE "Date réelle ""Visite"""
+            WHEN LENGTH(date_reelle_visite) = 10 
+            THEN SUBSTRING(date_reelle_visite, 7, 4) || '-' ||
+                 SUBSTRING(date_reelle_visite, 4, 2) || '-' ||
+                 SUBSTRING(date_reelle_visite, 1, 2) || ' 00:00:00'
+            ELSE date_reelle_visite
         END
     ) BETWEEN '2022-01-01 00:00:00' AND '2024-12-31 00:00:00'
     
     -- Filtrage sur le statut réalisé
-    AND "Statut de la mission" IN ('Clôturé', 'Maintenu')
+    AND statut_de_la_mission IN ('Clôturé', 'Maintenu')
     
     -- Filtrage sur le secteur d'intervention
-    AND "Secteur dintervention" = 'Médico-social'
+    AND secteur_d_intervention = 'Médico-social'
     
     -- Filtrage sur le type de cible
-    AND "Type de cible" = 'Etablissements et Services pour Personnes Agées'
+    AND type_de_cible = 'Etablissements et Services pour Personnes Agées'
     
     -- Filtrage des thèmes IGAS pertinents
-    AND "Code thème IGAS" IN (
+    AND code_theme_igas IN (
         'MS634D13', 'MS634D13', 'MS634N1', 'MS634E1', 
         'MS634D12', 'MS634R1', 'MS634D11', 'MS634D15', 
         'MS634C10', 'MS634C10'
     )
     
     -- Exclusion des types de mission non pertinents
-    AND "Type de mission" NOT IN (
+    AND type_de_mission NOT IN (
         'Audit', 'Audit franco-wallon', 'Evaluation', 
         'Visites de conformité', 'Enquête administrative'
     )

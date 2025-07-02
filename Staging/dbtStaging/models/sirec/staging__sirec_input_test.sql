@@ -4,9 +4,9 @@
 
 WITH sirec AS (
     SELECT 
-        "Numéro de la réclamation" AS numero_reclamation,
-        "Date de réception à l’ARS" AS date_reception_ars,
-        CAST("N° FINESS/RPPS" AS VARCHAR) AS numero_finess_rpps
+        numero_de_la_reclamation AS numero_reclamation,
+        date_de_reception_a_l_ars AS date_reception_ars,
+        CAST(n_finess_rpps AS VARCHAR) AS numero_finess_rpps
     FROM {{ ref('staging__sa_sirec') }}
 )
 
