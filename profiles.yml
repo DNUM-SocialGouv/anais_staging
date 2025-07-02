@@ -6,7 +6,7 @@ dbtStaging:
       type: duckdb
       path: ../data/duckdb_database.duckdb
       schema: main
-
+#
 
 # DNUM - Layer InspectionControle (dépend de la base de Staging)
 dbtInspectionControle:
