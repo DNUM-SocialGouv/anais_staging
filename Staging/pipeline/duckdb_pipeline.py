@@ -5,6 +5,8 @@ from pathlib import Path
 import logging
 import csv
 from io import StringIO
+from pipeline.loadfiles import load_colnames_YAML
+
 
 # === Configuration du logger ===
 os.makedirs("logs", exist_ok=True)
@@ -14,12 +16,15 @@ logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
+VIEWS_TO_EXPORT = load_colnames_YAML("file_names.yml", "views", "file_to_export")
+
 class DuckDBPipeline:
-    def __init__(self, db_path='data/duckdb_database.duckdb', sql_folder="output_sql_postgres/", csv_folder="input/"):
+    def __init__(self, db_path='data/duckdb_database.duckdb', sql_folder="Staging/output_sql/", csv_folder_input="input/", csv_folder_output="output/"):
         """Initialisation du chargeur DuckDB avec les chemins de la base et des fichiers."""
         self.db_path = db_path
         self.sql_folder = sql_folder
-        self.csv_folder = csv_folder
+        self.csv_folder_input = csv_folder_input
+        self.csv_folder_output = csv_folder_output
 
         self.ensure_directories_exist()
         self.init_duckdb()
@@ -27,7 +32,7 @@ class DuckDBPipeline:
 
     def ensure_directories_exist(self):
         """Crée les dossiers nécessaires s'ils n'existent pas."""
-        for folder in [self.sql_folder, self.csv_folder]:
+        for folder in [self.sql_folder, self.csv_folder_input, self.csv_folder_output]:
             os.makedirs(folder, exist_ok=True)
             logging.info(f"Dossier vérifié/créé : {folder}")
 
@@ -128,7 +133,7 @@ class DuckDBPipeline:
         """Charge un fichier CSV après vérification et conversion des types."""
         table_name = csv_file.stem
         result = self.conn.execute(f"""
-            SELECT COUNT(*) 
+            SELECT COUNT(*)
             FROM information_schema.tables 
             WHERE table_name = '{table_name}'
         """).fetchone()[0]
@@ -202,7 +207,7 @@ class DuckDBPipeline:
             except duckdb.Error as e:
                 logging.error(f"Erreur lors du chargement de {csv_file.name}: {e}")
 
-    def check_table(self, table_name, limit=10):
+    def check_table(self, table_name, limit=10, print_table=True):
         """Affiche les premières lignes d'une table (dans les logs uniquement si elle existe)."""
         try:
             table_exists = self.conn.execute(f"""
@@ -220,11 +225,29 @@ class DuckDBPipeline:
                 logging.warning(f"La table '{table_name}' est vide.")
                 return
 
-            df = self.conn.execute(f"SELECT * FROM {table_name} LIMIT {limit};").fetchdf()
-            logging.info(f"{limit} lignes de '{table_name}':\n{df.to_string(index=False)}")
-
+            if print_table:
+                df = self.conn.execute(f"SELECT * FROM {table_name} LIMIT {limit};").fetchdf()
+                logging.info(f"{limit} lignes de '{table_name}':\n{df.to_string(index=False)}")
+            return True
+            
         except Exception as e:
             logging.error(f"Erreur lors de la lecture de la table '{table_name}': {e}")
+
+    def export_to_csv(self, views_to_export=VIEWS_TO_EXPORT):
+        """ Export une table de DuckDB vers un csv"""
+        for table_name, csv_name in views_to_export.items():
+            # Vérification de l'existence de la table
+            if not self.check_table(table_name, print_table=False):
+                return
+
+            file = os.path.join(self.csv_folder_output, csv_name)
+
+            try:
+                df = self.conn.execute(f"SELECT * FROM {table_name}").df()
+                df.to_csv(file, index=False)
+                logging.info(f"Export réussi : {file}")
+            except Exception as e:
+                logging.error(f"Erreur lors de l'export de {table_name} : {e}")
 
     def list_tables(self):
         """Liste toutes les tables existantes dans la base DuckDB."""
@@ -247,11 +270,11 @@ class DuckDBPipeline:
         for sql_file in Path(self.sql_folder).glob("*.sql"):
             self.execute_sql_file(sql_file)
 
-        for csv_file in Path(self.csv_folder).glob("*.csv"):
+        for csv_file in Path(self.csv_folder_input).glob("*.csv"):
             self.load_csv_file(csv_file)
 
-        for csv_file in Path(self.csv_folder).glob("*.csv"):
-            self.check_table(csv_file.stem)
+        for csv_file in Path(self.csv_folder_input).glob("*.csv"):
+            self.check_table(csv_file.stem, print_table=False)
 
     def close(self):
         """Ferme la connexion à la base de données."""
