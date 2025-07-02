@@ -1,0 +1,114 @@
+tables:
+  file_to_import:
+    - path: "/SCN_BDD/INSERN"
+      table: "DNUM_TdB_CertDc"
+      file: "sa_insern.csv"
+
+    - path: "/SCN_BDD/SIICEA"
+      table: "GROUPECIBLES_SCN"
+      file: "sa_siicea_cibles.csv"
+
+    - path: "/SCN_BDD/SIICEA"
+      table: "MISSIONSPREV_SCN"
+      file: "sa_siicea_missions.csv"
+
+    - path: "/SCN_BDD/SIICEA"
+      table: "DECISIONS_SCN"
+      file: "sa_siicea_suites.csv"
+
+    - path: "/SCN_BDD/SIREC"
+      table: "sirec"
+      file: "sa_sirec.csv"
+
+    - path: "/SCN_BDD/SIVSS"
+      table: "SIVSS_SCN"
+      file: "sa_sivss.csv"
+
+    - path: "/SCN_BDD/T_FINESS"
+      table: "t-finess"
+      file: "sa_t_finess.csv"
+
+    - path: "/SCN_BDD/INSEE"
+      table: "v_comer"
+      file: "v_comer.csv"
+
+    - path: "/SCN_BDD/INSEE"
+      table: "v_commune_comer"
+      file: "v_commune_comer.csv"
+
+    - path: "/SCN_BDD/INSEE"
+      table: "v_commune_depuis"
+      file: "v_commune_depuis.csv"
+
+    - path: "/SCN_BDD/INSEE"
+      table: "v_commune_2024"
+      file: "v_commune.csv"
+
+    - path: "/SCN_BDD/INSEE"
+      table: "v_departement"
+      file: "v_departement.csv"
+
+    - path: "/SCN_BDD/INSEE"
+      table: "v_region"
+      file: "v_region.csv"
+
+    - path: "/SCN_BDD/INSERN/historique"
+      table: "sa_insern_n_2_n_1"
+      file: "cert_dc_insern_n2_n1.csv"
+
+    - path: "/SCN_BDD/INSERN/historique"
+      table: "CertDCInsern_2023_2024"
+      file: "cert_dc_insern_2023_2024.csv"
+
+    - path: "/SCN_BDD/DIAMANT/pour le script etl"
+      table: "sa_esms"
+      file: "sa_esms.csv"
+
+    - path: "/SCN_BDD/DIAMANT/pour le script etl"
+      table: "sa_pmsi"
+      file: "sa_pmsi.csv"
+
+    - path: "/SCN_BDD/DIAMANT/pour le script etl"
+      table: "sa_rpu"
+      file: "sa_rpu.csv"
+
+    - path: "/SCN_BDD/DIAMANT/pour le script etl"
+      table: "sa_usld"
+      file: "sa_usld.csv"
+
+    - path: "/SCN_BDD/HUBEE"
+      table: "sa_hubee"
+      file: "sa_hubee.csv"
+
+    - path: "/SCN_BDD/INSEE"
+      table: "DC_det"
+      file: "DC_det.csv"
+
+    - path: "/SCN_BDD/INSEE/historique"
+      table: "sa_insee_n_2_n_3"
+      file: "sa_insee_histo.csv"
+
+views:
+  file_to_export:
+    ods_insee: ods_insee.csv
+    ods_insern_edc: ods_insern_edc.csv
+    ods_insern_insee_tx_edc: ods_insern_insee_tx_edc.csv
+    ods_insern: ods_insern.csv
+    ods_pmsi: ods_pmsi.csv
+    ods_insern_pmsi_es: ods_insern_pmsi_es.csv
+  base:
+    sa_insern.csv: /SCN_BDD/INSERN
+    sa_siicea_cibles.csv: /SCN_BDD/SIICEA
+    sa_siicea_missions.csv: /SCN_BDD/SIICEA
+    sa_siicea_suites.csv: /SCN_BDD/SIICEA
+    sa_sirec.csv: /SCN_BDD/SIREC
+    sa_sivss.csv: /SCN_BDD/SIVSS
+    sa_t_finess.csv: /SCN_BDD/T_FINESS
+    v_comer.csv: /SCN_BDD/INSEE
+    v_commune.csv: /SCN_BDD/INSEE
+    v_commune_comer.csv: /SCN_BDD/INSEE
+    v_commune_depuis.csv: /SCN_BDD/INSEE
+    v_departement.csv: /SCN_BDD/INSEE
+    v_region.csv: /SCN_BDD/INSEE
+
+
