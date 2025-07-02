@@ -3,6 +3,8 @@ import pandas as pd
 import os
 from pathlib import Path
 import logging
+import csv
+from io import StringIO
 
 # === Configuration du logger ===
 os.makedirs("logs", exist_ok=True)
@@ -13,7 +15,7 @@ logging.basicConfig(
 )
 
 class DuckDBPipeline:
-    def __init__(self, db_path='data/duckdb_database.duckdb', sql_folder="output_sql", csv_folder="input/"):
+    def __init__(self, db_path='data/duckdb_database.duckdb', sql_folder="output_sql_postgres/", csv_folder="input/"):
         """Initialisation du chargeur DuckDB avec les chemins de la base et des fichiers."""
         self.db_path = db_path
         self.sql_folder = sql_folder
@@ -60,6 +62,68 @@ class DuckDBPipeline:
         except duckdb.Error as e:
             logging.error(f"Erreur lors de l'exécution du SQL {sql_file.name}: {e}")
 
+
+    def detect_delimiter(self, filepath, sample_size=4096):
+        """Détecte automatiquement le délimiteur du fichier CSV."""
+        try:
+            with open(filepath, 'r', encoding='utf-8-sig') as f:
+                sample = f.read(sample_size)
+                sniffer = csv.Sniffer()
+                dialect = sniffer.sniff(sample, delimiters=";,¤")
+                return dialect.delimiter
+        except Exception as e:
+            logging.warning(f"⚠️ Impossible de détecter le délimiteur pour {filepath} : {e} → ';' utilisé par défaut.")
+            return ";"
+
+    def read_csv_resilient(self, filepath):
+        """Tente de lire un CSV avec différents délimiteurs."""
+        delimiters_to_try = [self.detect_delimiter(filepath), ";", ",", "¤"]
+        tried = set()
+
+        for delimiter in delimiters_to_try:
+            if delimiter in tried:
+                continue
+            tried.add(delimiter)
+
+            try:
+                df = pd.read_csv(
+                    filepath,
+                    delimiter=delimiter,
+                    dtype=str,
+                    quotechar='"',
+                    encoding='utf-8-sig'
+                )
+                logging.info(f"✅ Lecture réussie avec le délimiteur '{delimiter}' pour {os.path.basename(filepath)}")
+                return df
+            except pd.errors.ParserError as e:
+                logging.warning(f"⚠️ Erreur de parsing avec '{delimiter}' pour {filepath} → {e}")
+            except Exception as e:
+                logging.warning(f"⚠️ Autre erreur avec '{delimiter}' → {e}")
+
+        raise ValueError(f"❌ Impossible de lire le fichier CSV {filepath} avec les délimiteurs connus.")
+
+    def read_csv_with_custom_delimiter(self, filepath):
+        try:
+            with open(filepath, "rb") as f:
+                raw = f.read()
+
+            decoded = raw.decode("utf-8", errors="replace")
+
+            df = pd.read_csv(
+                StringIO(decoded),
+                delimiter="¤",
+                dtype=str,
+                engine="python",
+                quoting=csv.QUOTE_NONE,
+                on_bad_lines="warn"
+            )
+
+            logging.info(f"✅ Lecture réussie avec délimiteur '¤' après détection binaire : {os.path.basename(filepath)}")
+            return df
+        except Exception as e:
+            logging.error(f"❌ Erreur lors de la lecture de {filepath} avec délimiteur '¤' → {e}")
+            raise
+
     def load_csv_file(self, csv_file):
         """Charge un fichier CSV après vérification et conversion des types."""
         table_name = csv_file.stem
@@ -74,7 +138,15 @@ class DuckDBPipeline:
             return
 
         schema_df = self.conn.execute(f"DESCRIBE {table_name}").fetchdf()
-        df = pd.read_csv(csv_file, dtype=str, delimiter=";")
+        # Lecture résiliente du CSV
+        try:
+            if csv_file.name == "sa_sivss.csv":
+                df = self.read_csv_with_custom_delimiter(csv_file)
+            else:
+                df = self.read_csv_resilient(csv_file)
+        except Exception as e:
+            logging.error(f"❌ Lecture échouée pour {csv_file.name} → {e}")
+            return
 
         table_columns = schema_df["column_name"].tolist()
         csv_columns = df.columns.tolist()

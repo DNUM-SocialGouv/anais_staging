@@ -8,7 +8,7 @@ WITH missions AS (
     FROM {{ ref('staging__sa_siicea_missions') }}
     WHERE 
         -- Filtre sur la période des missions
-        "Date réelle ""Visite""" BETWEEN '2022-01-01' AND '2024-12-31'
+        "Date réelle__Visite_" BETWEEN '2022-01-01' AND '2024-12-31'
         -- Filtre sur le statut réalisé
         AND "Statut de la mission" IN ('Clôturé', 'Maintenu')
         -- Filtre sur le secteur d’intervention
