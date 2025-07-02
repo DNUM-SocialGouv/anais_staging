@@ -11,15 +11,15 @@ WITH sa_insee_total AS (
     WHERE adec = {{ get_previous_year(3) }} OR adec = {{ get_previous_year(2) }}
     UNION
     SELECT 
-        adec AS adec,
-        mdec AS mdec,
-        jdec AS jdec,
-        depdec AS depdec,
-        comdec AS comdec,
-        anais AS anais,
-        mnais AS mnais,
-        jnais AS jnais,
-        sexe AS sexe,
+        adec,
+        mdec,
+        jdec,
+        depdec,
+        comdec,
+        anais,
+        mnais,
+        jnais,
+        sexe,
         '' AS comdom,
         '' AS lieudec2,
         --attention variables Ã  modifier selon la date de MAJ
