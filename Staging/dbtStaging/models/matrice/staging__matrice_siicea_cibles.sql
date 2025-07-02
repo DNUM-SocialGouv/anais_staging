@@ -5,13 +5,13 @@
 WITH cibles AS (
     SELECT 
         c.*,
-        m.date_reelle_visite,
-        m.statut_de_la_mission,
-        m.secteur_d_intervention,
-        m.type_de_mission
+        m."Date réelle ""Visite""" AS date_reelle_visite,
+        m."Statut de la mission",
+        m."Secteur dintervention",
+        m."Type de mission"
     FROM {{ ref('staging__sa_siicea_cibles') }} c
     LEFT JOIN {{ ref('staging__sa_siicea_missions') }} m
-        ON c.FINESS = m.finess_geographique
+        ON c.FINESS = m."Code FINESS"
 ),
 
 filtered_cibles AS (
@@ -21,11 +21,11 @@ filtered_cibles AS (
         -- Filtre sur la période (missions entre 2022 et 2024)
         date_reelle_visite BETWEEN '2022-01-01' AND '2024-12-31'
         -- Filtre sur les statuts de mission valides
-        AND statut_de_la_mission IN ('Clôturé', 'Maintenu')
+        AND "Statut de la mission" IN ('Clôturé', 'Maintenu')
         -- Filtre sur le secteur d’intervention
-        AND secteur_d_intervention IN ('Médico-social', 'Sanitaire')
+        AND "Secteur dintervention" IN ('Médico-social', 'Sanitaire')
         -- Exclusion des types de mission non pertinents
-        AND type_de_mission NOT IN (
+        AND "Type de mission" NOT IN (
             'Audit', 'Audit franco-wallon', 
             'Evaluation', 'Visites de conformité', 
             'Enquête administrative'

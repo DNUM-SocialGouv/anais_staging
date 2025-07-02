@@ -131,51 +131,14 @@ class PostgreSQLLoader:
 
                 with self.engine.begin() as connection:
                     connection.execute(text(f'SET search_path TO {self.schema}'))
-
-                    # Vérifie si la table existe
-                    table_exists = connection.execute(text(f"""
-                        SELECT EXISTS (
-                            SELECT FROM information_schema.tables 
-                            WHERE table_schema = :schema 
-                            AND table_name = :table
-                        )
-                    """), {"schema": self.schema, "table": table_name}).scalar()
-
-                    if not table_exists:
-                        logging.info(f"🔧 Table '{table_name}' absente → création avec if_exists='replace'")
-                        df.to_sql(
-                            table_name,
-                            connection,
-                            if_exists="replace",
-                            index=False,
-                            method='multi',
-                            chunksize=1000
-                        )
-                    else:
-                        logging.info(f"♻️ Table '{table_name}' existante → suppression + insertion")
-                        
-                        try:
-                            connection.execute(text(f"DELETE FROM {table_name}"))
-                        except Exception as e:
-                            logging.warning(f"⚠️ Erreur lors du DELETE de {table_name} : {e} → remplacement total")
-                            df.to_sql(
-                                table_name,
-                                connection,
-                                if_exists="replace",
-                                index=False,
-                                method='multi',
-                                chunksize=1000
-                            )
-                        else:
-                            df.to_sql(
-                                table_name,
-                                connection,
-                                if_exists="append",
-                                index=False,
-                                method='multi',
-                                chunksize=1000
-                            )
-
+                    df.to_sql(
+                        table_name,
+                        connection,
+                        if_exists="replace",
+                        index=False,
+                        method='multi',
+                        chunksize=1000
+                    )
                 logging.info(f"✅ Table '{table_name}' remplacée avec succès ({file})")
 
             except Exception as e:

@@ -10,13 +10,13 @@ WITH finess AS (
         categ_lib,
         etat
     FROM {{ ref('staging__sa_t_finess') }}
-    WHERE categ_code::int IN (
+    WHERE categ_code IN (
         448, 402, 396, 395, 370, 437, 255, 246, 198, 249, 238, 390, 188, 377, 
         192, 183, 186, 195, 194, 196, 379, 445, 221, 190, 189, 182
     )
 ), geo AS (
     SELECT 
-        c.com AS commune_code,
+        c.com AS commune_code,  -- Adapte ici si le nom est différent
         c.libelle AS commune_libelle,
         d.dep AS departement_code,
         d.libelle AS departement_libelle,

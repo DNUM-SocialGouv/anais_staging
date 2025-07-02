@@ -4,9 +4,9 @@
 
 WITH missions AS (
     SELECT 
-        identifiant_de_la_mission AS identifiant_mission,
-        finess_geographique AS code_finess,
-        date_reelle_visite AS date_reelle_visite
+        "Identifiant de la mission" AS identifiant_mission,
+        "Code FINESS" AS code_finess,
+        "Date réelle ""Visite""" AS date_reelle_visite
     FROM {{ ref('staging__sa_siicea_missions') }}
 )
 

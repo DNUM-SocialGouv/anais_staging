@@ -2,7 +2,6 @@ import argparse
 from pipeline.duckdb_pipeline import DuckDBPipeline
 from pipeline.sftp_sync import SFTPSync
 from pipeline.postgres_loader import PostgreSQLLoader
-from standardize_data import standardize_all_csv_columns
 import subprocess
 import logging
 import os
@@ -36,7 +35,6 @@ def main(env: str):
     if env == "anais":
         sftp = SFTPSync()
         sftp.download_all()
-        standardize_all_csv_columns("input/")
         
         pg_loader = PostgreSQLLoader()
         pg_loader.execute_create_sql_files()
@@ -44,14 +42,13 @@ def main(env: str):
         # run_dbt()
 
         # Export des tables listées dans .env
-        # pg_loader.export_tables_from_env()
+        pg_loader.export_tables_from_env()
         
     if env == "local":
-        standardize_all_csv_columns("input/")
         loader = DuckDBPipeline()
         loader.run()
         loader.close()
-        # run_dbt()
+        run_dbt()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Exécution du pipeline")
