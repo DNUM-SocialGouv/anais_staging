@@ -65,7 +65,7 @@ WITH finess_categories AS (
         SELECT 
             CAST(com AS VARCHAR) AS com,
             libelle,
-            MAX(SUBSTR(com, 1, 2)) AS dep,
+            MAX(SUBSTR(com, 1, 2)) AS dep
         FROM {{ ref('staging__v_commune') }} communes
         WHERE 1=1
         GROUP BY
@@ -248,9 +248,9 @@ WITH finess_categories AS (
         FINESS_LB,
         DECES_ANNEE,
         SUM(EDC_NB) AS EDC_NB,
-        SUM(DECES_NB) AS DECES_NB,
+        SUM(DECES_NB) AS DECES_NB
     FROM agg_all
-    WHERE DECES_ANNEE = 2023
+    WHERE CAST(DECES_ANNEE AS INTEGER) = 2023
     GROUP BY
         FINESS_CD,
         FINESS_LB,
@@ -285,13 +285,13 @@ SELECT
     {{ iif_replacement(
         "EDC_NB IS NULL AND DECES_NB IS NOT NULL",
             "'0%'",
-            iif_replacement("(ROUND((CAST((CAST(EDC_NB AS FLOAT) / CAST(DECES_NB AS FLOAT)) AS FLOAT) * 100), 2)) < 50",
+            iif_replacement("ROUND(((EDC_NB::numeric / DECES_NB::numeric) * 100), 2) < 50",
                 "'<50%'",
-                iif_replacement("(ROUND((CAST((CAST(EDC_NB AS FLOAT) / CAST(DECES_NB AS FLOAT)) AS FLOAT) * 100), 2)) >= 50 AND (ROUND((CAST((CAST(EDC_NB AS FLOAT) / CAST(DECES_NB AS FLOAT)) AS FLOAT) * 100), 2)) < 70",
+                iif_replacement("ROUND(((EDC_NB::numeric / DECES_NB::numeric) * 100), 2) >= 50 AND ROUND(((EDC_NB::numeric / DECES_NB::numeric) * 100), 2) < 70",
                     "'>=50% et <70%'",
-                    iif_replacement("(ROUND((CAST((CAST(EDC_NB AS FLOAT) / CAST(DECES_NB AS FLOAT)) AS FLOAT) * 100), 2)) >= 70 AND (ROUND((CAST((CAST(EDC_NB AS FLOAT) / CAST(DECES_NB AS FLOAT)) AS FLOAT) * 100), 2)) < 90",
+                    iif_replacement("ROUND(((EDC_NB::numeric / DECES_NB::numeric) * 100), 2) >= 70 AND ROUND(((EDC_NB::numeric / DECES_NB::numeric) * 100), 2) < 90",
                         "'>=70% et <90%'",
-                        iif_replacement("(ROUND((CAST((CAST(EDC_NB AS FLOAT) / CAST(DECES_NB AS FLOAT)) AS FLOAT) * 100), 2)) >= 90 AND (ROUND((CAST((CAST(EDC_NB AS FLOAT) / CAST(DECES_NB AS FLOAT)) AS FLOAT) * 100), 2)) < 100",
+                        iif_replacement("ROUND(((EDC_NB::numeric / DECES_NB::numeric) * 100), 2) >= 90 AND ROUND(((EDC_NB::numeric / DECES_NB::numeric) * 100), 2) < 100",
                             "'>=90%'",
                             "'N.A.'"		
                     )

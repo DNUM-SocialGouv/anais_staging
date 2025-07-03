@@ -18,23 +18,18 @@ dbt_logger.addHandler(file_handler)
 dbt_logger.setLevel(logging.INFO)
 
 
-def run_dbt(project_dir: str = "./Staging/dbtStaging", profiles_dir: str = "."):
+def run_dbt(profile: str, project_dir: str = "./Staging/dbtStaging", profiles_dir: str = "."):
     try:
         project_path = Path(project_dir).resolve()
         profiles_path = Path(profiles_dir).resolve()
-        dbt_logger.info(project_path)
-        dbt_logger.info(profiles_path)
-
 
         result = subprocess.run(
             ["dbt",
             "run",
-            "--project-dir", project_dir,
-            "--profiles-dir", profiles_path,
-            "--select", "base.staging__v_comer",
-            "--debug"
+            "--project-dir", str(project_path),
+            "--profiles-dir", str(profiles_path),
+            "--profile", profile
             ],
-            # cwd=project_dir,
             capture_output=True,
             text=True,
             check=True
@@ -44,18 +39,17 @@ def run_dbt(project_dir: str = "./Staging/dbtStaging", profiles_dir: str = "."):
 
     except subprocess.CalledProcessError as e:
         dbt_logger.error("Erreur lors du dbt run :")
-        dbt_logger.error(e.stderr)
+        dbt_logger.error(e.stdout)
 
 def main(env: str):
-    sftp = SFTPSync()
-    sftp.download_all()
-    standardize_all_csv_columns("input/")
     if env == "anais":
-        
+        sftp = SFTPSync()
+        sftp.download_all()
+        standardize_all_csv_columns("input/")
         pg_loader = PostgreSQLLoader()
         pg_loader.execute_create_sql_files()
         pg_loader.load_all_csv_from_input()
-        # run_dbt()
+        run_dbt()
 
         # Export des tables listées dans .env
         pg_loader.export_tables_from_env()
@@ -64,7 +58,7 @@ def main(env: str):
         
         loader = DuckDBPipeline()
         loader.run()
-        run_dbt()
+        run_dbt(profile='dbtStaging')
         loader.export_to_csv()
         loader.close()
 

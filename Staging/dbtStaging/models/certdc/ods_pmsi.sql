@@ -9,7 +9,7 @@ WITH mco_ssr_had_psy AS (
         finess,
         annee,
         mois,
-        SUM(deces_nb) AS deces_nb
+        SUM(CAST(deces_nb AS INTEGER)) AS deces_nb
     FROM (
         SELECT
             'mco_ssr_had_psy' AS source,
@@ -29,12 +29,12 @@ WITH mco_ssr_had_psy AS (
                 WHEN mois LIKE 'Nov%' THEN 11
                 WHEN mois LIKE 'Déc%' THEN 12
             END AS mois,
-            (
-                somme_de_mco_hors_seances
-                +somme_de_mco_seances
-                +somme_de_ssr
-                +somme_de_had
-                +somme_de_psy)
+            CAST((
+               CAST(somme_de_mco_hors_seances AS INTEGER)
+                +CAST(somme_de_mco_seances AS INTEGER)
+                +CAST(somme_de_ssr AS INTEGER)
+                +CAST(somme_de_had AS INTEGER)
+                +CAST(somme_de_psy AS INTEGER)) AS INTEGER)
             AS deces_nb
         FROM {{ ref('staging__sa_pmsi') }}
         WHERE 1 = 1
@@ -56,12 +56,12 @@ WITH mco_ssr_had_psy AS (
         finess,
         annee,
         mois,
-        SUM(deces_nb) AS deces_nb
+        SUM(CAST(deces_nb AS INTEGER)) AS deces_nb
     FROM (
         SELECT 
             'rpu' AS source,
             SUBSTR(finess, 1, 9) AS finess,
-	        CAST(SUBSTR(mois, (LENGTH(mois)-3), 4) AS INTEGER) AS annee,
+	        CAST(SUBSTR(mois, (LENGTH(mois)-3), 4) AS VARCHAR) AS annee,
             CASE 
                 WHEN mois LIKE 'Jan%' THEN 1
                 WHEN mois LIKE 'Fév%' THEN 2
@@ -76,7 +76,7 @@ WITH mco_ssr_had_psy AS (
                 WHEN mois LIKE 'Nov%' THEN 11
                 WHEN mois LIKE 'Déc%' THEN 12
             END AS mois,
-            total
+            CAST(total AS INTEGER)
             AS deces_nb
         FROM {{ ref('staging__sa_rpu') }}
         WHERE 1 = 1
@@ -97,14 +97,14 @@ WITH mco_ssr_had_psy AS (
         finess,
         annee,
         mois,
-        SUM(deces_nb) AS deces_nb
+        SUM(CAST(deces_nb AS INTEGER)) AS deces_nb
     FROM (
         SELECT 
             'esms' AS source,
             SUBSTR(finess, 1, 9) AS finess,
             annee AS annee,
-            '' AS mois,
-            total AS deces_nb
+            0 AS mois,
+            CAST(total AS INTEGER) AS deces_nb
         FROM {{ ref('staging__sa_esms') }}
         ) sa_esms_tmp
     GROUP BY
@@ -123,14 +123,14 @@ WITH mco_ssr_had_psy AS (
         finess,
         annee,
         mois,
-        SUM(deces_nb) AS deces_nb
+        SUM(CAST(deces_nb AS INTEGER)) AS deces_nb
     FROM (
         SELECT 
             'usld' AS source,
             SUBSTR(finess, 1, 9) AS finess,
             annee AS annee,
-            '' AS mois,
-            total AS deces_nb
+            0 AS mois,
+            CAST(total AS INTEGER) AS deces_nb
         FROM {{ ref('staging__sa_usld') }}
         WHERE 1 = 1
         AND finess != 'Non précisée'

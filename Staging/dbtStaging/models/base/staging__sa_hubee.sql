@@ -2,4 +2,4 @@
     materialized='view'
 ) }}
 
-SELECT * FROM {{ source('main', 'sa_hubee') }}
+SELECT * FROM {{ source(get_source_schema(), 'sa_hubee') }}

@@ -7,7 +7,7 @@ WITH insern AS (
 )
 
 SELECT 
-    ROW_NUMBER() OVER () AS index,
+    CAST(ROW_NUMBER() OVER () AS VARCHAR) AS index,
     CAST(Annee || '-' || LPAD(mois::VARCHAR, 2, '0') || '-' || LPAD(jour::VARCHAR, 2, '0') AS DATE) AS date_deces,
     annee,
     mois,

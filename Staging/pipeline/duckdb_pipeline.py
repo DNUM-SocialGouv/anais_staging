@@ -6,6 +6,7 @@ import logging
 import csv
 from io import StringIO
 from pipeline.loadfiles import load_colnames_YAML
+from datetime import date
 
 
 # === Configuration du logger ===
@@ -240,7 +241,9 @@ class DuckDBPipeline:
             if not self.check_table(table_name, print_table=False):
                 return
 
-            file = os.path.join(self.csv_folder_output, csv_name)
+            today = date.strftime(date.today(), "%Y_%m_%d") 
+            file_name = f'sa_{csv_name}_{today}.csv'
+            file = os.path.join(self.csv_folder_output, file_name)
 
             try:
                 df = self.conn.execute(f"SELECT * FROM {table_name}").df()

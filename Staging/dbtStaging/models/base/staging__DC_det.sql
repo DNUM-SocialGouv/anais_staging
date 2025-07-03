@@ -2,4 +2,4 @@
     materialized='view'
 ) }}
 
-SELECT * FROM {{ source('main', 'DC_det') }}
+SELECT * FROM {{ source(get_source_schema(), 'DC_det') }}

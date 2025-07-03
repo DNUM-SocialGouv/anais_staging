@@ -134,9 +134,9 @@ SELECT
     {{ iif_replacement("brut_insee_deces.DEP_LB IS NOT NULL", "brut_insee_deces.DEP_LB", "brut_insern_edc.DEP_LB") }} AS DEP_LB,
     {{ iif_replacement("brut_insee_deces.COM_CD IS NOT NULL", "brut_insee_deces.COM_CD", "brut_insern_edc.COM_CD") }} AS COM_CD,
     {{ iif_replacement("brut_insee_deces.COM_LB IS NOT NULL", "brut_insee_deces.COM_LB", "brut_insern_edc.COM_LB") }} AS COM_LB,
-    {{ iif_replacement("brut_insee_deces.DECES_ANNEE IS NOT NULL", "brut_insee_deces.DECES_ANNEE", "brut_insern_edc.DECES_ANNEE") }} AS DECES_ANNEE,
-    {{ iif_replacement("brut_insee_deces.DECES_MOIS IS NOT NULL", "brut_insee_deces.DECES_MOIS", "brut_insern_edc.DECES_MOIS") }} AS DECES_MOIS,
-    {{ iif_replacement("brut_insee_deces.DECES_JOUR IS NOT NULL", "brut_insee_deces.DECES_JOUR", "brut_insern_edc.DECES_JOUR") }} AS DECES_JOUR,
+    {{ iif_replacement("CAST(brut_insee_deces.DECES_ANNEE AS INTEGER) IS NOT NULL", "CAST(brut_insee_deces.DECES_ANNEE AS INTEGER)", "CAST(brut_insee_deces.DECES_ANNEE AS INTEGER)") }} AS DECES_ANNEE,
+    {{ iif_replacement("CAST(brut_insee_deces.DECES_MOIS AS INTEGER) IS NOT NULL", "CAST(brut_insee_deces.DECES_MOIS AS INTEGER)", "CAST(brut_insee_deces.DECES_MOIS AS INTEGER)") }} AS DECES_MOIS,
+    {{ iif_replacement("CAST(brut_insee_deces.DECES_JOUR AS INTEGER) IS NOT NULL", "CAST(brut_insee_deces.DECES_JOUR AS INTEGER)", "CAST(brut_insee_deces.DECES_JOUR AS INTEGER)") }} AS DECES_JOUR,
     brut_insern_edc.DECES_NB AS EDC_NB,
     brut_insee_deces.DECES_NB AS DECES_TOT_NB
 FROM base

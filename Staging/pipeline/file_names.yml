@@ -90,12 +90,12 @@ tables:
 
 views:
   file_to_export:
-    ods_insee: ods_insee.csv
-    ods_insern_edc: ods_insern_edc.csv
-    ods_insern_insee_tx_edc: ods_insern_insee_tx_edc.csv
-    ods_insern: ods_insern.csv
-    ods_pmsi: ods_pmsi.csv
-    ods_insern_pmsi_es: ods_insern_pmsi_es.csv
+    ods_insee: ods_insee
+    ods_insern_edc: ods_insern_edc
+    ods_insern_insee_tx_edc: ods_insern_insee_tx_edc
+    ods_insern: ods_insern
+    ods_pmsi: ods_pmsi
+    ods_insern_pmsi_es: ods_insern_pmsi_es
   base:
     sa_insern.csv: /SCN_BDD/INSERN
     sa_siicea_cibles.csv: /SCN_BDD/SIICEA

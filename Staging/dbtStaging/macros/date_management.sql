@@ -34,14 +34,14 @@
 
     (
         {% for ym in months_back %}
-            ({{ date_column_year }} = {{ ym[0] }} AND {{ date_column_month }} = {{ ym[1] }})
+            ({{ date_column_year }}::INT = {{ ym[0] }} AND {{ date_column_month }}::INT = {{ ym[1] }})
             {% if not loop.last %} OR {% endif %}
         {% endfor %}
     )
 {% endmacro %}
 
 
-{% macro where_remaining_last_year_months(reference_date=None, date_column_year='Annee', date_column_month='MOIS') %}
+{% macro where_remaining_last_year_months(reference_date=None, date_column_year='annee', date_column_month='mois') %}
   {% set ref_date = modules.datetime.datetime.strptime(reference_date, '%Y-%m-%d') %}
 
     {% set year = ref_date.year %}
@@ -64,8 +64,8 @@
 
     {# Ligne SQL #}
     (
-        {{ date_column_year }} = {{ sliding_start_year }}
-        AND {{ date_column_month }} IN (
+        {{ date_column_year }}::INT = {{ sliding_start_year }}
+        AND {{ date_column_month }}::INT IN (
             {{ months_to_include | join(', ') }}
         )
     )
@@ -84,7 +84,7 @@
     {% set year = year - 1 %}
   {% endif %}
   
-  {% set condition = year_col ~ ' = ' ~ year ~ ' AND ' ~ month_col ~ ' = ' ~ month %}
+  {% set condition = year_col ~ '::INT = ' ~ year ~ ' AND ' ~ month_col ~ '::INT = ' ~ month %}
   
   {{ return(condition) }}
 {% endmacro %}
@@ -94,9 +94,9 @@
     {% set ref_date = modules.datetime.datetime.strptime(reference_date, '%Y-%m-%d') %}
     {% set month = ref_date.month %}
     {% set year = ref_date.year %}
-    {% set condition = '(' ~ year_col ~ ' = ' ~ (year - 1) | string ~
-                        ' OR (' ~ year_col ~ ' = ' ~ year | string ~
-                        ' AND ' ~ month_col ~ ' < ' ~ month | string ~ 
-                        ' AND ' ~ month_col ~ ' !=7))' %}
+    {% set condition = '(' ~ year_col ~ '::INT = ' ~ (year - 1) | string ~
+                        ' OR (' ~ year_col ~ '::INT = ' ~ year | string ~
+                        ' AND ' ~ month_col ~ '::INT < ' ~ month | string ~ 
+                        ' AND ' ~ month_col ~ '::INT !=7))' %}
     {{ return(condition) }}
 {% endmacro %}
