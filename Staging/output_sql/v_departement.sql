@@ -1,9 +1,9 @@
 CREATE TABLE IF NOT EXISTS v_departement (
-    dep VARCHAR(50),
+    dep VARCHAR,
     reg INTEGER,
-    cheflieu VARCHAR(50),
+    cheflieu VARCHAR,
     tncc INTEGER,
-    ncc VARCHAR(50),
-    nccenr VARCHAR(50),
-    libelle VARCHAR(50)
+    ncc VARCHAR,
+    nccenr VARCHAR,
+    libelle VARCHAR
 )

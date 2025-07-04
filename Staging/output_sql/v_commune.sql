@@ -6,9 +6,9 @@ CREATE TABLE IF NOT EXISTS v_commune (
     ctcd TEXT,
     arr TEXT,
     tncc TEXT,
-    ncc VARCHAR(50),
-    nccenr VARCHAR(50),
-    libelle VARCHAR(50),
+    ncc VARCHAR,
+    nccenr VARCHAR,
+    libelle VARCHAR,
     can TEXT,
     comparent TEXT
 )

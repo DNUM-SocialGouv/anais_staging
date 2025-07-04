@@ -35,7 +35,6 @@ def load_YAML(file_name: str, config_file_dir: str = None) -> dict:
     else:
         current_dir = Path(__file__).resolve().parent
         path = current_dir.parent / "pipeline" / file_name
-        print(path)
     try:
         with open(path, 'r') as f:
             file = yaml.safe_load(f)
@@ -53,7 +52,7 @@ def load_YAML(file_name: str, config_file_dir: str = None) -> dict:
         raise
 
 
-def load_colnames_YAML(file_name: str, table: str, col_list: str, config_file_dir: str = None) -> dict:
+def load_colnames_YAML(file_name: str, table: str, config_file_dir: str = None) -> dict:
     """
     Charge le fichier de configuration et récupère la liste des colonnes d'une table donnée.
 
@@ -63,8 +62,6 @@ def load_colnames_YAML(file_name: str, table: str, col_list: str, config_file_di
         Nom du fichier de configuration YAML.
     table : str
         Nom de la table dont on veut récupérer les colonnes.
-    col_list : str
-        Clé correspondant à la liste des colonnes dans la configuration.
     config_file_dir : str
         Chemin du fichier, by default None.
 
@@ -87,10 +84,8 @@ def load_colnames_YAML(file_name: str, table: str, col_list: str, config_file_di
 
         if table not in metadata:
             raise KeyError(f"La table '{table}' n'existe pas dans le fichier {file_name}.")
-        if col_list not in metadata[table]:
-            raise KeyError(f"La clé '{col_list}' n'existe pas dans la table '{table}'.")
         
-        return metadata[table][col_list]
+        return metadata[table]
     except KeyError as e:
         logging.error(e)
         raise

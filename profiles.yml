@@ -1,12 +1,37 @@
 # DNUM - Staging (layer de base pour les autres projets métiers)
 dbtStaging:
-  target: dev
+  target: local
   outputs:
-    dev:
+    anais:
+      type: postgres
+      host: 10.89.136.17
+      user: staging_admin
+      password: _m-!2da82ZK6Dt
+      port: 5432
+      schema: public
+      dbname: staging
+    local:
       type: duckdb
-      path: ../data/duckdb_database.duckdb
+      path: data/duckdb_database.duckdb
       schema: main
 
+dbtCertDC:
+  target: local
+  outputs:
+    anais:
+      type: postgres
+      host: 10.89.136.17
+      user: certelec_dc_admin
+      password: UQ=#7I)fp$_C8u
+      port: 5432
+      schema: public
+      dbname: certelec_dc
+    local:
+      type: duckdb
+      path: data/duckdb_database.duckdb
+      schema: main
+  
+      
 
 # DNUM - Layer InspectionControle (dépend de la base de Staging)
 dbtInspectionControle:

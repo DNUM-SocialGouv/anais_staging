@@ -4,20 +4,20 @@ import os
 from pathlib import Path
 import logging
 import csv
-from io import StringIO
-from pipeline.loadfiles import load_colnames_YAML
 from datetime import date
-
+from pipeline.csv_management import ReadCsvWithDelimiter, check_missing_columns, convert_columns_type
+from pipeline.constantes import TYPE_MAPPING
 
 # === Configuration du logger ===
 os.makedirs("logs", exist_ok=True)
+for handler in logging.root.handlers[:]:
+    logging.root.removeHandler(handler)
 logging.basicConfig(
     filename="logs/duckdb_pipeline.log",
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
-VIEWS_TO_EXPORT = load_colnames_YAML("file_names.yml", "views", "file_to_export")
 
 class DuckDBPipeline:
     def __init__(self, db_path='data/duckdb_database.duckdb', sql_folder="Staging/output_sql/", csv_folder_input="input/", csv_folder_output="output/"):
@@ -144,59 +144,14 @@ class DuckDBPipeline:
             return
 
         schema_df = self.conn.execute(f"DESCRIBE {table_name}").fetchdf()
-        # Lecture résiliente du CSV
-        try:
-            if csv_file.name == "sa_sivss.csv":
-                df = self.read_csv_with_custom_delimiter(csv_file)
-            else:
-                df = self.read_csv_resilient(csv_file)
-        except Exception as e:
-            logging.error(f"❌ Lecture échouée pour {csv_file.name} → {e}")
-            return
+        
+        # Chargement des csv et datamanagement
+        delimiter = ReadCsvWithDelimiter(csv_file)
+        df = delimiter.read_csv_files()
+        check_missing_columns(csv_file.name, df, schema_df)
+        df = convert_columns_type(TYPE_MAPPING, df, schema_df)
 
-        table_columns = schema_df["column_name"].tolist()
-        csv_columns = df.columns.tolist()
-
-        missing_columns = set(table_columns) - set(csv_columns)
-        extra_columns = set(csv_columns) - set(table_columns)
-
-        if missing_columns:
-            logging.warning(f"Colonnes manquantes dans {csv_file.name} : {missing_columns}")
-            for col in missing_columns:
-                df[col] = None
-
-        if extra_columns:
-            logging.warning(f"Colonnes en trop dans {csv_file.name} : {extra_columns}")
-            df = df[table_columns]
-
-        type_mapping = {
-            "INTEGER": "int",
-            "BIGINT": "int",
-            "FLOAT": "float",
-            "DOUBLE": "float",
-            "REAL": "float",
-            "BOOLEAN": "bool",
-            "DATE": "datetime64",
-            "TIMESTAMP": "datetime64",
-        }
-
-        for _, row in schema_df.iterrows():
-            col_name = row["column_name"]
-            col_type = row["column_type"].split("(")[0]
-
-            if col_name in df.columns and col_type in type_mapping:
-                try:
-                    if type_mapping[col_type] in ["int", "float"]:
-                        df[col_name] = df[col_name].replace({None: 0, "": 0, pd.NA: 0, "nan": 0}).astype(type_mapping[col_type])
-                    elif type_mapping[col_type] == "bool":
-                        df[col_name] = df[col_name].replace({None: False, "": False, pd.NA: False}).astype(bool)
-                    elif type_mapping[col_type] == "datetime64":
-                        df[col_name] = pd.to_datetime(df[col_name], errors="coerce")
-                    else:
-                        df[col_name] = df[col_name].astype(type_mapping[col_type])
-                except ValueError as e:
-                    logging.warning(f"Erreur de conversion de {col_name} en {col_type}: {e}, valeurs laissées en str.")
-
+        # Vérification de la présence de la table
         row_count = self.conn.execute(f"SELECT COUNT(*) FROM {table_name}").fetchone()[0]
 
         if row_count > 0:
@@ -234,8 +189,9 @@ class DuckDBPipeline:
         except Exception as e:
             logging.error(f"Erreur lors de la lecture de la table '{table_name}': {e}")
 
-    def export_to_csv(self, views_to_export=VIEWS_TO_EXPORT):
+    def export_to_csv(self, views_to_export):
         """ Export une table de DuckDB vers un csv"""
+
         for table_name, csv_name in views_to_export.items():
             # Vérification de l'existence de la table
             if not self.check_table(table_name, print_table=False):

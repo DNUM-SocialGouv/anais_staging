@@ -8,25 +8,30 @@ from dotenv import load_dotenv
 from pathlib import Path
 from io import StringIO
 from datetime import date
-from pipeline.loadfiles import load_colnames_YAML
+from pipeline.csv_management import ReadCsvWithDelimiter, check_missing_columns, convert_columns_type
+from pipeline.constantes import TYPE_MAPPING
+import re
+from sqlalchemy import inspect
 
 # Chargement des variables d’environnement
 load_dotenv()
 
 # Configuration du logger PostgreSQL
 os.makedirs("logs", exist_ok=True)
+for handler in logging.root.handlers[:]:
+    logging.root.removeHandler(handler)
 logging.basicConfig(
     filename="logs/postgres_loader.log",
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
-VIEWS_TO_EXPORT = load_colnames_YAML("file_names.yml", "views", "file_to_export")
 
 class PostgreSQLLoader:
-    def __init__(self, input_folder="input/", export_folder="output/"):
-        self.input_folder = input_folder
-        self.export_folder = export_folder
+    def __init__(self, sql_folder="Staging/output_sql/", csv_folder_input="input/", csv_folder_output="output/"):
+        self.sql_folder = sql_folder
+        self.csv_folder_input = csv_folder_input
+        self.csv_folder_output = csv_folder_output
         self.host = os.getenv("PG_HOST")
         self.port = os.getenv("PG_PORT")
         self.user = os.getenv("PG_USER")
@@ -34,7 +39,7 @@ class PostgreSQLLoader:
         self.database = os.getenv("PG_DATABASE")
         self.schema = os.getenv("PG_SCHEMA", "public")
         self.engine = self.init_engine()
-        os.makedirs(export_folder, exist_ok=True)
+        os.makedirs(csv_folder_output, exist_ok=True)
 
     def init_engine(self):
         try:
@@ -46,17 +51,151 @@ class PostgreSQLLoader:
             logging.error(f"Erreur de connexion PostgreSQL : {e}")
             raise
 
-    def execute_create_sql_files(self, sql_folder="output_sql_postgres/"):
-        logging.info(f"Exécution des scripts SQL dans {sql_folder}")
-        for sql_file in Path(sql_folder).glob("*.sql"):
-            try:
-                with open(sql_file, "r", encoding="utf-8") as f:
-                    sql = f.read()
-                with self.engine.begin() as connection:
-                    connection.execute(text(sql))
-                logging.info(f"✅ Script exécuté avec succès : {sql_file.name}")
-            except Exception as e:
-                logging.error(f"❌ Erreur d'exécution {sql_file.name} : {e}")
+    def find_table_name_in_sql(self, sql_file: str)-> str:
+        """
+        Cherche le nom de la table dans un fichier sql (seulement un fichier avec CREATE TABLE).
+
+        Parameters
+        ----------
+        sql_file : str
+            Fichier sql de CREATE TABLE
+        
+        Returns
+        -------
+        str
+            Nom de la table.        
+        """
+        match = re.compile(
+            r"CREATE\s+TABLE\s+(IF\s+NOT\s+EXISTS\s+)?(?P<name>(\"[^\"]+\"|\w+))",
+            re.IGNORECASE
+        ).search(sql_file)
+
+        if match:
+            table_name = match.group("name").strip('"')
+            return table_name
+        else:
+            return None
+
+    def execute_drop_table(self, conn, table_name: str):
+        """
+        Supprime une table et les vues qui lui sont liées.
+
+        Parameters
+        ----------
+        conn : sqlalchemy.engine.base.Transaction
+            Connexion à la base de données. 
+        table_name : str
+            Nom de la table à supprimer.   
+        """
+        views = conn.execute(text("""
+            SELECT DISTINCT dependent_ns.nspname, dependent_view.relname
+            FROM pg_depend
+            JOIN pg_rewrite ON pg_depend.objid = pg_rewrite.oid
+            JOIN pg_class AS dependent_view ON pg_rewrite.ev_class = dependent_view.oid
+            JOIN pg_class AS base_table ON pg_depend.refobjid = base_table.oid
+            JOIN pg_namespace AS dependent_ns ON dependent_ns.oid = dependent_view.relnamespace
+            WHERE base_table.relname = :table
+        """), {"table": table_name}).fetchall()
+
+        for schema, view in views:
+            # Suppression des vues liées à la table
+            logging.info(f"🗑 Vue '{view}' existante → suppression totale (DROP VIEW)")
+            conn.execute(text(f'DROP VIEW IF EXISTS "{schema}"."{view}" CASCADE'))
+
+        # Suppression de la table
+        logging.info(f"🗑 Table '{table_name}' existante → suppression totale (DROP TABLE)")
+        conn.execute(text(f"DROP TABLE IF EXISTS {table_name} CASCADE"))
+
+    def verif_exist_table(self, conn, table_name: str) -> bool:
+        """
+        Vérifie l'existence de la table dans la base de données.
+
+        Parameters
+        ----------
+        conn : sqlalchemy.engine.base.Transaction
+            Connexion à la base de données. 
+        table_name : str
+            Nom de la table à supprimer.
+
+        Returns
+        -------
+        bool
+            True si la table existe, False sinon 
+        """
+        # Vérifie si la table existe
+        table_exists = conn.execute(text("""
+            SELECT EXISTS (
+                SELECT FROM information_schema.tables 
+                WHERE table_schema = :schema
+                AND table_name = :table
+            )
+        """), {"schema": self.schema, "table": table_name}).scalar()
+
+        if table_exists:
+            return True
+        return False
+
+    def execute_sql_file(self, sql_file: Path) -> None:
+        sql = self._read_sql_file(sql_file)
+        table_name = self.find_table_name_in_sql(sql)
+
+        if not table_name:
+            logging.info(f"❌ Nom de table introuvable dans le fichier SQL : '{sql_file.name}'")
+            return
+
+        with self.engine.begin() as conn:
+            self._recreate_table(conn, table_name, sql)
+            logging.info(f"✅ Table créée avec succès : {sql_file.name}")
+
+
+    def _read_sql_file(self, sql_file: Path) -> str:
+        """
+        Lit un fichier sql.
+
+        Parameters
+        ----------
+        sql_file : Path
+            Fichier sql à lire.
+        """
+        with open(sql_file, "r", encoding="utf-8") as f:
+            return f.read()
+
+
+    def _recreate_table(self, conn, table_name: str, sql: str) -> None:
+        """
+        Créer une table à partir d'un fichier sql CREATE TABLE.
+        Supprime la table en amont si elle existe déjà.
+
+        Parameters
+        ----------
+        conn : sqlalchemy.engine.base.Transaction
+            Connexion à la base de données. 
+        table_name : str
+            Nom de la table à supprimer.
+        sql : str
+            Contenu d'un fichier sql CREATE TABLE
+        """
+        if self.verif_exist_table(conn, table_name):
+            self.execute_drop_table(conn, table_name)
+        conn.execute(text(sql))
+
+    # def execute_create_sql_files(self, sql_folder="./Staging/output_sql/"):
+    #     """
+    #     Parcours l'ensemble des fichiers sql CREATE TABLE d'un répertoire.
+    #     Supprime les tables si elles existent, puis exécute le fichier pour créer ces tables.
+
+    #     Parameters
+    #     ----------
+    #     sql_folder : str
+    #         Répertoire des fichiers sql CREATE TABLE à parcourir.
+    #     """
+    #     logging.info(f"Exécution des scripts SQL dans {sql_folder}")
+    #     for sql_file in Path(sql_folder).glob("*.sql"):
+    #         try:
+    #             self.create_table_from_sql_file(sql_file)
+
+    #         except Exception as e:
+    #             logging.error(f"❌ Erreur d'exécution {sql_file.name} : {e}")
 
     def detect_delimiter(self, filepath, sample_size=4096):
         try:
@@ -114,89 +253,54 @@ class PostgreSQLLoader:
         except Exception as e:
             logging.error(f"❌ Erreur lors de la lecture de {filepath} avec délimiteur '¤' → {e}")
             raise
-
-    def load_all_csv_from_input(self):
+    
+    def load_csv_file(self, csv_file):
         logging.info("Début du chargement des fichiers CSV vers PostgreSQL.")
-        
-        for file in os.listdir(self.input_folder):
-            if not file.endswith(".csv"):
-               
-                continue
+        table_name = os.path.splitext(os.path.basename(csv_file))[0]
+        logging.info(f"📥 Chargement du fichier : {csv_file}")
 
-            table_name = os.path.splitext(file)[0]
-            csv_path = os.path.join(self.input_folder, file)
-            logging.info(f"📥 Chargement du fichier : {file}")
+        try:
+            with self.engine.begin() as conn:
 
-            try:
-                # Chargement du CSV avec gestion du délimiteur
-                if file == "sa_sivss.csv":
-                    df = self.read_csv_with_custom_delimiter(csv_path)
-                else:
-                    df = self.read_csv_resilient(csv_path)
+                inspector = inspect(conn)
+                columns = inspector.get_columns(table_name, schema=self.schema)
+                schema_df = pd.DataFrame(columns)
+                schema_df = schema_df.rename(columns={"name": "column_name", "type": "column_type"})
 
+                # conn.execute(text(f'SET search_path TO {self.schema}'))
+                
+                # Chargement des csv et datamanagement
+                delimiter = ReadCsvWithDelimiter(csv_file)
+                df = delimiter.read_csv_files()
+                check_missing_columns(csv_file, df, schema_df)
+                df = convert_columns_type(TYPE_MAPPING, df, schema_df)
+                
                 # Nettoyage des noms de colonnes
-                df.columns = df.columns.str.strip().str.replace(r"[^\w]", "_", regex=True)
+                # df.columns = df.columns.str.strip().str.replace(r"[^\w]", "_", regex=True)
 
-                with self.engine.begin() as connection:
-                    connection.execute(text(f'SET search_path TO {self.schema}'))
+                # Création de la table avec la structure du CSV
+                logging.info(f"🆕 Injection dans la table '{table_name}' à partir du CSV")
+                df.to_sql(
+                    table_name,
+                    conn,
+                    if_exists="append",
+                    index=False,
+                    method='multi',
+                    chunksize=1000
+                )
 
-                    # Vérifie si la table existe
-                    table_exists = connection.execute(text("""
-                        SELECT EXISTS (
-                            SELECT FROM information_schema.tables 
-                            WHERE table_schema = :schema 
-                            AND table_name = :table
-                        )
-                    """), {"schema": self.schema, "table": table_name}).scalar()
+                logging.info(f"✅ Table '{table_name}' créée et remplie avec succès ({csv_file})")
 
-                    # Supprimer complètement la table si elle existe (structure incluse)
-                    if table_exists:
-                        # Suppression des vues liées à la table
-                        views = connection.execute(text("""
-                            SELECT DISTINCT dependent_ns.nspname, dependent_view.relname
-                            FROM pg_depend
-                            JOIN pg_rewrite ON pg_depend.objid = pg_rewrite.oid
-                            JOIN pg_class AS dependent_view ON pg_rewrite.ev_class = dependent_view.oid
-                            JOIN pg_class AS base_table ON pg_depend.refobjid = base_table.oid
-                            JOIN pg_namespace AS dependent_ns ON dependent_ns.oid = dependent_view.relnamespace
-                            WHERE base_table.relname = :table
-                        """), {"table": table_name}).fetchall()
+        except Exception as e:
+            logging.error(f"❌ Erreur pour le fichier {csv_file} → {e}")
 
-                        for schema, view in views:
-                            logging.info(f"🗑 Vue '{view}' existante → suppression totale (DROP VIEW)")
-                            connection.execute(text(f'DROP VIEW IF EXISTS "{schema}"."{view}" CASCADE'))
+    logging.info("✅ Chargement PostgreSQL terminé.")
 
-                        logging.info(f"🗑 Table '{table_name}' existante → suppression totale (DROP TABLE)")
-                        connection.execute(text(f"DROP TABLE IF EXISTS {table_name} CASCADE"))
-
-                    # Création de la table avec la structure du CSV
-                    logging.info(f"🆕 Création de la table '{table_name}' à partir du CSV")
-                    df.to_sql(
-                        table_name,
-                        connection,
-                        if_exists="replace",
-                        index=False,
-                        method='multi',
-                        chunksize=1000
-                    )
-
-                    logging.info(f"✅ Table '{table_name}' créée et remplie avec succès ({file})")
-
-            except Exception as e:
-                logging.error(f"❌ Erreur pour le fichier {file} → {e}")
-
-        logging.info("✅ Chargement PostgreSQL terminé.")
-
-    def export_tables_from_env(self, output_folder="output/"):
+    def export_tables_from_env(self, views_to_export, output_folder="output/"):
         """Exporte en CSV les tables listées dans PG_EXPORT_TABLES du .env"""
-        # tables_str = os.getenv("PG_EXPORT_TABLES", "")
-        
-
-
         os.makedirs(output_folder, exist_ok=True)
 
-        # tables = [t.strip() for t in tables_str.split(",") if t.strip()]
-        for table_name, csv_name in VIEWS_TO_EXPORT.items():
+        for table_name, csv_name in views_to_export.items():
             if not table_name:
                 logging.warning("⚠️ Aucune table spécifiée dans PG_EXPORT_TABLES")
                 return
@@ -205,10 +309,21 @@ class PostgreSQLLoader:
                 file_name = f'sa_{csv_name}_{today}.csv'
                 output_path = os.path.join(output_folder, file_name)
                 logging.info(f"📤 Export de la table '{file_name}' vers {output_path}")
-                with self.engine.begin() as connection:
-                    connection.execute(text(f'SET search_path TO {self.schema}'))
-                    df = pd.read_sql_table(table_name, connection)
+                with self.engine.begin() as conn:
+                    conn.execute(text(f'SET search_path TO {self.schema}'))
+                    df = pd.read_sql_table(table_name, conn)
                     df.to_csv(output_path, index=False, sep=";", encoding="utf-8-sig")
                 logging.info(f"✅ Table '{file_name}' exportée avec succès.")
             except Exception as e:
                 logging.error(f"❌ Erreur lors de l'export de '{file_name}' → {e}")
+
+    def run(self):
+        """Exécute toutes les étapes : création des tables, chargement des CSV et vérification."""
+        for sql_file in Path(self.sql_folder).glob("*.sql"):
+            self.execute_sql_file(sql_file)
+
+        for csv_file in Path(self.csv_folder_input).glob("*.csv"):
+            self.load_csv_file(csv_file)
+
+        # for csv_file in Path(self.csv_folder_input).glob("*.csv"):
+        #     self.check_table(csv_file.stem, print_table=False)

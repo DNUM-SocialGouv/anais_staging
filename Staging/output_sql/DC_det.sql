@@ -5,6 +5,8 @@ CREATE TABLE DC_det (
 	jdec INTEGER,
 	depdec VARCHAR,
 	comdec TEXT,
+	depdom VARCHAR,
+	regdom VARCHAR,
 	anais INTEGER,
 	mnais INTEGER,
 	jnais INTEGER,

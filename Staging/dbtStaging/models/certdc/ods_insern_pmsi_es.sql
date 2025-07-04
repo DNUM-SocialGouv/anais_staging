@@ -285,15 +285,18 @@ SELECT
     {{ iif_replacement(
         "EDC_NB IS NULL AND DECES_NB IS NOT NULL",
             "'0%'",
-            iif_replacement("ROUND(((EDC_NB::numeric / DECES_NB::numeric) * 100), 2) < 50",
-                "'<50%'",
-                iif_replacement("ROUND(((EDC_NB::numeric / DECES_NB::numeric) * 100), 2) >= 50 AND ROUND(((EDC_NB::numeric / DECES_NB::numeric) * 100), 2) < 70",
-                    "'>=50% et <70%'",
-                    iif_replacement("ROUND(((EDC_NB::numeric / DECES_NB::numeric) * 100), 2) >= 70 AND ROUND(((EDC_NB::numeric / DECES_NB::numeric) * 100), 2) < 90",
-                        "'>=70% et <90%'",
-                        iif_replacement("ROUND(((EDC_NB::numeric / DECES_NB::numeric) * 100), 2) >= 90 AND ROUND(((EDC_NB::numeric / DECES_NB::numeric) * 100), 2) < 100",
-                            "'>=90%'",
-                            "'N.A.'"		
+            iif_replacement("EDC_NB IS NOT NULL AND DECES_NB = 0",
+                "'N.A.'",
+                iif_replacement("ROUND(((EDC_NB::numeric / DECES_NB::numeric) * 100), 2) < 50",
+                    "'<50%'",
+                    iif_replacement("ROUND(((EDC_NB::numeric / DECES_NB::numeric) * 100), 2) >= 50 AND ROUND(((EDC_NB::numeric / DECES_NB::numeric) * 100), 2) < 70",
+                        "'>=50% et <70%'",
+                        iif_replacement("ROUND(((EDC_NB::numeric / DECES_NB::numeric) * 100), 2) >= 70 AND ROUND(((EDC_NB::numeric / DECES_NB::numeric) * 100), 2) < 90",
+                            "'>=70% et <90%'",
+                            iif_replacement("ROUND(((EDC_NB::numeric / DECES_NB::numeric) * 100), 2) >= 90 AND ROUND(((EDC_NB::numeric / DECES_NB::numeric) * 100), 2) < 100",
+                                "'>=90%'",
+                                "'N.A.'"		
+                        )
                     )
                 )
             )

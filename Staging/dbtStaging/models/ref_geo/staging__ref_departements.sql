@@ -15,8 +15,8 @@ WITH departements AS (
 
     -- Départements des DROM via v_comer
     SELECT
-        COMER AS dep,
-        COMER AS reg,
+        comer AS dep,
+        comer AS reg,
         ncc,
         libelle
     FROM {{ ref('staging__v_comer') }}

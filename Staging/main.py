@@ -3,6 +3,7 @@ from pipeline.duckdb_pipeline import DuckDBPipeline
 from pipeline.sftp_sync import SFTPSync
 from pipeline.postgres_loader import PostgreSQLLoader
 from pipeline.standardize_data import standardize_all_csv_columns
+from pipeline.loadfiles import load_colnames_YAML
 import subprocess
 import logging
 import os
@@ -17,8 +18,10 @@ file_handler.setFormatter(formatter)
 dbt_logger.addHandler(file_handler)
 dbt_logger.setLevel(logging.INFO)
 
+folder_name = 'certdc'
 
-def run_dbt(profile: str, project_dir: str = "./Staging/dbtStaging", profiles_dir: str = "."):
+
+def run_dbt(profile: str, target: str, view_directory:str, project_dir: str = "./Staging/dbtStaging", profiles_dir: str = "."):
     try:
         project_path = Path(project_dir).resolve()
         profiles_path = Path(profiles_dir).resolve()
@@ -28,7 +31,9 @@ def run_dbt(profile: str, project_dir: str = "./Staging/dbtStaging", profiles_di
             "run",
             "--project-dir", str(project_path),
             "--profiles-dir", str(profiles_path),
-            "--profile", profile
+            "--profile", profile,
+            "--target", target,
+            "--select", f"base {view_directory}"
             ],
             capture_output=True,
             text=True,
@@ -41,30 +46,39 @@ def run_dbt(profile: str, project_dir: str = "./Staging/dbtStaging", profiles_di
         dbt_logger.error("Erreur lors du dbt run :")
         dbt_logger.error(e.stdout)
 
-def main(env: str):
-    if env == "anais":
-        sftp = SFTPSync()
-        sftp.download_all()
-        standardize_all_csv_columns("input/")
-        pg_loader = PostgreSQLLoader()
-        pg_loader.execute_create_sql_files()
-        pg_loader.load_all_csv_from_input()
-        run_dbt()
 
-        # Export des tables listées dans .env
-        pg_loader.export_tables_from_env()
+def main(env: str, profile: str):
+    PROJECT_PARAMS = load_colnames_YAML("file_names.yml", profile)
+    if env == "anais":
+        # # Récupération des fichiers sur le sftp
+        # sftp = SFTPSync()
+        # sftp.download_all(PROJECT_PARAMS["input_file"])
+        # standardize_all_csv_columns(PROJECT_PARAMS["input_directory"])
+
+        # Remplissage des tables de la base postgres
+        pg_loader = PostgreSQLLoader(csv_folder_input=PROJECT_PARAMS["input_directory"], csv_folder_output=PROJECT_PARAMS["output_directory"])
+        # pg_loader.run()
+
+        # Création des vues et export
+        run_dbt(profile=profile, target="anais", view_directory=PROJECT_PARAMS["view_directory"])
+        pg_loader.export_tables_from_env(PROJECT_PARAMS["views"], PROJECT_PARAMS["output_directory"])
         
     if env == "local":
-        
-        loader = DuckDBPipeline()
+         # Remplissage des tables de la base DuckDBP
+        loader = DuckDBPipeline(csv_folder_input=PROJECT_PARAMS["input_directory"], csv_folder_output=PROJECT_PARAMS["output_directory"])
         loader.run()
-        run_dbt(profile='dbtStaging')
-        loader.export_to_csv()
+        loader.close()
+
+        # Création des vues et export
+        run_dbt(profile=profile, target="local", view_directory=PROJECT_PARAMS["view_directory"])
+        loader = DuckDBPipeline(csv_folder_input=PROJECT_PARAMS["input_directory"], csv_folder_output=PROJECT_PARAMS["output_directory"])
+        loader.export_to_csv(PROJECT_PARAMS["views"])
         loader.close()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Exécution du pipeline")
     parser.add_argument("--env", choices=["local", "anais"], default="local", help="Environnement d'exécution")
+    parser.add_argument("--profile", choices=["dbtStaging", "dbtCertDC"], default="dbtStaging", help="Profile dbt d'exécution")
     args = parser.parse_args()
 
-    main(args.env)
+    main(args.env, args.profile)

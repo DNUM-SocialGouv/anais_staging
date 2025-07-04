@@ -11,14 +11,14 @@ WITH sa_insee_total AS (
     WHERE adec::INT = {{ get_previous_year(3) }} OR adec::INT = {{ get_previous_year(2) }}
     UNION
     SELECT 
-        adec,
-        mdec,
-        jdec,
+        adec::INT,
+        mdec::INT,
+        jdec::INT,
         depdec,
         comdec,
-        anais,
-        mnais,
-        jnais,
+        anais::INT,
+        mnais::INT,
+        jnais::INT,
         sexe,
         '' AS comdom,
         '' AS lieudec2,

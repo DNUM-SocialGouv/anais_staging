@@ -34,7 +34,7 @@ WITH mco_ssr_had_psy AS (
                 +CAST(somme_de_mco_seances AS INTEGER)
                 +CAST(somme_de_ssr AS INTEGER)
                 +CAST(somme_de_had AS INTEGER)
-                +CAST(somme_de_psy AS INTEGER)) AS INTEGER)
+                +CAST(somme_de_psy AS INTEGER)) AS VARCHAR)
             AS deces_nb
         FROM {{ ref('staging__sa_pmsi') }}
         WHERE 1 = 1
@@ -141,6 +141,8 @@ WITH mco_ssr_had_psy AS (
         annee,
         mois
     )
+
+
 --
 --
 --

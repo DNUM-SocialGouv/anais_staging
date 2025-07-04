@@ -52,7 +52,7 @@ SELECT
     motifs_igas_sortie,
     niveau_de_competence_de_traitement_de_la_reclamation AS niveau_competence_traitement_reclamation,
     institution_s_partenaire_s AS institutions_partenaires,
-    precisions_sur_le_niveau_de_competence_de_traitement_de_la_reclamation AS precisions_niveau_competence_traitement_reclamation,
+    precisions_sur_le_niveau_de_competence_de_traitement_de_la_recl AS precisions_niveau_competence_traitement_reclamation,
     envoi_d_un_accuse_reception AS envoi_accuse_reception,
     date_d_envoi_de_l_ar AS date_envoi_ar,
     precisions_sur_le_non_envoi_de_l_ar AS precisions_non_envoi_ar,

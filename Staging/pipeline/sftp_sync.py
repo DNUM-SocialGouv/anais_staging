@@ -3,7 +3,7 @@ import logging
 import paramiko
 import datetime
 from dotenv import load_dotenv
-from pipeline.import_excel import convert_excel_to_csv
+from pipeline.csv_management import convert_excel_to_csv
 from pipeline.loadfiles import load_colnames_YAML
 
 
@@ -24,13 +24,8 @@ class SFTPSync:
             level=logging.INFO,
             format="%(asctime)s - %(levelname)s - %(message)s"
         )
-        import_files = load_colnames_YAML("file_names.yml", "tables", "file_to_import")
 
-        self.files_to_download = [
-            (item["path"], item["table"], item["file"])
-            for item in import_files
-        ]
-        self.upload_mapping = load_colnames_YAML("file_names.yml", "views", "base")
+        
 
     def connect(self):
         try:
@@ -70,9 +65,13 @@ class SFTPSync:
         except Exception as e:
             logging.error(f"Échec du téléchargement {remote_path} : {e}")
 
-    def download_all(self):
+    def download_all(self, files_list):
         sftp, transport = self.connect()
-        for remote_dir, keyword, local_filename in self.files_to_download:
+        files_to_download = [
+            (item["path"], item["table"], item["file"])
+            for item in files_list
+        ]
+        for remote_dir, keyword, local_filename in files_to_download:
             logging.info(f"Recherche du fichier contenant '{keyword}' dans {remote_dir}")
             latest_file = self.get_latest_file(sftp, remote_dir, keyword)
             
@@ -83,7 +82,7 @@ class SFTPSync:
                 logging.info(f"Dernière version : {latest_file.filename} (modifié le {mod_time})")
 
                 # Gestion des fichiers DIAMANT au format excel
-                if 'xlsx' in latest_file.filename:
+                if '.xlsx' in latest_file.filename:
                     local_xlsx_path = local_path.replace('.csv', '.xlsx')
                     self.download_file(sftp, remote_path, local_xlsx_path)
                     convert_excel_to_csv(local_xlsx_path, local_path)
@@ -98,6 +97,7 @@ class SFTPSync:
     def upload_all(self, local_folder="output/"):
         """Upload tous les fichiers CSV de output/ vers le SFTP dans les bons dossiers."""
         sftp, transport = self.connect()
+        self.upload_mapping = PROJECT_PARAMS["base"]
 
         for filename in os.listdir(local_folder):
             if not filename.endswith(".csv"):

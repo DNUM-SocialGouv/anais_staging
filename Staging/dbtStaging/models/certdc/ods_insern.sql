@@ -6,16 +6,16 @@
 -- N-2
 WITH N_2 AS (
     SELECT
-        CAST(index AS VARCHAR),
-        CAST(annee AS INTEGER),
-        CAST(mois AS INTEGER),
-        CAST(jour AS INTEGER),
-        CAST(departement_code AS TEXT),
-        CAST(commune_code AS TEXT),
-        CAST(et_finess AS VARCHAR),
-        CAST(lieu_de_deces AS VARCHAR),
-        CAST(source AS VARCHAR),
-        CAST(deces_nb AS INTEGER)
+        index,
+        annee,
+        mois,
+        jour,
+        departement_code,
+        commune_code,
+        et_finess,
+        lieu_de_deces,
+        source,
+        deces_nb
     FROM {{ ref('staging__cert_dc_insern_n2_n1') }}
     WHERE 1 = 1
     -- param Ã  variabiliser dans le code
@@ -23,16 +23,16 @@ WITH N_2 AS (
 )
 , N_1 AS (
     SELECT
-        CAST(index AS VARCHAR),
-        CAST(annee AS INTEGER),
-        CAST(mois AS INTEGER),
-        CAST(jour AS INTEGER),
-        CAST(departement_code AS TEXT),
-        CAST(commune_code AS TEXT),
-        CAST(et_finess AS VARCHAR),
-        CAST(lieu_de_deces AS VARCHAR),
-        CAST(source AS VARCHAR),
-        CAST(deces_nb AS INTEGER)
+        index,
+        annee,
+        mois,
+        jour,
+        departement_code,
+        commune_code,
+        et_finess,
+        lieu_de_deces,
+        source,
+        deces_nb
     FROM {{ ref('staging__cert_dc_insern_2023_2024') }}
     WHERE 1 = 1
     -- param Ã  variabiliser dans le code
@@ -40,16 +40,16 @@ WITH N_2 AS (
 )
 , N AS (
     SELECT
-        CAST(index AS VARCHAR),
-        CAST(annee AS INTEGER),
-        CAST(mois AS INTEGER),
-        CAST(jour AS INTEGER),
-        CAST(departement_code AS TEXT),
-        CAST(commune_code AS TEXT),
-        CAST(et_finess AS VARCHAR),
-        CAST(lieu_de_deces AS VARCHAR),
-        CAST(source AS VARCHAR),
-        CAST(deces_nb AS INTEGER)
+        index,
+        annee,
+        mois,
+        jour,
+        departement_code,
+        commune_code,
+        et_finess,
+        lieu_de_deces,
+        source,
+        deces_nb
     FROM {{ ref('staging__cert_dc_insern_2023_2024') }}
     WHERE 1 = 1
     -- param Ã  variabiliser dans le code
@@ -57,16 +57,16 @@ WITH N_2 AS (
 )
 , N_0 AS (
     SELECT
-        CAST(index AS VARCHAR),
-        CAST(annee AS INTEGER),
-        CAST(mois AS INTEGER),
-        CAST(jour AS INTEGER),
-        CAST(departement_code AS TEXT),
-        CAST(commune_code AS TEXT),
-        CAST(et_finess AS VARCHAR),
-        CAST(lieu_de_deces AS VARCHAR),
-        CAST(source AS VARCHAR),
-        CAST(deces_nb AS INTEGER)
+        index,
+        annee,
+        mois,
+        jour,
+        departement_code,
+        commune_code,
+        et_finess,
+        lieu_de_deces,
+        source,
+        deces_nb
     FROM {{ ref('staging__cert_dc_insern') }}
     WHERE 1 = 1
     -- param Ã  variabiliser dans le code
