@@ -78,19 +78,32 @@ def remove_accents(text):
         if unicodedata.category(c) != 'Mn'
     )
 
-def standardize_column_names(df):
-    """Nettoie et standardise les noms de colonnes : minuscules, pas d'accents, caractères spéciaux en underscore, < 64 caractères."""
-    df.columns = (
-        df.columns
-        .str.strip()
-        .map(remove_accents)
-        .str.lower()
-        .str.replace(r"[^\w]", "_", regex=True)
-        .str.replace(r"__+", "_", regex=True)
-        .str.strip("_")
-    )
-    df.columns = [col[:63] for col in df.columns]
-    return df
+    def shorten_column_names(df: pd.DataFrame, max_length: int=63):
+        """Raccourcit les noms de colonnes et loggue les changements."""
+        new_columns = []
+        for col in df.columns:
+            if len(col) > max_length:
+                shortened = col[:max_length]
+                logging.info(f"📝 Colonne raccourcie : '{col}' → '{shortened}'")
+                new_columns.append(shortened)
+            else:
+                new_columns.append(col)
+        df.columns = new_columns
+        return df
+    
+    def standardize_column_names(df: pd.DataFrame):
+        """Nettoie et standardise les noms de colonnes : minuscules, pas d'accents, caractères spéciaux en underscore, < 64 caractères."""
+        df.columns = (
+            df.columns
+            .str.strip()
+            .map(remove_accents)
+            .str.lower()
+            .str.replace(r"[^\w]", "_", regex=True)
+            .str.replace(r"__+", "_", regex=True)
+            .str.strip("_")
+        )
+        df = shorten_column_names(df)
+        return df
 
 def standardize_all_csv_columns(input_folder="input/"):
     """Standardise les noms de colonnes de tous les fichiers CSV en conservant le délimiteur d'origine."""

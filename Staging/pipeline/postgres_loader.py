@@ -8,10 +8,11 @@ from dotenv import load_dotenv
 from pathlib import Path
 from io import StringIO
 from datetime import date
-from pipeline.csv_management import ReadCsvWithDelimiter, check_missing_columns, convert_columns_type
+from pipeline.csv_management import ReadCsvWithDelimiter, check_missing_columns, convert_columns_type, export_to_csv
 from pipeline.constantes import TYPE_MAPPING
 import re
 from sqlalchemy import inspect
+
 
 # Chargement des variables d’environnement
 load_dotenv()
@@ -296,26 +297,43 @@ class PostgreSQLLoader:
 
     logging.info("✅ Chargement PostgreSQL terminé.")
 
-    def export_tables_from_env(self, views_to_export, output_folder="output/"):
-        """Exporte en CSV les tables listées dans PG_EXPORT_TABLES du .env"""
-        os.makedirs(output_folder, exist_ok=True)
+    def _fetch_df(self, table_name):
+        with self.engine.begin() as conn:
+            conn.execute(text(f"SET search_path TO {self.schema}"))
+            return pd.read_sql_table(table_name, conn)
 
+    def postgres_export(self, views_to_export, output_folder, date):
         for table_name, csv_name in views_to_export.items():
-            if not table_name:
-                logging.warning("⚠️ Aucune table spécifiée dans PG_EXPORT_TABLES")
-                return
-            try:
-                today = date.strftime(date.today(), "%Y_%m_%d") 
-                file_name = f'sa_{csv_name}_{today}.csv'
-                output_path = os.path.join(output_folder, file_name)
-                logging.info(f"📤 Export de la table '{file_name}' vers {output_path}")
-                with self.engine.begin() as conn:
-                    conn.execute(text(f'SET search_path TO {self.schema}'))
-                    df = pd.read_sql_table(table_name, conn)
-                    df.to_csv(output_path, index=False, sep=";", encoding="utf-8-sig")
-                logging.info(f"✅ Table '{file_name}' exportée avec succès.")
-            except Exception as e:
-                logging.error(f"❌ Erreur lors de l'export de '{file_name}' → {e}")
+            if table_name:
+                export_to_csv(table_name, csv_name, self._fetch_df, output_folder, date)
+            else:
+                logging.warning("⚠️ Aucune table spécifiée")
+
+    # def export_tables_from_env(self, views_to_export, output_folder="output/"):
+    #     """Exporte en CSV les tables listées dans PG_EXPORT_TABLES du .env"""
+    #     os.makedirs(output_folder, exist_ok=True)
+
+    #     for table_name, csv_name in views_to_export.items():
+    #         if not table_name:
+    #             logging.warning("⚠️ Aucune table spécifiée dans PG_EXPORT_TABLES")
+    #             return
+    #         try:
+    #             today = date.strftime(date.today(), "%Y_%m_%d") 
+    #             file_name = f'sa_{csv_name}_{today}.csv'
+    #             output_path = os.path.join(output_folder, file_name)
+    #             logging.info(f"📤 Export de la table '{file_name}' vers {output_path}")
+    #             with self.engine.begin() as conn:
+    #                 conn.execute(text(f'SET search_path TO {self.schema}'))
+    #                 df = pd.read_sql_table(table_name, conn)
+    #                 df.to_csv(output_path, index=False, sep=";", encoding="utf-8-sig")
+    #             logging.info(f"✅ Table '{file_name}' exportée avec succès.")
+    #         except Exception as e:
+    #             logging.error(f"❌ Erreur lors de l'export de '{file_name}' → {e}")
+
+    # def get_dataframe_from_table(self, table_name: str):
+    #     with self.engine.begin() as conn:
+    #         conn.execute(text(f"SET search_path TO {self.schema}"))
+    #         return pd.read_sql_table(table_name, conn)
 
     def run(self):
         """Exécute toutes les étapes : création des tables, chargement des CSV et vérification."""

@@ -1,5 +1,5 @@
 # DNUM - Staging (layer de base pour les autres projets métiers)
-dbtStaging:
+Staging:
   target: local
   outputs:
     anais:
@@ -15,7 +15,7 @@ dbtStaging:
       path: data/duckdb_database.duckdb
       schema: main
 
-dbtCertDC:
+CertDC:
   target: local
   outputs:
     anais:
@@ -43,10 +43,10 @@ dbtInspectionControle:
       schema: main
 
 # DNUM - Layer Helios (dépend de la base de Staging)
-dbtHelios:
-  target: dev
+Helios:
+  target: local
   outputs:
-    dev:
+    local:
       type: duckdb
-      path: ../../Staging/data/duckdb_database.duckdb
+      path: data/duckdb_database.duckdb
       schema: main

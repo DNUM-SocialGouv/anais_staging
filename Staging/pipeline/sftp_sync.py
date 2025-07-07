@@ -25,8 +25,6 @@ class SFTPSync:
             format="%(asctime)s - %(levelname)s - %(message)s"
         )
 
-        
-
     def connect(self):
         try:
             transport = paramiko.Transport((self.host, self.port))
@@ -37,6 +35,14 @@ class SFTPSync:
         except Exception as e:
             logging.error(f"Erreur de connexion SFTP : {e}")
             raise
+
+    def sftp_dir_exists(self, sftp, path):
+        """ Vérifie l'existence d'un répertoire SFTP"""
+        try:
+            sftp.chdir(path)
+            return True
+        except IOError:
+            return False
 
     def get_latest_file(self, sftp, remote_dir, keyword):
         try:
@@ -94,29 +100,57 @@ class SFTPSync:
         logging.info("Connexion SFTP fermée.")
         
         
-    def upload_all(self, local_folder="output/"):
-        """Upload tous les fichiers CSV de output/ vers le SFTP dans les bons dossiers."""
+    # def upload_all(self, local_folder="output/"):
+    #     """Upload tous les fichiers CSV de output/ vers le SFTP dans les bons dossiers."""
+    #     sftp, transport = self.connect()
+    #     self.upload_mapping = PROJECT_PARAMS["base"]
+
+    #     for filename in os.listdir(local_folder):
+    #         if not filename.endswith(".csv"):
+    #             continue
+
+    #         local_path = os.path.join(local_folder, filename)
+    #         remote_dir = self.upload_mapping.get(filename)
+
+    #         if not remote_dir:
+    #             logging.warning(f"❗ Fichier {filename} non mappé à un dossier distant SFTP, upload ignoré.")
+    #             continue
+
+    #         try:
+    #             remote_path = os.path.join(remote_dir, filename)
+    #             sftp.put(local_path, remote_path)
+    #             logging.info(f"✅ Upload : {local_path} → {remote_path}")
+    #         except Exception as e:
+    #             logging.error(f"❌ Échec de l'upload {filename} → {e}")
+
+    #     sftp.close()
+    #     transport.close()
+    #     logging.info("✅ Upload SFTP terminé et connexion fermée.")
+
+    def upload_file_to_sftp(self, views_to_export: dict, output_dir: str, remote_dir: str, date: str):
+        """Exporte en CSV les tables listées dans PG_EXPORT_TABLES du .env"""
         sftp, transport = self.connect()
-        self.upload_mapping = PROJECT_PARAMS["base"]
 
-        for filename in os.listdir(local_folder):
-            if not filename.endswith(".csv"):
-                continue
+        if not self.sftp_dir_exists(sftp, remote_dir):
+            logging.error(f"❌ Répertoire SFTP inexistant : {remote_dir}")
+            sftp.close()
+            transport.close()
+            return
+        
+        for _, csv_name in views_to_export.items():
+            # Récupère le nom du fichier csv
+            file_name = f'sa_{csv_name}_{date}.csv'
+            local_path = os.path.join(output_dir, file_name)
+            remote_path = os.path.join(remote_dir, file_name)
 
-            local_path = os.path.join(local_folder, filename)
-            remote_dir = self.upload_mapping.get(filename)
-
-            if not remote_dir:
-                logging.warning(f"❗ Fichier {filename} non mappé à un dossier distant SFTP, upload ignoré.")
-                continue
-
-            try:
-                remote_path = os.path.join(remote_dir, filename)
-                sftp.put(local_path, remote_path)
-                logging.info(f"✅ Upload : {local_path} → {remote_path}")
-            except Exception as e:
-                logging.error(f"❌ Échec de l'upload {filename} → {e}")
-
+            # Vérifie l'existence du fichier csv dans output
+            if os.path.exists(local_path):
+                try:
+                    sftp.put(local_path, remote_path)
+                    logging.info(f"✅ Upload réussi: {file_name} → {remote_path}")
+                except Exception as e:
+                    logging.error(f"❌ Échec de l'upload {file_name} → {e}")
+            else:
+                logging.warning(f"⚠️ Fichier introuvable : {local_path}")
         sftp.close()
         transport.close()
-        logging.info("✅ Upload SFTP terminé et connexion fermée.")

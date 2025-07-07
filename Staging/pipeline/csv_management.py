@@ -4,6 +4,7 @@ import csv
 import os
 import logging
 from io import StringIO
+from datetime import datetime
 
 # === Configuration du logging ===
 logging.getLogger(__name__)
@@ -146,7 +147,6 @@ class ReadCsvWithDelimiter:
             logging.error(f"❌ Lecture échouée pour {self.filepath.name} → {e}")
             return
 
-
 def check_missing_columns(csv_file_name: str, df: pd.DataFrame, schema_df):
     table_columns = schema_df["column_name"].tolist()
     csv_columns = df.columns.tolist()
@@ -182,27 +182,21 @@ def convert_columns_type(type_mapping: dict, df: pd.DataFrame, schema_df)-> pd.D
                 logging.warning(f"Erreur de conversion de {col_name} en {col_type}: {e}, valeurs laissées en str.")
     return df
 
-
-
-def export_to_csv(self, views_to_export):
+def export_to_csv(table_name: str, csv_name: str, df_fetch_func, output_folder: str, date: datetime):
     """ Export une table de DuckDB vers un csv"""
-    for table_name, csv_name in views_to_export.items():
-        # Vérification de l'existence de la table
-        if not self.check_table(table_name, print_table=False):
-            return
+    os.makedirs(output_folder, exist_ok=True)
 
-        today = date.strftime(date.today(), "%Y_%m_%d") 
-        file_name = f'sa_{csv_name}_{today}.csv'
-        file = os.path.join(self.csv_folder_output, file_name)
+    # date = date.strftime(date.today(), "%Y_%m_%d") 
+    file_name = f'sa_{csv_name}_{date}.csv'
+    output_path = os.path.join(output_folder, file_name)
+    logging.info(f"📤 Export de '{table_name}' → {output_path}")
 
-        try:
-            df = self.conn.execute(f"SELECT * FROM {table_name}").df()
-            df.to_csv(file, index=False)
-            logging.info(f"Export réussi : {file}")
-        except Exception as e:
-            logging.error(f"Erreur lors de l'export de {table_name} : {e}")
-
-
+    try:
+        df = df_fetch_func(table_name)
+        df.to_csv(output_path, index=False, sep=";", encoding="utf-8-sig")
+        logging.info(f"✅ Export réussi : {file_name}")
+    except Exception as e:
+        logging.error(f"❌ Erreur d'export pour '{table_name}' → {e}")
 
 if __name__ == "__main__":
     convert_excel_to_csv(local_xlsx_path, local_csv_path)

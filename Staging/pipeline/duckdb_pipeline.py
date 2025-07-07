@@ -5,7 +5,7 @@ from pathlib import Path
 import logging
 import csv
 from datetime import date
-from pipeline.csv_management import ReadCsvWithDelimiter, check_missing_columns, convert_columns_type
+from pipeline.csv_management import ReadCsvWithDelimiter, check_missing_columns, convert_columns_type, export_to_csv
 from pipeline.constantes import TYPE_MAPPING
 
 # === Configuration du logger ===
@@ -69,66 +69,66 @@ class DuckDBPipeline:
             logging.error(f"Erreur lors de l'exécution du SQL {sql_file.name}: {e}")
 
 
-    def detect_delimiter(self, filepath, sample_size=4096):
-        """Détecte automatiquement le délimiteur du fichier CSV."""
-        try:
-            with open(filepath, 'r', encoding='utf-8-sig') as f:
-                sample = f.read(sample_size)
-                sniffer = csv.Sniffer()
-                dialect = sniffer.sniff(sample, delimiters=";,¤")
-                return dialect.delimiter
-        except Exception as e:
-            logging.warning(f"⚠️ Impossible de détecter le délimiteur pour {filepath} : {e} → ';' utilisé par défaut.")
-            return ";"
+    # def detect_delimiter(self, filepath, sample_size=4096):
+    #     """Détecte automatiquement le délimiteur du fichier CSV."""
+    #     try:
+    #         with open(filepath, 'r', encoding='utf-8-sig') as f:
+    #             sample = f.read(sample_size)
+    #             sniffer = csv.Sniffer()
+    #             dialect = sniffer.sniff(sample, delimiters=";,¤")
+    #             return dialect.delimiter
+    #     except Exception as e:
+    #         logging.warning(f"⚠️ Impossible de détecter le délimiteur pour {filepath} : {e} → ';' utilisé par défaut.")
+    #         return ";"
 
-    def read_csv_resilient(self, filepath):
-        """Tente de lire un CSV avec différents délimiteurs."""
-        delimiters_to_try = [self.detect_delimiter(filepath), ";", ",", "¤"]
-        tried = set()
+    # def read_csv_resilient(self, filepath):
+    #     """Tente de lire un CSV avec différents délimiteurs."""
+    #     delimiters_to_try = [self.detect_delimiter(filepath), ";", ",", "¤"]
+    #     tried = set()
 
-        for delimiter in delimiters_to_try:
-            if delimiter in tried:
-                continue
-            tried.add(delimiter)
+    #     for delimiter in delimiters_to_try:
+    #         if delimiter in tried:
+    #             continue
+    #         tried.add(delimiter)
 
-            try:
-                df = pd.read_csv(
-                    filepath,
-                    delimiter=delimiter,
-                    dtype=str,
-                    quotechar='"',
-                    encoding='utf-8-sig'
-                )
-                logging.info(f"✅ Lecture réussie avec le délimiteur '{delimiter}' pour {os.path.basename(filepath)}")
-                return df
-            except pd.errors.ParserError as e:
-                logging.warning(f"⚠️ Erreur de parsing avec '{delimiter}' pour {filepath} → {e}")
-            except Exception as e:
-                logging.warning(f"⚠️ Autre erreur avec '{delimiter}' → {e}")
+    #         try:
+    #             df = pd.read_csv(
+    #                 filepath,
+    #                 delimiter=delimiter,
+    #                 dtype=str,
+    #                 quotechar='"',
+    #                 encoding='utf-8-sig'
+    #             )
+    #             logging.info(f"✅ Lecture réussie avec le délimiteur '{delimiter}' pour {os.path.basename(filepath)}")
+    #             return df
+    #         except pd.errors.ParserError as e:
+    #             logging.warning(f"⚠️ Erreur de parsing avec '{delimiter}' pour {filepath} → {e}")
+    #         except Exception as e:
+    #             logging.warning(f"⚠️ Autre erreur avec '{delimiter}' → {e}")
 
-        raise ValueError(f"❌ Impossible de lire le fichier CSV {filepath} avec les délimiteurs connus.")
+    #     raise ValueError(f"❌ Impossible de lire le fichier CSV {filepath} avec les délimiteurs connus.")
 
-    def read_csv_with_custom_delimiter(self, filepath):
-        try:
-            with open(filepath, "rb") as f:
-                raw = f.read()
+    # def read_csv_with_custom_delimiter(self, filepath):
+    #     try:
+    #         with open(filepath, "rb") as f:
+    #             raw = f.read()
 
-            decoded = raw.decode("utf-8", errors="replace")
+    #         decoded = raw.decode("utf-8", errors="replace")
 
-            df = pd.read_csv(
-                StringIO(decoded),
-                delimiter="¤",
-                dtype=str,
-                engine="python",
-                quoting=csv.QUOTE_NONE,
-                on_bad_lines="warn"
-            )
+    #         df = pd.read_csv(
+    #             StringIO(decoded),
+    #             delimiter="¤",
+    #             dtype=str,
+    #             engine="python",
+    #             quoting=csv.QUOTE_NONE,
+    #             on_bad_lines="warn"
+    #         )
 
-            logging.info(f"✅ Lecture réussie avec délimiteur '¤' après détection binaire : {os.path.basename(filepath)}")
-            return df
-        except Exception as e:
-            logging.error(f"❌ Erreur lors de la lecture de {filepath} avec délimiteur '¤' → {e}")
-            raise
+    #         logging.info(f"✅ Lecture réussie avec délimiteur '¤' après détection binaire : {os.path.basename(filepath)}")
+    #         return df
+    #     except Exception as e:
+    #         logging.error(f"❌ Erreur lors de la lecture de {filepath} avec délimiteur '¤' → {e}")
+    #         raise
 
     def load_csv_file(self, csv_file):
         """Charge un fichier CSV après vérification et conversion des types."""
@@ -189,25 +189,6 @@ class DuckDBPipeline:
         except Exception as e:
             logging.error(f"Erreur lors de la lecture de la table '{table_name}': {e}")
 
-    def export_to_csv(self, views_to_export):
-        """ Export une table de DuckDB vers un csv"""
-
-        for table_name, csv_name in views_to_export.items():
-            # Vérification de l'existence de la table
-            if not self.check_table(table_name, print_table=False):
-                return
-
-            today = date.strftime(date.today(), "%Y_%m_%d") 
-            file_name = f'sa_{csv_name}_{today}.csv'
-            file = os.path.join(self.csv_folder_output, file_name)
-
-            try:
-                df = self.conn.execute(f"SELECT * FROM {table_name}").df()
-                df.to_csv(file, index=False)
-                logging.info(f"Export réussi : {file}")
-            except Exception as e:
-                logging.error(f"Erreur lors de l'export de {table_name} : {e}")
-
     def list_tables(self):
         """Liste toutes les tables existantes dans la base DuckDB."""
         try:
@@ -234,6 +215,18 @@ class DuckDBPipeline:
 
         for csv_file in Path(self.csv_folder_input).glob("*.csv"):
             self.check_table(csv_file.stem, print_table=False)
+
+
+    def _fetch_df(self, table_name):
+        return self.conn.execute(f"SELECT * FROM {table_name}").df()
+
+    def duckdb_export(self, views_to_export, output_folder, date):
+        """ Fonction d'export des tables en fichier csv """
+        for table_name, csv_name in views_to_export.items():
+            if table_name:
+                export_to_csv(table_name, csv_name, self._fetch_df, output_folder, date)
+            else:
+                logging.warning("⚠️ Aucune table spécifiée")
 
     def close(self):
         """Ferme la connexion à la base de données."""

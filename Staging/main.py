@@ -8,6 +8,7 @@ import subprocess
 import logging
 import os
 from pathlib import Path
+from datetime import date
 
 # Configuration du logger DBT
 os.makedirs("logs", exist_ok=True)
@@ -18,8 +19,8 @@ file_handler.setFormatter(formatter)
 dbt_logger.addHandler(file_handler)
 dbt_logger.setLevel(logging.INFO)
 
-folder_name = 'certdc'
 
+today = date.strftime(date.today(), "%Y_%m_%d") 
 
 def run_dbt(profile: str, target: str, view_directory:str, project_dir: str = "./Staging/dbtStaging", profiles_dir: str = "."):
     try:
@@ -49,19 +50,23 @@ def run_dbt(profile: str, target: str, view_directory:str, project_dir: str = ".
 
 def main(env: str, profile: str):
     PROJECT_PARAMS = load_colnames_YAML("file_names.yml", profile)
+    FILES_TO_DOWNLOAD = load_colnames_YAML("file_names.yml", 'tables')
+
     if env == "anais":
-        # # Récupération des fichiers sur le sftp
-        # sftp = SFTPSync()
-        # sftp.download_all(PROJECT_PARAMS["input_file"])
-        # standardize_all_csv_columns(PROJECT_PARAMS["input_directory"])
+        # Récupération des fichiers sur le sftp
+        sftp = SFTPSync()
+        sftp.download_all(FILES_TO_DOWNLOAD["files_to_download"])
+        standardize_all_csv_columns(PROJECT_PARAMS["input_directory"])
 
         # Remplissage des tables de la base postgres
         pg_loader = PostgreSQLLoader(csv_folder_input=PROJECT_PARAMS["input_directory"], csv_folder_output=PROJECT_PARAMS["output_directory"])
-        # pg_loader.run()
+        pg_loader.run()
 
         # Création des vues et export
         run_dbt(profile=profile, target="anais", view_directory=PROJECT_PARAMS["view_directory"])
         pg_loader.export_tables_from_env(PROJECT_PARAMS["views"], PROJECT_PARAMS["output_directory"])
+        pg_loader.postgres_export(PROJECT_PARAMS["views"], PROJECT_PARAMS["output_directory"], date=today)
+        sftp.upload_file_to_sftp(PROJECT_PARAMS["views"], PROJECT_PARAMS["output_directory"], PROJECT_PARAMS["remote_directory"], date=today)
         
     if env == "local":
          # Remplissage des tables de la base DuckDBP
@@ -72,13 +77,13 @@ def main(env: str, profile: str):
         # Création des vues et export
         run_dbt(profile=profile, target="local", view_directory=PROJECT_PARAMS["view_directory"])
         loader = DuckDBPipeline(csv_folder_input=PROJECT_PARAMS["input_directory"], csv_folder_output=PROJECT_PARAMS["output_directory"])
-        loader.export_to_csv(PROJECT_PARAMS["views"])
+        loader.duckdb_export(PROJECT_PARAMS["views"], PROJECT_PARAMS["output_directory"], date=today)
         loader.close()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Exécution du pipeline")
     parser.add_argument("--env", choices=["local", "anais"], default="local", help="Environnement d'exécution")
-    parser.add_argument("--profile", choices=["dbtStaging", "dbtCertDC"], default="dbtStaging", help="Profile dbt d'exécution")
+    parser.add_argument("--profile", choices=["Staging", "Helios", "Matrice", "Ref", "TdBIC", "CertDC"], default="Staging", help="Profile dbt d'exécution")
     args = parser.parse_args()
 
     main(args.env, args.profile)
