@@ -6,7 +6,6 @@ dbtStaging:
       type: postgres
       host: 10.89.136.17
       user: staging_admin
-      password: _m-!2da82ZK6Dt
       port: 5432
       schema: public
       dbname: staging
@@ -22,7 +21,6 @@ dbtCertDC:
       type: postgres
       host: 10.89.136.17
       user: certelec_dc_admin
-      password: UQ=#7I)fp$_C8u
       port: 5432
       schema: public
       dbname: certelec_dc
