@@ -6,6 +6,7 @@ dbtStaging:
       type: postgres
       host: 10.89.136.17
       user: staging_admin
+      password: "{{ env_var('DBT_DB_PASSWORD') }}"
       port: 5432
       schema: public
       dbname: staging
@@ -21,6 +22,7 @@ dbtCertDC:
       type: postgres
       host: 10.89.136.17
       user: certelec_dc_admin
+      password: "{{ env_var('DBT_DB_PASSWORD') }}"
       port: 5432
       schema: public
       dbname: certelec_dc
