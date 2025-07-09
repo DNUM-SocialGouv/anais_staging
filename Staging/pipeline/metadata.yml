@@ -1,91 +1,91 @@
 tables:
   files_to_download:
     - path: "/SCN_BDD/INSERN"
-      table: "DNUM_TdB_CertDc"
+      keyword: "DNUM_TdB_CertDc"
       file: "sa_insern.csv"
 
     - path: "/SCN_BDD/SIICEA"
-      table: "GROUPECIBLES_SCN"
+      keyword: "GROUPECIBLES_SCN"
       file: "sa_siicea_cibles.csv"
 
     - path: "/SCN_BDD/SIICEA"
-      table: "MISSIONSPREV_SCN"
+      keyword: "MISSIONSPREV_SCN"
       file: "sa_siicea_missions.csv"
 
     - path: "/SCN_BDD/SIICEA"
-      table: "DECISIONS_SCN"
+      keyword: "DECISIONS_SCN"
       file: "sa_siicea_suites.csv"
 
     - path: "/SCN_BDD/SIREC"
-      table: "sirec"
+      keyword: "sirec"
       file: "sa_sirec.csv"
 
     - path: "/SCN_BDD/SIVSS"
-      table: "SIVSS_SCN"
+      keyword: "SIVSS_SCN"
       file: "sa_sivss.csv"
 
     - path: "/SCN_BDD/T_FINESS"
-      table: "t-finess"
+      keyword: "t-finess"
       file: "sa_t_finess.csv"
 
     - path: "/SCN_BDD/INSEE"
-      table: "v_comer"
+      keyword: "v_comer"
       file: "v_comer.csv"
 
     - path: "/SCN_BDD/INSEE"
-      table: "v_commune_comer"
+      keyword: "v_commune_comer"
       file: "v_commune_comer.csv"
 
     - path: "/SCN_BDD/INSEE"
-      table: "v_commune_depuis"
+      keyword: "v_commune_depuis"
       file: "v_commune_depuis.csv"
 
     - path: "/SCN_BDD/INSEE"
-      table: "v_commune_2024"
+      keyword: "v_commune_2024"
       file: "v_commune.csv"
 
     - path: "/SCN_BDD/INSEE"
-      table: "v_departement"
+      keyword: "v_departement"
       file: "v_departement.csv"
 
     - path: "/SCN_BDD/INSEE"
-      table: "v_region"
+      keyword: "v_region"
       file: "v_region.csv"
 
     - path: "/SCN_BDD/INSERN/historique"
-      table: "sa_insern_n_2_n_1"
+      keyword: "sa_insern_n_2_n_1"
       file: "cert_dc_insern_n2_n1.csv"
 
     - path: "/SCN_BDD/INSERN/historique"
-      table: "CertDCInsern_2023_2024"
+      keyword: "CertDCInsern_2023_2024"
       file: "cert_dc_insern_2023_2024.csv"
 
     - path: "/SCN_BDD/DIAMANT/pour le script etl"
-      table: "sa_esms"
+      keyword: "sa_esms"
       file: "sa_esms.csv"
 
     - path: "/SCN_BDD/DIAMANT/pour le script etl"
-      table: "sa_pmsi"
+      keyword: "sa_pmsi"
       file: "sa_pmsi.csv"
 
     - path: "/SCN_BDD/DIAMANT/pour le script etl"
-      table: "sa_rpu"
+      keyword: "sa_rpu"
       file: "sa_rpu.csv"
 
     - path: "/SCN_BDD/DIAMANT/pour le script etl"
-      table: "sa_usld"
+      keyword: "sa_usld"
       file: "sa_usld.csv"
 
     - path: "/SCN_BDD/HUBEE"
-      table: "sa_hubee"
+      keyword: "sa_hubee"
       file: "sa_hubee.csv"
 
     - path: "/SCN_BDD/INSEE"
-      table: "DC_det"
+      keyword: "DC_det"
       file: "DC_det.csv"
 
     - path: "/SCN_BDD/INSEE/historique"
-      table: "sa_insee_n_2_n_3"
+      keyword: "sa_insee_n_2_n_3"
       file: "sa_insee_histo.csv"
 
 Staging:
@@ -122,7 +122,7 @@ Helios:
   input_directory: "input/"
   view_directory: "helios"
   output_directory: "output/"
-  remote_directory: "SCN_BDD/HELIOS/input"
+  remote_directory: "/SCN_BDD/HELIOS/input"
   base:
     sa_insern.csv: /SCN_BDD/INSERN
     sa_siicea_cibles.csv: /SCN_BDD/SIICEA
@@ -170,7 +170,7 @@ Ref:
   input_directory: "input/"
   view_directory: "ref_geo"
   output_directory: "output/"
-  remote_directory: "SCN_BDD/REFERENTIELS"
+  remote_directory: "/SCN_BDD/REFERENTIELS"
   base:
     sa_insern.csv: /SCN_BDD/INSERN
     sa_siicea_cibles.csv: /SCN_BDD/SIICEA
@@ -195,7 +195,7 @@ TdBIC:
   input_directory: "input/"
   view_directory: "tdb"
   output_directory: "output/"
-  remote_directory: "SCN_BDD/INSPECTION_CONTROLE/PA/input"
+  remote_directory: "/SCN_BDD/INSPECTION_CONTROLE/PA/input"
   base:
     sa_insern.csv: /SCN_BDD/INSERN
     sa_siicea_cibles.csv: /SCN_BDD/SIICEA
@@ -220,7 +220,9 @@ CertDC:
   input_directory: "input/"
   view_directory: "certdc"
   output_directory: "output/"
-  remote_directory: "SCN_BDD/CERTELEC_DC/input"
+  output_sql_directory: "Staging/output_sql/"
+  duckdb_directory: 
+  remote_directory: "/SCN_BDD/CERTELEC_DC/input"
   base:
     sa_insern.csv: /SCN_BDD/INSERN
     sa_siicea_cibles.csv: /SCN_BDD/SIICEA

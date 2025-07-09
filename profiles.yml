@@ -22,7 +22,8 @@ CertDC:
       type: postgres
       host: 10.89.136.17
       user: certelec_dc_admin
-      password: "{{ env_var('DBT_DB_PASSWORD') }}"
+      # password: "{{ env_var('DBT_DB_PASSWORD') }}"
+      password: "UQ=#7I)fp$_C8u"
       port: 5432
       schema: public
       dbname: certelec_dc
