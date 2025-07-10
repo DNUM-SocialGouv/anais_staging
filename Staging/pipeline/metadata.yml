@@ -82,7 +82,7 @@ tables:
 
     - path: "/SCN_BDD/INSEE"
       keyword: "DC_det"
-      file: "DC_det.csv"
+      file: "dc_det.csv"
 
     - path: "/SCN_BDD/INSEE/historique"
       keyword: "sa_insee_n_2_n_3"
@@ -105,10 +105,6 @@ Staging:
     v_commune_depuis.csv: /SCN_BDD/INSEE
     v_departement.csv: /SCN_BDD/INSEE
     v_region.csv: /SCN_BDD/INSEE
-  # tables:
-  #   cert_dc_insern_2023_2024: cert_dc_insern_2023_2024
-  #   cert_dc_insern_n2_n1: cert_dc_insern_n2_n1
-  #   DC_det: DC_det
   views:
     ods_insee: ods_insee
     ods_insern_edc: ods_insern_edc
@@ -123,44 +119,28 @@ Helios:
   view_directory: "helios"
   output_directory: "output/"
   remote_directory: "/SCN_BDD/HELIOS/input"
-  base:
-    sa_insern.csv: /SCN_BDD/INSERN
-    sa_siicea_cibles.csv: /SCN_BDD/SIICEA
-    sa_siicea_missions.csv: /SCN_BDD/SIICEA
-    sa_siicea_suites.csv: /SCN_BDD/SIICEA
-    sa_sirec.csv: /SCN_BDD/SIREC
-    sa_sivss.csv: /SCN_BDD/SIVSS
-    sa_t_finess.csv: /SCN_BDD/T_FINESS
-    v_comer.csv: /SCN_BDD/INSEE
-    v_commune.csv: /SCN_BDD/INSEE
-    v_commune_comer.csv: /SCN_BDD/INSEE
-    v_commune_depuis.csv: /SCN_BDD/INSEE
-    v_departement.csv: /SCN_BDD/INSEE
-    v_region.csv: /SCN_BDD/INSEE
   views:
     staging__helios_siicea_missions: helios_siicea_missions
     staging__helios_sirec: helios_sirec
     staging__helios_sivss: helios_sivss
 
-Matrice:
+Matrice_PA:
   input_directory: "input/"
   view_directory: "matrice"
   output_directory: "output/"
+  output_sql_directory: "Staging/output_sql/"
   remote_directory: "SCN_BDD/PRECIBLAGE/input"
-  base:
-    sa_insern.csv: /SCN_BDD/INSERN
-    sa_siicea_cibles.csv: /SCN_BDD/SIICEA
-    sa_siicea_missions.csv: /SCN_BDD/SIICEA
-    sa_siicea_suites.csv: /SCN_BDD/SIICEA
-    sa_sirec.csv: /SCN_BDD/SIREC
-    sa_sivss.csv: /SCN_BDD/SIVSS
-    sa_t_finess.csv: /SCN_BDD/T_FINESS
-    v_comer.csv: /SCN_BDD/INSEE
-    v_commune.csv: /SCN_BDD/INSEE
-    v_commune_comer.csv: /SCN_BDD/INSEE
-    v_commune_depuis.csv: /SCN_BDD/INSEE
-    v_departement.csv: /SCN_BDD/INSEE
-    v_region.csv: /SCN_BDD/INSEE
+  views:
+    staging__matrice_siicea_cibles: matrice_siicea_cibles
+    staging__matrice_siicea_missions_real: matrice_siicea_missions_real
+    staging__matrice_sirec: matrice_sirec
+
+Matrice_PH:
+  input_directory: "input/"
+  view_directory: "matrice"
+  output_directory: "output/"
+  output_sql_directory: "Staging/output_sql/"
+  remote_directory: "SCN_BDD/PRECIBLAGE/input"
   views:
     staging__matrice_siicea_cibles: matrice_siicea_cibles
     staging__matrice_siicea_missions_real: matrice_siicea_missions_real
@@ -170,46 +150,20 @@ Ref:
   input_directory: "input/"
   view_directory: "ref_geo"
   output_directory: "output/"
+  output_sql_directory: "Staging/output_sql/"
   remote_directory: "/SCN_BDD/REFERENTIELS"
-  base:
-    sa_insern.csv: /SCN_BDD/INSERN
-    sa_siicea_cibles.csv: /SCN_BDD/SIICEA
-    sa_siicea_missions.csv: /SCN_BDD/SIICEA
-    sa_siicea_suites.csv: /SCN_BDD/SIICEA
-    sa_sirec.csv: /SCN_BDD/SIREC
-    sa_sivss.csv: /SCN_BDD/SIVSS
-    sa_t_finess.csv: /SCN_BDD/T_FINESS
-    v_comer.csv: /SCN_BDD/INSEE
-    v_commune.csv: /SCN_BDD/INSEE
-    v_commune_comer.csv: /SCN_BDD/INSEE
-    v_commune_depuis.csv: /SCN_BDD/INSEE
-    v_departement.csv: /SCN_BDD/INSEE
-    v_region.csv: /SCN_BDD/INSEE
   views:
     staging__ref_communes: ref_communes
     staging__ref_departements: ref_departements
     staging__ref_geo: ref_geo
     staging__ref_regions: ref_regions
 
-TdBIC:
+InspectionControle:
   input_directory: "input/"
   view_directory: "tdb"
   output_directory: "output/"
+  output_sql_directory: "Staging/output_sql/"
   remote_directory: "/SCN_BDD/INSPECTION_CONTROLE/PA/input"
-  base:
-    sa_insern.csv: /SCN_BDD/INSERN
-    sa_siicea_cibles.csv: /SCN_BDD/SIICEA
-    sa_siicea_missions.csv: /SCN_BDD/SIICEA
-    sa_siicea_suites.csv: /SCN_BDD/SIICEA
-    sa_sirec.csv: /SCN_BDD/SIREC
-    sa_sivss.csv: /SCN_BDD/SIVSS
-    sa_t_finess.csv: /SCN_BDD/T_FINESS
-    v_comer.csv: /SCN_BDD/INSEE
-    v_commune.csv: /SCN_BDD/INSEE
-    v_commune_comer.csv: /SCN_BDD/INSEE
-    v_commune_depuis.csv: /SCN_BDD/INSEE
-    v_departement.csv: /SCN_BDD/INSEE
-    v_region.csv: /SCN_BDD/INSEE
   views:
     staging__tdb_ic_finess_500: tdb_ic_finess_500
     staging__tdb_ic_siicea_cibles: tdb_ic_siicea_cibles
@@ -221,22 +175,7 @@ CertDC:
   view_directory: "certdc"
   output_directory: "output/"
   output_sql_directory: "Staging/output_sql/"
-  duckdb_directory: 
   remote_directory: "/SCN_BDD/CERTELEC_DC/input"
-  base:
-    sa_insern.csv: /SCN_BDD/INSERN
-    sa_siicea_cibles.csv: /SCN_BDD/SIICEA
-    sa_siicea_missions.csv: /SCN_BDD/SIICEA
-    sa_siicea_suites.csv: /SCN_BDD/SIICEA
-    sa_sirec.csv: /SCN_BDD/SIREC
-    sa_sivss.csv: /SCN_BDD/SIVSS
-    sa_t_finess.csv: /SCN_BDD/T_FINESS
-    v_comer.csv: /SCN_BDD/INSEE
-    v_commune.csv: /SCN_BDD/INSEE
-    v_commune_comer.csv: /SCN_BDD/INSEE
-    v_commune_depuis.csv: /SCN_BDD/INSEE
-    v_departement.csv: /SCN_BDD/INSEE
-    v_region.csv: /SCN_BDD/INSEE
   views:
     ods_insee: ods_insee
     ods_insern_edc: ods_insern_edc

@@ -124,6 +124,7 @@ WITH brut_insee_deces AS (
 --
 --
 --	
+
 SELECT 
 --SUM(brut_insern_edc.DECES_NB)
 --, SUM(brut_insee_deces.DECES_NB)

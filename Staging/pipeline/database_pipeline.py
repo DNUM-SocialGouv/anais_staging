@@ -3,7 +3,7 @@ import duckdb
 import os
 from pathlib import Path
 import logging
-from typing import Callable
+from typing import Callable, Any
 import re
 
 # Modules
@@ -15,6 +15,27 @@ class DataBasePipeline:
                 sql_folder: str = "Staging/output_sql/",
                 csv_folder_input: str = "input/",
                 csv_folder_output: str = "output/"):
+        """
+        Classe qui réalise les actions communes pour n'importe quel database.
+        Cette classe est héritée par une classe relative au type de base.
+        ! Il est nécessaire de définir les éléments suivants dans la classe enfant:
+            - self.conn = connexion à la base de données
+            - self.schema = schéma de la base de données
+            - self.typedb = type de la base de données
+            - is_table_exist(self, conn, query_params: dict, print_log: bool) -> bool = fonction qui vérifie l'existence de la table
+            - show_row_count(self, conn, query_params: dict) = fonction qui compte le nombre de lignes de la table
+            - print_table(self, conn, query_params: dict, limit: int) = fonction qui affiche la table
+            - create_table(self, conn, sql_query: str, query_params: str) = fonction d'exécution des fichier SQL de CREATE TABLE
+            - load_csv_file(self, conn, csv_file: Path) = fonction d'injection des données d'un csv vers une table de la base de données
+        Parameters
+        ----------
+        sql_folder : str, optional
+            Chemin des fichiers SQL Create table, by default "Staging/output_sql/"
+        csv_folder_input : str, optional
+            Chemine des fichiers csv en entrée, by default "input/"
+        csv_folder_output : str, optional
+            Chemin des fichiers csv en sortie, by default "output/"
+        """
         self.sql_folder = sql_folder
         self.csv_folder_input = csv_folder_input
         self.csv_folder_output = csv_folder_output
@@ -24,8 +45,8 @@ class DataBasePipeline:
         for folder in [self.sql_folder, self.csv_folder_input, self.csv_folder_output]:
             os.makedirs(folder, exist_ok=True)
             logging.info(f"Dossier vérifié/créé : {folder}")
-    
-    def _read_sql_file(self, sql_file: Path) -> str:
+
+    def read_sql_file(self, sql_file: Path) -> str:
         """
         Lit un fichier sql.
 
@@ -33,23 +54,28 @@ class DataBasePipeline:
         ----------
         sql_file : Path
             Fichier sql à lire.
+
+        Returns
+        -------
+        str
+            Contenu du fichier SQL.        
         """
         with open(sql_file, "r", encoding="utf-8") as f:
             return f.read()
 
-    def find_table_name_in_sql(self, sql_file: str)-> str:
+    def find_table_name_in_sql(self, sql_file: str) -> str:
         """
-        Cherche le nom de la table dans un fichier sql (seulement un fichier avec CREATE TABLE).
+        Cherche le nom de la table dans un fichier sql (seulement un fichier SQL CREATE TABLE).
 
         Parameters
         ----------
         sql_file : str
-            Fichier sql de CREATE TABLE
-        
+            Fichier sql de CREATE TABLE.
+
         Returns
         -------
         str
-            Nom de la table.        
+            Nom de la table.
         """
         match = re.compile(
             r"CREATE\s+TABLE\s+(IF\s+NOT\s+EXISTS\s+)?(?P<name>(\"[^\"]+\"|\w+))",
@@ -61,49 +87,21 @@ class DataBasePipeline:
             return table_name
         else:
             return None
-    
-    def show_row_count(self, table: str):
-        """
-        Affiche le nombre de lignes d'une table.
-
-        Parameters
-        ----------
-        table : str
-            Nom de la table à vérifier (+ schema à indiquer si postgres).
-        """
-        row_count = self.conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]
-        if row_count == 0:
-            logging.warning(f"⚠️ La table '{table}' est vide.")
-            return True
-        else:
-            logging.info(f"✅ La table '{table}' contient {row_count} lignes.")
-    
-    def print_table(table: str, limit: int):
-        """
-        Affiche les premières lignes d'une table.
-
-        Parameters
-        ----------
-        table : str
-            Nom de la table à vérifier (+ schema à indiquer si postgres).
-        limit : int, optional
-            Nombre de lignes à afficher si print_table est True, 10 by default.
-        """
-        df = self.conn.execute(f"SELECT * FROM {table} LIMIT {limit}").fetchdf()
-        logging.info(f"🔍 Aperçu de '{table}' ({limit} lignes) :\n{df.to_string(index=False)}")
 
     def check_table(
         self,
-        table_name: str,
+        conn,
         query_params: dict,
         print_table: bool = False,
         show_row_count: bool = False
     ) -> bool:
         """
-        Vérifie l'existence et le contenu d'une table, avec option d'affichage.
+        Vérifie l'existence d'une table, son nombre de ligne (optionnel) et affiche son contenu (optionnel).
 
         Parameters
         ----------
+        conn : sqlalchemy.engine.base.Connection | duckdb.DuckDBPyConnection
+            Connexion à la base de données.
         table_name : str
             Nom de la table à vérifier.
         query_params : dict
@@ -111,7 +109,8 @@ class DataBasePipeline:
         print_table : bool, optional
             Affiche les premières lignes de la table si elle existe, False by default.
         show_row_count : bool, optional
-            Affiche le nombre total de lignes, False by default
+            Affiche le nombre total de lignes, False by default.
+
         Returns
         -------
         bool
@@ -119,32 +118,36 @@ class DataBasePipeline:
         """
         try:
             # Vérifie si la table existe ou non
-            table_exist = self.is_table_exist(query_params)
+            table_exist = self.is_table_exist(conn, query_params, True)
 
             if table_exist:
                 # Vérifie si la table est remplie ou non
                 if show_row_count:
-                    self.show_row_count(table_name)
+                    self.show_row_count(conn, query_params)
 
                 # Affichage des premières valeurs d'une table
                 if print_table:
-                    self.print_table(table_name)
+                    self.print_table(conn, query_params)
             return table_exist
 
         except Exception as e:
-            logging.error(f"❌ Erreur lors de la vérification de la table '{table_name}' → {e}")
+            logging.error(f"❌ Erreur lors de la vérification de la table '{query_params["table"]}' → {e}")
             return False
 
-    def execute_sql_file(self, sql_file: Path, create_table_func: Callable[[str], None]):
+    def execute_sql_file(self, conn, sql_file: Path, create_table_func: Callable[[Any, str, dict], None]):
         """
-        Exécute un fichier SQL si la table n'existe pas. 
+        Exécute un fichier SQL Create Table.
 
         Parameters
         ----------
+        conn : sqlalchemy.engine.base.Connection | duckdb.DuckDBPyConnection
+            Connexion à la base de données.
         sql_file : Path
             Fichier SQL Create table.
+        create_table_func : Callable[[Any, str, dict], None]
+            Fonction create_table relative au type de base.
         """
-        sql = self._read_sql_file(sql_file)
+        sql = self.read_sql_file(sql_file)
         table_name = self.find_table_name_in_sql(sql)
 
         if not table_name:
@@ -153,14 +156,14 @@ class DataBasePipeline:
         else:
             query_params = {"schema": self.schema, "table": table_name}
 
-            if not self.is_table_exist(query_params):
-                try:
-                    create_table_func(sql, query_params)
-                    logging.info(f"✅ Table créée avec succès : {sql_file.name}")
-                except Exception as e:
-                    logging.error(f"❌ Erreur lors de l'exécution du SQL {sql_file.name}: {e}")
+            # if not self.is_table_exist(conn, query_params):
+            try:
+                create_table_func(conn, sql, query_params)
+                logging.info(f"✅ Table créée avec succès : {sql_file.name}")
+            except Exception as e:
+                logging.error(f"❌ Erreur lors de l'exécution du SQL {sql_file.name}: {e}")
 
-    def export_csv(self, views_to_export, date):
+    def export_csv(self, views_to_export: dict, date: str):
         """
         Exporte les vues vers un format csv.
 
@@ -173,7 +176,7 @@ class DataBasePipeline:
         """
         for table_name, csv_name in views_to_export.items():
             if table_name:
-                export_to_csv(table_name, csv_name, self._fetch_df, self.csv_folder_output, date)
+                export_to_csv(table_name, csv_name, self.fetch_df, self.csv_folder_output, date)
             else:
                 logging.warning("⚠️ Aucune table spécifiée")
 
@@ -182,17 +185,19 @@ class DataBasePipeline:
         Exécute toutes les étapes suivantes :
             - Création des tables SQL dans la base
             - Chargement des CSV et injection dans les tables
-            - Vérification de la création
+            - Vérification de leur création
         """
         self.ensure_directories_exist()
+        conn = self.conn
         for sql_file in Path(self.sql_folder).glob("*.sql"):
-            self.execute_sql_file(sql_file, self.create_table)
+            self.execute_sql_file(conn, sql_file, self.create_table)
 
         logging.info(f"Début du chargement des fichiers CSV vers {self.typedb}.")
         for csv_file in Path(self.csv_folder_input).glob("*.csv"):
-            self.load_csv_file(csv_file)
+            self.load_csv_file(conn, csv_file)
         logging.info(f"Fin du chargement des fichiers CSV vers {self.typedb}.")
 
         for csv_file in Path(self.csv_folder_input).glob("*.csv"):
             query_params = {"schema": self.schema, "table": csv_file.stem}
-            self.check_table(csv_file.stem, query_params, print_table=False)
+            self.check_table(conn, query_params, print_table=False, show_row_count = True)
+        conn.close()

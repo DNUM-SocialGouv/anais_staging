@@ -305,6 +305,7 @@ SELECT
     FROM tmp_categories
 )
 
+
 SELECT
     agg_all.ID_REF,
     agg_all.REG_CD,

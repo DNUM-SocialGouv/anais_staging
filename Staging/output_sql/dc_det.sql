@@ -1,4 +1,4 @@
-CREATE TABLE DC_det (
+CREATE TABLE dc_det (
 	date VARCHAR,
 	adec INTEGER,
 	mdec INTEGER,
@@ -10,7 +10,7 @@ CREATE TABLE DC_det (
 	anais INTEGER,
 	mnais INTEGER,
 	jnais INTEGER,
-	sexe INTEGER,
+	sexe VARCHAR,
 	depnais VARCHAR,
 	pnais VARCHAR,
 	lieudeces_r VARCHAR

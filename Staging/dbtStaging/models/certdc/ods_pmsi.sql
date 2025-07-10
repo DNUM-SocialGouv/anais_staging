@@ -146,6 +146,7 @@ WITH mco_ssr_had_psy AS (
 --
 --
 --
+
 SELECT *
 FROM (
     SELECT * FROM mco_ssr_had_psy

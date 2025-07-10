@@ -6,7 +6,7 @@ Staging:
       type: postgres
       host: 10.89.136.17
       user: staging_admin
-      password: "{{ env_var('DBT_DB_PASSWORD') }}"
+      password: "{{ env_var('STAGING_PASSWORD') }}"
       port: 5432
       schema: public
       dbname: staging
@@ -15,6 +15,7 @@ Staging:
       path: data/duckdb_database.duckdb
       schema: main
 
+# DNUM - Layer CertDC (dépend de la base de Staging)
 CertDC:
   target: local
   outputs:
@@ -22,8 +23,7 @@ CertDC:
       type: postgres
       host: 10.89.136.17
       user: certelec_dc_admin
-      # password: "{{ env_var('DBT_DB_PASSWORD') }}"
-      password: "UQ=#7I)fp$_C8u"
+      password: "{{ env_var('CERTDC_PASSWORD') }}"
       port: 5432
       schema: public
       dbname: certelec_dc
@@ -32,21 +32,69 @@ CertDC:
       path: data/duckdb_database.duckdb
       schema: main
   
-      
-
 # DNUM - Layer InspectionControle (dépend de la base de Staging)
-dbtInspectionControle:
-  target: dev
+InspectionControle:
+  target: local
   outputs:
-    dev:
+    anais:
+      type: postgres
+      host: 10.89.136.17
+      user: inspection_controle_admin
+      password: "{{ env_var('INSPECTION_CONTROLE_ADMIN_PASSWORD') }}"
+      port: 5432
+      schema: public
+      dbname: inspection_controle
+    local:
       type: duckdb
-      path: ../../Staging/data/duckdb_database.duckdb
+      path: data/duckdb_database.duckdb
       schema: main
 
 # DNUM - Layer Helios (dépend de la base de Staging)
 Helios:
   target: local
   outputs:
+    anais:
+      type: postgres
+      host: 10.89.136.17
+      user: helios_admin
+      password: "{{ env_var('HELIOS_PASSWORD') }}"
+      port: 5432
+      schema: public
+      dbname: helios
+    local:
+      type: duckdb
+      path: data/duckdb_database.duckdb
+      schema: main
+
+# DNUM - Layer Matrice Personnes Agées (dépend de la base de Staging)
+Matrice_PA:
+  target: local
+  outputs:
+    anais:
+      type: postgres
+      host: 10.89.136.17
+      user: matrice_pa_admin
+      password: "{{ env_var('MATRICE_PA_PASSWORD') }}"
+      port: 5432
+      schema: public
+      dbname: matrice_ph
+    local:
+      type: duckdb
+      path: data/duckdb_database.duckdb
+      schema: main
+  
+# DNUM - Layer Matrice Personnes Handicapées (dépend de la base de Staging)
+Matrice_PH:
+  target: local
+  outputs:
+    anais:
+      type: postgres
+      host: 10.89.136.17
+      user: matrice_ph_admin
+      password: "{{ env_var('MATRICE_PH_PASSWORD') }}"
+      port: 5432
+      schema: public
+      dbname: matrice_ph
     local:
       type: duckdb
       path: data/duckdb_database.duckdb

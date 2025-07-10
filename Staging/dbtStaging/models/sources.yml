@@ -19,7 +19,7 @@ sources:
       - name: v_region
       - name: cert_dc_insern_2023_2024
       - name: cert_dc_insern_n2_n1
-      - name: DC_det
+      - name: dc_det
       - name: sa_esms
       - name: sa_hubee
       - name: sa_insee_histo
@@ -45,7 +45,7 @@ sources:
       - name: v_region
       - name: cert_dc_insern_2023_2024
       - name: cert_dc_insern_n2_n1
-      - name: DC_det
+      - name: dc_det
       - name: sa_esms
       - name: sa_hubee
       - name: sa_insee_histo

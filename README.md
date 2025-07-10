@@ -35,7 +35,7 @@ DBT nécessite un fichier de configuration appelé `profiles.yml`, qui contient 
 
 ### Où se trouve le fichier ?
 
-Il doit être placé dans le répertoire suivant :
+Il doit se trouver dans le répertoire suivant :
 - **Linux/macOS** : `~/.dbt/profiles.yml`
 - **Windows** : `C:\Users\<VotreNom>\.dbt\profiles.yml`
 
@@ -62,7 +62,29 @@ Il contient les informations relatives aux bases de données des différents pro
 Seul le password des bases postgres n'est pas indiqué -> il est indiqué dans le `.env`
 
 ---
+## 3. ⚙️ Configuration du fichier `metadata.yml`
 
+Le fichier `metadata.yml` contient le paramétrage relatif aux fichiers en entrée et en sortie pour les différents projets.
+
+### Section **tables**
+
+Contient les informations relatives aux fichiers csv provenant du SFTP.
+La section `files_to_download` (fichier à télécharger) contient :
+- path = Chemin du fichier sur le SFTP. Exemple : "/SCN_BDD/INSERN"
+- keyword = Terme dans le nom du fichier qui permet de le distinguer des autres fichiers. Exemple : "DNUM_TdB_CertDc" pour un fichier nommer DNUM_TdB_CertDcT42024T12025.csv
+- file = Nom d'enregistrement du fichier une fois importé. Exemple : "sa_insern.csv"
+
+### Section **<Nom_projet>**
+
+Contient les informations relatives aux fichiers et répertoires du projet.
+- input_directory = répertoire où sont trouvables les fichiers csv en entrée. Par défaut "input/"
+- view_directory = répertoire dans lequel sont enregistrés les modèles dbt du projet. Exemple: "certdc", touvable dans '/anais_staging/Staging/dbtStaging/models/'
+- output_directory = répertoire où sont enregistrés les fichiers csv en sortie. Par défaut "output/"
+- output_sql_directory = répertoire où sont enregistrés les fichiers SQL Create table. Par dafaut 'Staging/output_sql/'
+- remote_directory = répertoire sur le SFTP où sont enregistrés les fichiers csv en sortie. Exemple: "/SCN_BDD/CERTELEC_DC/input"
+- views = Nom des modèles dbt exportés. Avec en premier élément : nom de la vue sql (nom du modèle dbt). En second élément : radical du nom donné au fichier csv exporté. Le nom final sera 'sa_<radical>_<date_du_jour>.csv'. Exemple: ods_insee: ods_insee
+
+---
 ## 3. Lancement du pipeline :
 
 L'ensemble de la Pipeline est exécuté depuis le `main.py`.
@@ -87,24 +109,112 @@ Avec env = 'local' ou 'anais' selon votre environnement de travail
 et profile = 'Staging', 'Helios', 'Matrice', 'InspectionControle' ou 'CertDC' selon le projet que vous souhaitez lancer
 
 ### Pipeline sur env 'local':
-1. Récupération des fichiers d'input. Ces fichiers sont placés manuellement dans le dossier `input` sous format **.csv** (les délimiteurs sont gérés automatiquement)
+1. Récupération des fichiers d'input. Ces fichiers sont placés manuellement dans le dossier `input/` sous format **.csv** (les délimiteurs sont gérés automatiquement)
 2. Création de la base DuckDB si inexistante.
 3. Connexion à la base DuckDB
 4. Création des tables si inexistantes
 5. Lecture des csv avec standardisation des colonnes (sans caractères spéciaux) -> injection des données dans les tables
 6. Vérification de l'injection
 7. Exécution de la commande `run dbt` -> Création des vues relatives au projet
-8. Export des vues dans le dossier `output`
+8. Export des vues dans le dossier `output/`
 9. Fermeture de la connexion à la base DuckDB
 
 ### Pipeline sur env 'anais':
-1. Récupération des fichiers d'input. Ces fichiers sont récupérés automatiquement sur le SFTP et placés dans le dossier `input` sous format **.csv** (les délimiteurs sont gérés automatiquement)
+1. Récupération des fichiers d'input. Ces fichiers sont récupérés automatiquement sur le SFTP et placés dans le dossier `input/` sous format **.csv** (les délimiteurs sont gérés automatiquement)
 2. Création de la base Postgres si inexistante.
 3. Connexion à la base Postgres
 4. Création des tables si inexistantes
 5. Lecture des csv avec standardisation des colonnes (sans caractères spéciaux) -> injection des données dans les tables
 6. Vérification de l'injection
 7. Exécution de la commande `run dbt` -> Création des vues relatives au projet
-8. Export des vues dans le dossier `output` au format **.csv**
+8. Export des vues dans le dossier `output/` au format **.csv**
 9. Fermeture de la connexion à la base Postgres
 10. Export des **.csv** en output vers le SFTP
+
+
+## Architecture du projet
+# MonProjet
+
+## 🏗️ Architecture du projet
+
+```plaintext
+.
+├── data
+│   └── duckdb_database.duckdb
+├── input
+│   ├── cert_dc_insern_2023_2024.csv
+│   ...
+│   └── v_region.csv
+├── logs
+│   └── sources.log
+├── output
+│   ├── sa_ods_insee_2025_07_09.csv
+│   ...
+│   └── sa_ods_pmsi_2025_07_09.csv
+├── Staging
+│   ├── dbtStaging
+│   │   ├── dbt_project.yml
+│   │   ├── logs
+│   │   ├── macros
+│   │   ├── models
+│   │   ├── target
+│   │   └── tests
+│   ├── logs
+│   ├── main.py
+│   ├── output_sql
+│   │   ├── cert_dc_insern_2023_2024.sql
+│   │   ...
+│   │   └── v_region.sql
+│   ├── pipeline
+│   │   ├── __init__.py
+│   │   ├── csv_management.py
+│   │   ├── database_pipeline.py
+│   │   ├── duckdb_pipeline.py
+│   │   ├── load_yml.py
+│   │   ├── metadata.yml
+│   │   ├── postgres_loader.py
+│   │   └── sftp_sync.py
+│   ├── staging_tables.txt
+│   └── staging_views.txt
+├── poetry.lock
+├── profiles.yml
+├── pyproject.toml
+├── README.md
+└── uv.lock
+```
+
+## Utilités des fichiers
+### ./Staging/dbtStaging/
+Répertoire de fonctionnement des modèles DBT -> création de vue SQL.
+
+dbt_project.yml : Fichier de configuration de DBT (obligatoire)
+macros/ : Répertoire de stockage des macro jinja
+models/ : Répertoire de stockage des modèles dbt
+
+### ./Staging/pipeline/
+Répertoire d'orchestration de la pipeline Python.
+.env : Fichier secret contenant le paramétrage vers le SFTP et les mots de passes des bases de données postgres.
+database_pipeline.py : Réalise les actions communes pour n'importe quelle database (lecture de fichier SQL, exécution du fichier sql, export de vues, run de la pipeline...). Fonctionne en complément avec duckdb_pipeline.py et postgres_loader.py.
+duckdb_pipeline.py : Réalise les actions spécifiques à une base (connexion à la base, création de table, chargement des données dans la BDD). Fonctionne en complément avec database_pipeline.py.
+postgres_loader.py : Réalise les actions spécifiques à une base postgres (connexion à la base, création de table, chargement des données dans la BDD). Fonctionne en complément avec database_pipeline.py.
+sftp_sync.py : Réalise les actions relatives à une connexion SFTP (connexion, import, export...)
+csv_management.py : Réalise les actions relatives à la manipulation de fichier csv (transformation d'un .xlsx en .csv, lecture du .csv avec délimiteur personnalisé, standarisation des colonnes, conversion des types, export ...)
+metadata.yml : Contient les informations relatives aux fichiers .csv provenant du SFTP.
+load_yml.py : Lit un fichier .yml
+
+./Staging/main.py : Programme d'exécution de la pipeline
+
+./Staging/output_sql/ : Répertoire qui contient les fichiers .sql de création de table (CREATE TABLE)
+
+./logs/ : Répertoire de la log
+
+./data/duckdb_database.duckdb : Base duckDB
+
+./input/ : Répertoire de stockage des fichiers .csv en entrée
+./output/ : Répertoire de stockage des fichiers .csv en sortie
+
+./profiles.yml : Contient les informations relatives aux bases des différents projets.
+
+./poetry.lock
+./uv.lock
+./pyproject.toml

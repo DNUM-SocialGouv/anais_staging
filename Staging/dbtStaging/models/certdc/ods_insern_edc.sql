@@ -85,6 +85,7 @@ WITH insern AS (
             )}} AS CAT_ETAB_LB
     FROM {{ ref('staging__sa_t_finess') }} t_finess
 )
+
 SELECT
     insern.REG_CD,
     insern.REG_LB,

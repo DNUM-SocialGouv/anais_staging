@@ -28,18 +28,18 @@ class DuckDBPipeline(DataBasePipeline):
                 csv_folder_output: str = "output/",
                 db_path: str = 'data/duckdb_database.duckdb'):
         """
-        Initialisation de la base DuckDB avec les répertoires des fichiers.
+        Initialisation de la base DuckDB. Classe héritière de DataBasePipeline.
 
         Parameters
         ----------
-        db_path : str, optional
-            Répertoire de la base duckdb, by default 'data/duckdb_database.duckdb'
         sql_folder : str, optional
-            Répertoire des fichiers SQL CREATE TABLE, by default "Staging/output_sql/"
+            Répertoire des fichiers SQL CREATE TABLE, by default "Staging/output_sql/".
         csv_folder_input : str, optional
-            Répertoire des fichiers csv importés, by default "input/"
+            Répertoire des fichiers csv importés, by default "input/".
         csv_folder_output : str, optional
-            Répertoire des fichiers csv exportés, by default "output/"
+            Répertoire des fichiers csv exportés, by default "output/".
+        db_path : str, optional
+            Répertoire de la base duckdb, by default 'data/duckdb_database.duckdb'.
         """
         super().__init__(sql_folder=sql_folder,
                          csv_folder_input=csv_folder_input,
@@ -59,97 +59,159 @@ class DuckDBPipeline(DataBasePipeline):
         else:
             logging.info("La base DuckDB existe déjà.")
 
-    def create_table(self, sql_query: str, query_params: str):
-        """ Exécution du fichier SQL Create Table. """
-        self.conn.execute(sql_query)
+    def create_table(self, conn, sql_query: str, query_params: dict):
+        """
+        Exécution du fichier SQL Create Table.
 
-    def get_duckdb_schema(self, conn, table_name):
-        """ Récupération du schema DuckDB. """
+        Parameters
+        ----------
+        conn : duckdb.DuckDBPyConnection
+            Connexion à la base DuckDB.
+        sql_query : str
+            Contenu du fichier SQL Create table.
+        query_params : dict
+            Paramètres à injecter dans la requête SQL (Non nécessaire pour duckDB).
+        """
+        conn.execute(sql_query)
+
+    def get_duckdb_schema(self, conn, table_name: str) -> pd.DataFrame:
+        """
+        Récupération du schéma DuckDB pour une table spécifique.
+
+        Parameters
+        ----------
+        conn : duckdb.DuckDBPyConnection
+            Connexion à la base DuckDB.
+        table_name : str
+            Nom de la table.
+
+        Returns
+        -------
+        pd.DataFrame
+            Schéma de la table contenant le nom des colonnes, leur type et leur format.
+        """
         return conn.execute(f"DESCRIBE {table_name}").fetchdf()
 
-    def is_table_exist(self, query_params: dict) -> bool:
+    def is_table_exist(self, conn, query_params: dict, print_log: bool = False) -> bool:
         """
         Indique si la table existe ou non.
 
         Parameters
         ----------
+        conn : duckdb.DuckDBPyConnection
+            Connexion à la base DuckDB.
         query_params : dict
             Paramètres à injecter dans la requête SQL.
-
+        print_log : bool
+            True si on souhaite afficher la log, False sinon, by default False.
+            
         Returns
         -------
         bool
             True si la table existe (et non vide si applicable), False sinon.
         """
         table_name = query_params['table']
-        table_exists = self.conn.execute(f"""
-                SELECT COUNT(*) 
+        table_exists = conn.execute(f"""
+                SELECT COUNT(*)
                 FROM information_schema.tables 
                 WHERE table_name = '{table_name}'
                 """).fetchone()[0]
 
         if table_exists:
-            # logging.warning(f"✅ La table '{table_name}' existe déjà.")
+            if print_log:
+                logging.warning(f"✅ La table '{table_name}' existe déjà.")
             return True
         else:
-            logging.warning(f"❌ La table '{table_name}' n'existe pas.")
+            if print_log:
+                logging.warning(f"❌ La table '{table_name}' n'existe pas.")
             return False
-        
-    def load_csv_file(self, csv_file: Path):
+
+    def show_row_count(self, conn, query_params: dict):
+        """
+        Affiche le nombre de lignes d'une table.
+
+        Parameters
+        ----------
+        conn : duckdb.DuckDBPyConnection
+            Connexion à la base de données DuckDB.
+        query_params : dict
+            Nom de la table.
+        """
+        table = query_params["table"]
+
+        row_count = conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]
+        if row_count == 0:
+            logging.warning(f"⚠️ La table '{table}' est vide.")
+        else:
+            logging.info(f"✅ La table '{table}' contient {row_count} lignes.")
+
+    def print_table(self, conn, query_params: dict, limit: int):
+        """
+        Affiche les premières lignes d'une table.
+
+        Parameters
+        ----------
+        conn : duckdb.DuckDBPyConnection
+            Connexion à la base de données DuckDB.
+        query_params : dict
+            Nom de la table.
+        limit : int, optional
+            Nombre de lignes à afficher si print_table est True, 10 by default.
+        """
+        table = query_params["table"]
+
+        df = conn.execute(f"SELECT * FROM {table} LIMIT {limit}").fetchdf()
+        logging.info(f"🔍 Aperçu de '{table}' ({limit} lignes) :\n{df.to_string(index=False)}")
+
+    def load_csv_file(self, conn, csv_file: Path):
         """
         Charge un fichier CSV et l'injecte dans la base DuckDB.
 
         Parameters
         ----------
+        conn : duckdb.DuckDBPyConnection
+            Connexion à la base de données.
         csv_file : Path
             Fichier csv.
         """
-        # table_name = csv_file.stem
-        # result = self.conn.execute(f"""
-        #     SELECT COUNT(*)
-        #     FROM information_schema.tables 
-        #     WHERE table_name = '{table_name}'
-        # """).fetchone()[0]
-
-        
-        # csv_exists = self.conn.execute(
-        #     f"""
-        #     SELECT EXISTS (
-        #         SELECT COUNT(*)
-        #         FROM information_schema.tables 
-        #         WHERE table_name = '{table_name}'
-        #     )
-        #     """).fetchone()[0]
         logging.info(f"📥 Chargement du fichier : {csv_file}")
         table_name = csv_file.stem
         self.query_params = {"schema": self.schema, "table": table_name}
+
         # Si la table est inexistante
-        if not self.is_table_exist(self.query_params):
+        if not self.is_table_exist(conn, self.query_params):
             logging.warning(f"Table {table_name} non trouvée, impossible de charger {csv_file.name}")
             return
 
-        schema_df = self.get_duckdb_schema(self.conn, table_name)
+        schema_df = self.get_duckdb_schema(conn, table_name)
 
         # Chargement du csv
         df = csv_pipeline(csv_file, schema_df)
 
         # Vérification de la présence de la table
-        row_count = self.conn.execute(f"SELECT COUNT(*) FROM {table_name}").fetchone()[0]
+        row_count = conn.execute(f"SELECT COUNT(*) FROM {table_name}").fetchone()[0]
 
         if row_count > 0:
             logging.info(f"Données déjà présentes dans {table_name}, passage du fichier CSV : {csv_file.name}")
         else:
             logging.info(f"🆕 Injection dans la table '{table_name}' à partir du CSV {csv_file}")
             try:
-                self.conn.execute(f"INSERT INTO {table_name} SELECT * FROM df")
+                conn.execute(f"INSERT INTO {table_name} SELECT * FROM df")
                 logging.info(f"✅ Table '{table_name}' créée et remplie avec succès ({csv_file})")
             except duckdb.Error as e:
                 logging.error(f"Erreur lors du chargement de {csv_file.name}: {e}")
 
-    def list_tables(self):
-        """Liste toutes les tables existantes dans la base DuckDB."""
+    def list_tables(self, conn):
+        """
+        Liste toutes les tables existantes dans la base DuckDB.
+
+        Parameters
+        ----------
+        conn : duckdb.DuckDBPyConnection
+            Connexion à la base de données.
+        """
         try:
-            tables = self.conn.execute("SELECT table_schema, table_name FROM information_schema.tables").fetchall()
+            tables = conn.execute("SELECT table_schema, table_name FROM information_schema.tables").fetchall()
 
             if not tables:
                 logging.warning("Aucune table trouvée dans la base DuckDB.")
@@ -162,7 +224,7 @@ class DuckDBPipeline(DataBasePipeline):
         except Exception as e:
             logging.error(f"Erreur lors de la récupération des tables : {e}")
 
-    def _fetch_df(self, table_name: str) -> pd.DataFrame:
+    def fetch_df(self, table_name: str) -> pd.DataFrame:
         """
         Fonction de chargement d'une table depuis une base DuckDB.
         Importante pour l'export des csv.
@@ -180,6 +242,6 @@ class DuckDBPipeline(DataBasePipeline):
         return self.conn.execute(f"SELECT * FROM {table_name}").df()
 
     def close(self):
-        """Ferme la connexion à la base de données Duckdb."""
+        """ Ferme la connexion à la base de données Duckdb. """
         self.conn.close()
         logging.info("Connexion à DuckDB fermée.")

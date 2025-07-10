@@ -8,7 +8,7 @@ from typing import Tuple, Optional, List, Dict
 
 # Modules
 from pipeline.csv_management import TransformExcel
-from pipeline.load_yml import load_colnames_YAML
+from pipeline.load_yml import load_metadata_YAML
 
 
 # Classe SFTPSync

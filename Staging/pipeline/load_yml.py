@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 import yaml
 import logging
+import re
 
 
 # Fonction
@@ -52,7 +53,7 @@ def load_YAML(file_name: str, config_file_dir: str = None) -> dict:
         raise
 
 
-def load_colnames_YAML(file_name: str, table: str, config_file_dir: str = None) -> dict:
+def load_metadata_YAML(file_name: str, table: str, config_file_dir: str = None) -> dict:
     """
     Charge le fichier de configuration et récupère la liste des colonnes d'une table donnée.
 
@@ -92,3 +93,26 @@ def load_colnames_YAML(file_name: str, table: str, config_file_dir: str = None) 
     except Exception as e:
         logging.error(f"Erreur inattendue lors du chargement de la configuration : {e}")
         raise
+
+
+def resolve_env_var(value: str) -> str:
+    """
+    Transforme une variable d'environnement (stocké dans le .env) en chaine de caractère en valeur exploitable.
+    Exemple : "{{ env_var('ID_USER') }}" -> Michel.Dupond
+
+    Parameters
+    ----------
+    value : str
+        Variable d'environnement en chaine de caractère.
+
+    Returns
+    -------
+    str
+        Valeur de la variable d'environnement.
+    """
+    pattern = r"\{\{\s*env_var\(['\"](.+?)['\"]\)\s*\}\}"
+    match = re.fullmatch(pattern, value.strip())
+    if match:
+        env_key = match.group(1)
+        return os.getenv(env_key, f"<MISSING ENV: {env_key}>")
+    return value

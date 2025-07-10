@@ -29,7 +29,7 @@ WITH sa_insee_total AS (
             WHEN {{ previous_month_condition(reference_date, 1, 'adec', 'mdec') }} THEN 1.001
             ELSE 1
         END AS Total
-    FROM {{ ref('staging__DC_det') }}
+    FROM {{ ref('staging__dc_det') }}
     WHERE 1=1
     AND {{ previous_year_and_current(reference_date, 'adec', 'mdec') }}
     --attention variables Ã  modifier selon la date de MAJ
@@ -111,4 +111,5 @@ GROUP BY
     DECES_MOIS,
     DECES_JOUR,
     DECES_LIEU
+
 
