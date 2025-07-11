@@ -173,11 +173,13 @@ class DataBasePipeline:
         date : str
             Date présente dans le nom des fichiers à exporter.
         """
+        conn = self.conn
         for table_name, csv_name in views_to_export.items():
             if table_name:
-                export_to_csv(table_name, csv_name, self.fetch_df, self.csv_folder_output, date)
+                export_to_csv(conn, table_name, csv_name, self.fetch_df, self.csv_folder_output, date)
             else:
                 logging.warning("⚠️ Aucune table spécifiée")
+        conn.close()
 
     def run(self):
         """

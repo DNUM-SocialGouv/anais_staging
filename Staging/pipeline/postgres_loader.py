@@ -6,6 +6,7 @@ import logging
 from sqlalchemy import create_engine, inspect, text
 from dotenv import load_dotenv
 from pathlib import Path
+import urllib.parse
 
 # Modules
 from pipeline.csv_management import csv_pipeline
@@ -56,7 +57,7 @@ class PostgreSQLLoader(DataBasePipeline):
         self.host = db_config["host"]
         self.port = db_config["port"]
         self.user = db_config["user"]
-        self.password = resolve_env_var(db_config["password"])
+        self.password = urllib.parse.quote(resolve_env_var(db_config["password"]))
         self.database = db_config["dbname"]
         self.schema = db_config["schema"]
         self.engine = self.init_engine()
@@ -279,13 +280,15 @@ class PostgreSQLLoader(DataBasePipeline):
         except Exception as e:
             logging.error(f"❌ Erreur pour le fichier {csv_file} → {e}")
 
-    def fetch_df(self, table_name: str) -> pd.DataFrame:
+    def fetch_df(self, conn, table_name: str) -> pd.DataFrame:
         """
         Fonction de chargement d'une table depuis une base postgres.
         Importante pour l'export des csv.
 
         Parameters
         ----------
+        conn : sqlalchemy.engine.base.Connection
+            Connexion à la base de données.
         table_name : str
             Nom de la table que l'on charge.
 
@@ -294,8 +297,8 @@ class PostgreSQLLoader(DataBasePipeline):
         pd.DataFrame
             Dataframe de la table chargée.
         """
-        self.conn.execute(text(f"SET search_path TO {self.schema}"))
-        return pd.read_sql_table(table_name, self.conn)
+        conn.execute(text(f"SET search_path TO {self.schema}"))
+        return pd.read_sql_table(table_name, conn)
 
     def close(self):
         """Ferme la connexion à la base de données postgres."""

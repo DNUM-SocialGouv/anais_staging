@@ -354,13 +354,15 @@ def csv_pipeline(csv_file: Path, schema_df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def export_to_csv(table_name: str, csv_name: str, df_fetch_func: Callable[[str], pd.DataFrame], output_folder: str, date: str):
+def export_to_csv(conn, table_name: str, csv_name: str, df_fetch_func: Callable[[str], pd.DataFrame], output_folder: str, date: str):
     """
     Exporte une table SQL vers un format csv.
     Le dataframe peut être issue d'un requêtage duckdb ou postgres. 
 
     Parameters
     ----------
+    conn : duckdb.DuckDBPyConnection | sqlalchemy.engine.base.Connection
+        Connexion à la base de données.
     table_name : str
         Nom de la table SQL
     csv_name : str
@@ -380,7 +382,7 @@ def export_to_csv(table_name: str, csv_name: str, df_fetch_func: Callable[[str],
     logging.info(f"📤 Export de '{table_name}' → {output_path}")
 
     try:
-        df = df_fetch_func(table_name)
+        df = df_fetch_func(conn, table_name)
         df.to_csv(output_path, index=False, sep=";", encoding="utf-8-sig")
         logging.info(f"✅ Export réussi : {file_name}")
     except Exception as e:

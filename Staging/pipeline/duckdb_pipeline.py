@@ -224,13 +224,15 @@ class DuckDBPipeline(DataBasePipeline):
         except Exception as e:
             logging.error(f"Erreur lors de la récupération des tables : {e}")
 
-    def fetch_df(self, table_name: str) -> pd.DataFrame:
+    def fetch_df(self, conn, table_name: str) -> pd.DataFrame:
         """
         Fonction de chargement d'une table depuis une base DuckDB.
         Importante pour l'export des csv.
 
         Parameters
         ----------
+        conn : duckdb.DuckDBPyConnection
+            Connexion à la base de données.
         table_name : str
             Nom de la table que l'on charge.
 
@@ -239,7 +241,7 @@ class DuckDBPipeline(DataBasePipeline):
         pd.DataFrame
             Dataframe de la table chargée.
         """
-        return self.conn.execute(f"SELECT * FROM {table_name}").df()
+        return conn.execute(f"SELECT * FROM {table_name}").df()
 
     def close(self):
         """ Ferme la connexion à la base de données Duckdb. """
