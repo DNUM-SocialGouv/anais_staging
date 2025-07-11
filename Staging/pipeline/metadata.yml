@@ -118,6 +118,7 @@ Helios:
   input_directory: "input/"
   view_directory: "helios"
   output_directory: "output/"
+  output_sql_directory: "Staging/output_sql/"
   remote_directory: "/SCN_BDD/HELIOS/input"
   views:
     staging__helios_siicea_missions: helios_siicea_missions

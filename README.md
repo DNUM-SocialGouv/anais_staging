@@ -1,30 +1,28 @@
 # anais_staging
 Pipeline de l'étape de staging de la plateforme ANAIS
 
-- CertDC
-
-
 # Installation & Lancement du projet DBT
 
 Cette section décrit les étapes nécessaires pour installer les dépendances, configurer DBT, instancier la base de données si besoin, et exécuter le projet.
 
 ---
 
-## 1. Installation des dépendances via Poetry
+## 1. Installation des dépendances via UV
 
-Le projet utilise [Poetry](https://python-poetry.org/) pour la gestion des dépendances Python.  
+Le projet utilise [UV] pour la gestion des dépendances Python.  
 Voici les étapes à suivre pour initialiser l’environnement :
 
 ```bash
 
-# 2. Se placer dans le dossier du projet
+# 1. Se placer dans le dossier du projet
 cd chemin/vers/le/projet
 
-# 3. Installer les dépendances
-poetry install
+# 2. Vérifier que uv est installé
+uv --version
+pip install uv # Si pas installé
 
-# 4. Activer l’environnement virtuel Poetry
-poetry shell
+# 3. Installer les dépendances
+uv sync
 ```
 
 ---
@@ -85,7 +83,7 @@ Contient les informations relatives aux fichiers et répertoires du projet.
 - views = Nom des modèles dbt exportés. Avec en premier élément : nom de la vue sql (nom du modèle dbt). En second élément : radical du nom donné au fichier csv exporté. Le nom final sera 'sa_<radical>_<date_du_jour>.csv'. Exemple: ods_insee: ods_insee
 
 ---
-## 3. Lancement du pipeline :
+## 4. Lancement du pipeline :
 
 L'ensemble de la Pipeline est exécuté depuis le `main.py`.
 
@@ -93,17 +91,13 @@ L'ensemble de la Pipeline est exécuté depuis le `main.py`.
 1. Placer vous dans le bon répertoire `anais_staging`
 
 ```bash
+# Placer vous dans anais_staging
 cd anais_staging
 ```
 
-2. Activer le `.venv`
+2. Lancer le `main.py`
 ```bash
-source .venv/bin/activate
-```
-
-3. Lancer le `main.py`
-```bash
-python3 Staging/main.py --env "env" --profile "projet"
+uv run Staging/main.py --env "local" --profile "CertDC"
 ```
 Avec env = 'local' ou 'anais' selon votre environnement de travail
 et profile = 'Staging', 'Helios', 'Matrice', 'InspectionControle' ou 'CertDC' selon le projet que vous souhaitez lancer
@@ -132,7 +126,7 @@ et profile = 'Staging', 'Helios', 'Matrice', 'InspectionControle' ou 'CertDC' se
 10. Export des **.csv** en output vers le SFTP
 
 
-## Architecture du projet
+## 5. Architecture du projet
 # MonProjet
 
 ## 🏗️ Architecture du projet
@@ -183,12 +177,14 @@ et profile = 'Staging', 'Helios', 'Matrice', 'InspectionControle' ou 'CertDC' se
 └── uv.lock
 ```
 
-## Utilités des fichiers
+## 6. Utilités des fichiers
 ### ./Staging/dbtStaging/
 Répertoire de fonctionnement des modèles DBT -> création de vue SQL.
 
 dbt_project.yml : Fichier de configuration de DBT (obligatoire)
+
 macros/ : Répertoire de stockage des macro jinja
+
 models/ : Répertoire de stockage des modèles dbt
 
 ### ./Staging/pipeline/
