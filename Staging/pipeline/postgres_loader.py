@@ -118,9 +118,16 @@ class PostgreSQLLoader(DataBasePipeline):
         query_params : dict
             Paramètres à injecter dans la requête SQL.
         """
-        if self.is_table_exist(conn, query_params):
-            self.postgres_drop_table(conn, query_params)
-        conn.execute(text(sql_query))
+        trans = conn.begin()
+        try:
+            if self.is_table_exist(conn, query_params):
+                self.postgres_drop_table(conn, query_params)
+            conn.execute(text(sql_query))
+            trans.commit()
+        except Exception as e:
+            trans.rollback()
+            logging.error(f"❌ Erreur lors de l'exécution : {e}")
+            raise
 
     def get_postgres_schema(self, conn, table_name: str) -> pd.DataFrame:
         """
@@ -172,11 +179,11 @@ class PostgreSQLLoader(DataBasePipeline):
 
         if table_exists:
             if print_log:
-                logging.warning(f"✅ La table '{table_name}' existe déjà.")
+                logging.warning(f"✅ La table '{query_params['table']}' existe déjà.")
             return True
         else:
             if print_log:
-                logging.warning(f"❌ La table '{table_name}' n'existe pas.")
+                logging.warning(f"❌ La table '{query_params['table']}' du schéma {query_params['schema']} n'existe pas.")
             return False
 
     def show_row_count(self, conn, query_params: dict):
@@ -245,17 +252,27 @@ class PostgreSQLLoader(DataBasePipeline):
 
             # Chargement des csv et datamanagement
             df = csv_pipeline(csv_file, schema_df)
-
+            logging.info(f"Taille de '{table_name}' : {df.shape}")
+            
             # Création de la table avec la structure du CSV
             logging.info(f"🆕 Injection dans la table '{table_name}' à partir du CSV {csv_file}")
-            df.to_sql(
-                table_name,
-                conn,
-                if_exists="append",
-                index=False,
-                method='multi',
-                chunksize=1000
-            )
+
+            trans = conn.get_transaction()
+            try:
+                df.to_sql(
+                    table_name,
+                    conn,
+                    schema=query_params["schema"],
+                    if_exists="append",
+                    index=False,
+                    method='multi',
+                    chunksize=1000
+                )
+                trans.commit()
+            except Exception as e:
+                trans.rollback()
+                logging.error(f"❌ Erreur lors de l'exécution : {e}")
+                raise
 
             logging.info(f"✅ Table '{table_name}' créée et remplie avec succès ({csv_file})")
 

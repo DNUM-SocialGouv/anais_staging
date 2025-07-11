@@ -6,12 +6,16 @@ import argparse
 import subprocess
 import logging
 from typing import Literal
+from dotenv import load_dotenv
 
 # Modules
 from pipeline.duckdb_pipeline import DuckDBPipeline
 from pipeline.sftp_sync import SFTPSync
 from pipeline.postgres_loader import PostgreSQLLoader
-from pipeline.load_yml import load_colnames_YAML
+from pipeline.load_yml import load_metadata_YAML
+from pipeline.logging_management import setup_logger
+
+# dbt_logger = setup_logger("DBT", "logs/dbt.log")
 
 # Configuration du logger DBT
 os.makedirs("logs", exist_ok=True)
@@ -24,7 +28,7 @@ dbt_logger.setLevel(logging.INFO)
 
 # Date du jour
 today = date.strftime(date.today(), "%Y_%m_%d")
-
+load_dotenv()
 
 def run_dbt(profile: str, target: Literal["local", "anais"], view_directory: str, project_dir: str = "./Staging/dbtStaging", profiles_dir: str = "."):
     """
@@ -90,9 +94,9 @@ def main(env: str, profile: str, metadata: str = "metadata.yml"):
     metadata : str, optional
         Nom du fichier de metadata contenant les informations relatives à chaque profile, by default "metadata.yml".
     """
-    PROJECT_PARAMS = load_colnames_YAML(metadata, profile)
-    FILES_TO_DOWNLOAD = load_colnames_YAML(metadata, 'tables')
-    DB_CONFIG = load_colnames_YAML("profiles.yml", profile, ".")["outputs"][env]
+    PROJECT_PARAMS = load_metadata_YAML(metadata, profile)
+    FILES_TO_DOWNLOAD = load_metadata_YAML(metadata, 'tables')
+    DB_CONFIG = load_metadata_YAML("profiles.yml", profile, ".")["outputs"][env]
 
     if env == "anais":
         # Récupération des fichiers sur le sftp
@@ -110,7 +114,7 @@ def main(env: str, profile: str, metadata: str = "metadata.yml"):
         # Création des vues et export
         run_dbt(profile=profile, target="anais", view_directory=PROJECT_PARAMS["view_directory"])
         pg_loader.export_csv(PROJECT_PARAMS["views"], date=today)
-        # sftp.upload_file_to_sftp(PROJECT_PARAMS["views"], PROJECT_PARAMS["output_directory"], PROJECT_PARAMS["remote_directory"], date=today)
+        sftp.upload_file_to_sftp(PROJECT_PARAMS["views"], PROJECT_PARAMS["output_directory"], PROJECT_PARAMS["remote_directory"], date=today)
 
     if env == "local":
         # Remplissage des tables de la base DuckDBP
@@ -138,7 +142,7 @@ def main(env: str, profile: str, metadata: str = "metadata.yml"):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Exécution du pipeline")
     parser.add_argument("--env", choices=["local", "anais"], default="local", help="Environnement d'exécution")
-    parser.add_argument("--profile", choices=["Staging", "Helios", "TdBIC", "CertDC"], default="Staging", help="Profile dbt d'exécution")
+    parser.add_argument("--profile", choices=["Staging", "Helios", "InspectionControle", "Matrice_PA", "Matrice_PH", "CertDC"], default="Staging", help="Profile dbt d'exécution")
     args = parser.parse_args()
 
     main(args.env, args.profile)

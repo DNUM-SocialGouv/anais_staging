@@ -156,7 +156,6 @@ class DataBasePipeline:
         else:
             query_params = {"schema": self.schema, "table": table_name}
 
-            # if not self.is_table_exist(conn, query_params):
             try:
                 create_table_func(conn, sql, query_params)
                 logging.info(f"✅ Table créée avec succès : {sql_file.name}")

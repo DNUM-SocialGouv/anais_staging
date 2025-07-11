@@ -193,27 +193,42 @@ models/ : Répertoire de stockage des modèles dbt
 
 ### ./Staging/pipeline/
 Répertoire d'orchestration de la pipeline Python.
+
 .env : Fichier secret contenant le paramétrage vers le SFTP et les mots de passes des bases de données postgres.
+
 database_pipeline.py : Réalise les actions communes pour n'importe quelle database (lecture de fichier SQL, exécution du fichier sql, export de vues, run de la pipeline...). Fonctionne en complément avec duckdb_pipeline.py et postgres_loader.py.
+
 duckdb_pipeline.py : Réalise les actions spécifiques à une base (connexion à la base, création de table, chargement des données dans la BDD). Fonctionne en complément avec database_pipeline.py.
+
 postgres_loader.py : Réalise les actions spécifiques à une base postgres (connexion à la base, création de table, chargement des données dans la BDD). Fonctionne en complément avec database_pipeline.py.
-sftp_sync.py : Réalise les actions relatives à une connexion SFTP (connexion, import, export...)
-csv_management.py : Réalise les actions relatives à la manipulation de fichier csv (transformation d'un .xlsx en .csv, lecture du .csv avec délimiteur personnalisé, standarisation des colonnes, conversion des types, export ...)
+
+sftp_sync.py : Réalise les actions relatives à une connexion SFTP (connexion, import, export...).
+
+csv_management.py : Réalise les actions relatives à la manipulation de fichier csv (transformation d'un .xlsx en .csv, lecture du .csv avec délimiteur personnalisé, standarisation des colonnes, conversion des types, export ...).
+
 metadata.yml : Contient les informations relatives aux fichiers .csv provenant du SFTP.
+
 load_yml.py : Lit un fichier .yml
+
 
 ./Staging/main.py : Programme d'exécution de la pipeline
 
+
 ./Staging/output_sql/ : Répertoire qui contient les fichiers .sql de création de table (CREATE TABLE)
+
 
 ./logs/ : Répertoire de la log
 
+
 ./data/duckdb_database.duckdb : Base duckDB
+
 
 ./input/ : Répertoire de stockage des fichiers .csv en entrée
 ./output/ : Répertoire de stockage des fichiers .csv en sortie
 
+
 ./profiles.yml : Contient les informations relatives aux bases des différents projets.
+
 
 ./poetry.lock
 ./uv.lock
