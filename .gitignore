@@ -6,3 +6,5 @@
 *.cpython-312.pyc
 *__pycache__
 Staging/show_column.py
+Staging/dbtStaging/target/*
+data/duckdb_database.duckdb
