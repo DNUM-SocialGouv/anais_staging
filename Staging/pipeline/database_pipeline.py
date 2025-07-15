@@ -179,7 +179,6 @@ class DataBasePipeline:
                 export_to_csv(conn, table_name, csv_name, self.fetch_df, self.csv_folder_output, date)
             else:
                 logging.warning("⚠️ Aucune table spécifiée")
-        conn.close()
 
     def run(self):
         """
@@ -201,4 +200,3 @@ class DataBasePipeline:
         for csv_file in Path(self.csv_folder_input).glob("*.csv"):
             query_params = {"schema": self.schema, "table": csv_file.stem}
             self.check_table(conn, query_params, print_table=False, show_row_count = True)
-        conn.close()

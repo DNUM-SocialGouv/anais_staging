@@ -114,6 +114,7 @@ def main(env: str, profile: str, metadata: str = "metadata.yml"):
         # Création des vues et export
         run_dbt(profile=profile, target="anais", view_directory=PROJECT_PARAMS["view_directory"])
         pg_loader.export_csv(PROJECT_PARAMS["views"], date=today)
+        pg_loader.close()
         sftp.upload_file_to_sftp(PROJECT_PARAMS["views"], PROJECT_PARAMS["output_directory"], PROJECT_PARAMS["remote_directory"], date=today)
 
     if env == "local":
