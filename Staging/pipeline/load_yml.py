@@ -3,12 +3,11 @@
 import os
 from pathlib import Path
 import yaml
-import logging
 import re
 
 
 # Fonction
-def load_YAML(file_name: str, config_file_dir: str = None) -> dict:
+def load_YAML(file_name: str, config_file_dir: str = None, logger=None) -> dict:
     """
     Charge un fichier YAML.
 
@@ -39,21 +38,21 @@ def load_YAML(file_name: str, config_file_dir: str = None) -> dict:
     try:
         with open(path, 'r') as f:
             file = yaml.safe_load(f)
-            logging.info(f"Acces config file readed from {path}")
+            logger.info(f"Acces config file readed from {path}")
             return file
 
     except FileNotFoundError:
-        logging.error(f"Fichier de configuration introuvable {path}")
+        logger.error(f"Fichier de configuration introuvable {path}")
         raise
     except yaml.YAMLError as e:
-        logging.error(f"Erreur de parsing YAML dans le fichier {file_name} : {e}")
+        logger.error(f"Erreur de parsing YAML dans le fichier {file_name} : {e}")
         raise
     except Exception as e:
-        logging.error(f"Erreur inattendue lors du chargement du fichier de configuration : {e}")
+        logger.error(f"Erreur inattendue lors du chargement du fichier de configuration : {e}")
         raise
 
 
-def load_metadata_YAML(file_name: str, table: str, config_file_dir: str = None) -> dict:
+def load_metadata_YAML(file_name: str, table: str, config_file_dir: str = None, logger=None) -> dict:
     """
     Charge le fichier de configuration et récupère la liste des colonnes d'une table donnée.
 
@@ -81,17 +80,17 @@ def load_metadata_YAML(file_name: str, table: str, config_file_dir: str = None) 
         Si le fichier YAML est mal formaté.
     """
     try:
-        metadata = load_YAML(file_name, config_file_dir)
+        metadata = load_YAML(file_name, config_file_dir, logger=logger)
 
         if table not in metadata:
             raise KeyError(f"La table '{table}' n'existe pas dans le fichier {file_name}.")
         
         return metadata[table]
     except KeyError as e:
-        logging.error(e)
+        logger.error(e)
         raise
     except Exception as e:
-        logging.error(f"Erreur inattendue lors du chargement de la configuration : {e}")
+        logger.error(f"Erreur inattendue lors du chargement de la configuration : {e}")
         raise
 
 

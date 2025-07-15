@@ -2,14 +2,6 @@
 import os
 import logging
 
-# Configuration du logger DBT
-os.makedirs("logs", exist_ok=True)
-dbt_logger = logging.getLogger("dbt_logger")
-file_handler = logging.FileHandler("logs/dbt.log")
-formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
-file_handler.setFormatter(formatter)
-dbt_logger.addHandler(file_handler)
-dbt_logger.setLevel(logging.INFO)
 
 def setup_logger(name: str, log_file: str, level=logging.INFO) -> logging.Logger:
     """

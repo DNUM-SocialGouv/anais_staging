@@ -2,7 +2,6 @@
 import duckdb
 import os
 from pathlib import Path
-import logging
 from typing import Callable, Any
 import re
 
@@ -14,7 +13,8 @@ class DataBasePipeline:
     def __init__(self,
                 sql_folder: str = "Staging/output_sql/",
                 csv_folder_input: str = "input/",
-                csv_folder_output: str = "output/"):
+                csv_folder_output: str = "output/",
+                logger=None):
         """
         Classe qui réalise les actions communes pour n'importe quel database.
         Cette classe est héritée par une classe relative au type de base.
@@ -39,12 +39,13 @@ class DataBasePipeline:
         self.sql_folder = sql_folder
         self.csv_folder_input = csv_folder_input
         self.csv_folder_output = csv_folder_output
+        self.logger = logger
 
     def ensure_directories_exist(self):
         """ Crée les dossiers nécessaires s'ils n'existent pas. """
         for folder in [self.sql_folder, self.csv_folder_input, self.csv_folder_output]:
             os.makedirs(folder, exist_ok=True)
-            logging.info(f"Dossier vérifié/créé : {folder}")
+            self.logger.info(f"Dossier vérifié/créé : {folder}")
 
     def read_sql_file(self, sql_file: Path) -> str:
         """
@@ -131,7 +132,7 @@ class DataBasePipeline:
             return table_exist
 
         except Exception as e:
-            logging.error(f"❌ Erreur lors de la vérification de la table '{query_params["table"]}' → {e}")
+            self.logger.error(f"❌ Erreur lors de la vérification de la table '{query_params["table"]}' → {e}")
             return False
 
     def execute_sql_file(self, conn, sql_file: Path, create_table_func: Callable[[Any, str, dict], None]):
@@ -151,16 +152,16 @@ class DataBasePipeline:
         table_name = self.find_table_name_in_sql(sql)
 
         if not table_name:
-            logging.info(f"❌ Nom de table introuvable dans le fichier SQL : '{sql_file.name}'")
+            self.logger.info(f"❌ Nom de table introuvable dans le fichier SQL : '{sql_file.name}'")
             return
         else:
             query_params = {"schema": self.schema, "table": table_name}
 
             try:
                 create_table_func(conn, sql, query_params)
-                logging.info(f"✅ Table créée avec succès : {sql_file.name}")
+                self.logger.info(f"✅ Table créée avec succès : {sql_file.name}")
             except Exception as e:
-                logging.error(f"❌ Erreur lors de l'exécution du SQL {sql_file.name}: {e}")
+                self.logger.error(f"❌ Erreur lors de l'exécution du SQL {sql_file.name}: {e}")
 
     def export_csv(self, views_to_export: dict, date: str):
         """
@@ -176,9 +177,9 @@ class DataBasePipeline:
         conn = self.conn
         for table_name, csv_name in views_to_export.items():
             if table_name:
-                export_to_csv(conn, table_name, csv_name, self.fetch_df, self.csv_folder_output, date)
+                export_to_csv(conn, table_name, csv_name, self.fetch_df, self.csv_folder_output, date, logger=self.logger)
             else:
-                logging.warning("⚠️ Aucune table spécifiée")
+                self.logger.warning("⚠️ Aucune table spécifiée")
 
     def run(self):
         """
@@ -192,10 +193,10 @@ class DataBasePipeline:
         for sql_file in Path(self.sql_folder).glob("*.sql"):
             self.execute_sql_file(conn, sql_file, self.create_table)
 
-        logging.info(f"Début du chargement des fichiers CSV vers {self.typedb}.")
+        self.logger.info(f"Début du chargement des fichiers CSV vers {self.typedb}.")
         for csv_file in Path(self.csv_folder_input).glob("*.csv"):
             self.load_csv_file(conn, csv_file)
-        logging.info(f"Fin du chargement des fichiers CSV vers {self.typedb}.")
+        self.logger.info(f"Fin du chargement des fichiers CSV vers {self.typedb}.")
 
         for csv_file in Path(self.csv_folder_input).glob("*.csv"):
             query_params = {"schema": self.schema, "table": csv_file.stem}

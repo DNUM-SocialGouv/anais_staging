@@ -54,7 +54,7 @@ Il contient les informations relatives aux bases de données des différents pro
 - Staging (DuckDB et postegres)
 - Helios (DuckDB et postegres)
 - Matrice (DuckDB et postegres)
-- InspectionControle (DuckDB et postegres)
+- InspectionControlePA (DuckDB et postegres)
 - CertDC (DuckDB et postegres)
 
 Seul le password des bases postgres n'est pas indiqué -> il est indiqué dans le `.env`
@@ -100,7 +100,7 @@ cd anais_staging
 uv run Staging/main.py --env "local" --profile "CertDC"
 ```
 Avec env = 'local' ou 'anais' selon votre environnement de travail
-et profile = 'Staging', 'Helios', 'Matrice', 'InspectionControle' ou 'CertDC' selon le projet que vous souhaitez lancer
+et profile = 'Staging', 'Helios', 'Matrice', 'InspectionControlePA' ou 'CertDC' selon le projet que vous souhaitez lancer
 
 ### Pipeline sur env 'local':
 1. Récupération des fichiers d'input. Ces fichiers sont placés manuellement dans le dossier `input/` sous format **.csv** (les délimiteurs sont gérés automatiquement)

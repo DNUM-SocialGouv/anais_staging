@@ -2,20 +2,16 @@
 import pandas as pd
 import csv
 import os
-import logging
 from io import StringIO
 import re
 import unicodedata
 from collections.abc import Callable
 from pathlib import Path
 
-# === Configuration du logging ===
-logging.getLogger(__name__)
-
 
 # === Classes ===
 class TransformExcel:
-    def __init__(self, local_xlsx_path: str, local_csv_path: str):
+    def __init__(self, local_xlsx_path: str, local_csv_path: str, logger=None):
         """
         Classe de conversion d'un fichier Excel basé sur un TCD vers un fichier csv.
 
@@ -26,6 +22,7 @@ class TransformExcel:
         local_csv_path : str
             Nom du fichier local au format csv.
         """
+        self.logger = logger
         self.local_xlsx_path = local_xlsx_path
         self.local_csv_path = local_csv_path
         self.df: pd.DataFrame = pd.DataFrame()
@@ -67,13 +64,13 @@ class TransformExcel:
 
             # Suppression du fichier Excel
             os.remove(self.local_xlsx_path)
-            logging.info(f"Fichier remplacé par un csv : {self.local_xlsx_path} -> {self.local_csv_path}")
+            self.logger.info(f"Fichier remplacé par un csv : {self.local_xlsx_path} -> {self.local_csv_path}")
         except Exception as e:
-            logging.warning(f"⚠️ Erreur lors de la suppression de {self.local_xlsx_path} : {e}")
+            self.logger.warning(f"⚠️ Erreur lors de la suppression de {self.local_xlsx_path} : {e}")
 
 
 class ReadCsvWithDelimiter:
-    def __init__(self, file_path: str, sample_size: int = 4096):
+    def __init__(self, file_path: str, sample_size: int = 4096, logger=None):
         """
         Classe de lecture des csv grâce à la détection du délimiteur.
 
@@ -84,6 +81,7 @@ class ReadCsvWithDelimiter:
         sample_size : int, optional
             Taille de l'échantillon de lecture pour déterminer le délimiteur, by default 4096
         """
+        self.logger = logger
         self.file_path = file_path
         self.sample_size = sample_size
         self.dialect = self.detect_delimiter()
@@ -97,7 +95,7 @@ class ReadCsvWithDelimiter:
                 dialect = sniffer.sniff(sample, delimiters=";,¤")
                 return dialect.delimiter
         except Exception as e:
-            logging.warning(f"⚠️ Impossible de détecter le délimiteur pour {self.file_path} : {e} → ';' utilisé par défaut.")
+            self.logger.warning(f"⚠️ Impossible de détecter le délimiteur pour {self.file_path} : {e} → ';' utilisé par défaut.")
             return ";"
 
     def read_csv_resilient(self) -> pd.DataFrame:
@@ -125,12 +123,12 @@ class ReadCsvWithDelimiter:
                     quotechar='"',
                     encoding='utf-8-sig'
                 )
-                logging.info(f"✅ Lecture réussie avec le délimiteur '{delimiter}' pour {os.path.basename(self.file_path)}")
+                self.logger.info(f"✅ Lecture réussie avec le délimiteur '{delimiter}' pour {os.path.basename(self.file_path)}")
                 return df
             except pd.errors.ParserError as e:
-                logging.warning(f"⚠️ Erreur de parsing avec '{delimiter}' pour {self.file_path} → {e}")
+                self.logger.warning(f"⚠️ Erreur de parsing avec '{delimiter}' pour {self.file_path} → {e}")
             except Exception as e:
-                logging.warning(f"⚠️ Autre erreur avec '{delimiter}' → {e}")
+                self.logger.warning(f"⚠️ Autre erreur avec '{delimiter}' → {e}")
 
         raise ValueError(f"❌ Impossible de lire le fichier CSV {self.file_path} avec les délimiteurs connus.")
 
@@ -163,10 +161,10 @@ class ReadCsvWithDelimiter:
                 on_bad_lines="warn"
             )
 
-            logging.info(f"✅ Lecture réussie avec délimiteur '¤' après détection binaire : {os.path.basename(self.file_path)}")
+            self.logger.info(f"✅ Lecture réussie avec délimiteur '¤' après détection binaire : {os.path.basename(self.file_path)}")
             return df
         except Exception as e:
-            logging.error(f"❌ Erreur lors de la lecture de {self.file_path} avec délimiteur '¤' → {e}")
+            self.logger.error(f"❌ Erreur lors de la lecture de {self.file_path} avec délimiteur '¤' → {e}")
             raise
 
     def read_csv_files(self) -> pd.DataFrame:
@@ -184,12 +182,12 @@ class ReadCsvWithDelimiter:
             else:
                 return self.read_csv_resilient()
         except Exception as e:
-            logging.error(f"❌ Lecture échouée pour {self.file_path.name} → {e}")
+            self.logger.error(f"❌ Lecture échouée pour {self.file_path.name} → {e}")
             return
 
 
 class StandardizeColnames:
-    def __init__(self, df: pd.DataFrame):
+    def __init__(self, df: pd.DataFrame, logger=None):
         """
         Classe de standardisation du nom des colonnes.
 
@@ -198,6 +196,7 @@ class StandardizeColnames:
         df : pd.DataFrame
             Dataframe sur lequel appliqué les transformations.
         """
+        self.logger = logger
         self.df = df
 
     def remove_accents(self, text: str) -> str:
@@ -239,7 +238,7 @@ class StandardizeColnames:
             col = self.shorten_column_names(col)
 
             if col != original:
-                # logging.info(f"📝 Colonne renommée : '{original}' → '{col}'")
+                # self.logger.info(f"📝 Colonne renommée : '{original}' → '{col}'")
                 pass
 
             new_columns.append(col)
@@ -247,7 +246,7 @@ class StandardizeColnames:
         self.df.columns = new_columns
 
 
-def check_missing_columns(csv_file_name: str, df: pd.DataFrame, schema_df: pd.DataFrame):
+def check_missing_columns(csv_file_name: str, df: pd.DataFrame, schema_df: pd.DataFrame, logger=None):
     """
     Vérifie la cohérence entre les colonnes du fichier csv et les colonnes de la table SQL.
 
@@ -267,16 +266,16 @@ def check_missing_columns(csv_file_name: str, df: pd.DataFrame, schema_df: pd.Da
     extra_columns = set(csv_columns) - set(table_columns)
 
     if missing_columns:
-        logging.warning(f"Colonnes manquantes dans {csv_file_name} : {missing_columns}")
+        logger.warning(f"Colonnes manquantes dans {csv_file_name} : {missing_columns}")
         for col in missing_columns:
             df[col] = None
 
     if extra_columns:
-        logging.warning(f"Colonnes en trop dans {csv_file_name} : {extra_columns}")
+        logger.warning(f"Colonnes en trop dans {csv_file_name} : {extra_columns}")
         df = df[table_columns]
 
 
-def convert_columns_type(type_mapping: dict, df: pd.DataFrame, schema_df: pd.DataFrame) -> pd.DataFrame:
+def convert_columns_type(type_mapping: dict, df: pd.DataFrame, schema_df: pd.DataFrame, logger=None) -> pd.DataFrame:
     """
     Convertie les colonnes du dataframe selon le type dans les tables SQL.
 
@@ -309,11 +308,11 @@ def convert_columns_type(type_mapping: dict, df: pd.DataFrame, schema_df: pd.Dat
                 else:
                     df[col_name] = df[col_name].astype(type_mapping[col_type])
             except ValueError as e:
-                logging.warning(f"Erreur de conversion de {col_name} en {col_type}: {e}, valeurs laissées en str.")
+                logger.warning(f"Erreur de conversion de {col_name} en {col_type}: {e}, valeurs laissées en str.")
     return df
 
 
-def csv_pipeline(csv_file: Path, schema_df: pd.DataFrame) -> pd.DataFrame:
+def csv_pipeline(csv_file: Path, schema_df: pd.DataFrame, logger=None) -> pd.DataFrame:
     """
     Applique la transformation d'un csv et la compare au schéma de table SQL attendu:
         - Lecture du csv avec le bon délimiter
@@ -344,17 +343,17 @@ def csv_pipeline(csv_file: Path, schema_df: pd.DataFrame) -> pd.DataFrame:
         "TIMESTAMP": "datetime64",
     }
 
-    df = ReadCsvWithDelimiter(csv_file).read_csv_files()
-    standardizer = StandardizeColnames(df)
+    df = ReadCsvWithDelimiter(csv_file, logger=logger).read_csv_files()
+    standardizer = StandardizeColnames(df, logger=logger)
     standardizer.standardize_column_names()
     df = standardizer.df
-    check_missing_columns(csv_file.name, df, schema_df)
-    df = convert_columns_type(TYPE_MAPPING, df, schema_df)
+    check_missing_columns(csv_file.name, df, schema_df, logger=logger)
+    df = convert_columns_type(TYPE_MAPPING, df, schema_df, logger=logger)
 
     return df
 
 
-def export_to_csv(conn, table_name: str, csv_name: str, df_fetch_func: Callable[[str], pd.DataFrame], output_folder: str, date: str):
+def export_to_csv(conn, table_name: str, csv_name: str, df_fetch_func: Callable[[str], pd.DataFrame], output_folder: str, date: str, logger=None):
     """
     Exporte une table SQL vers un format csv.
     Le dataframe peut être issue d'un requêtage duckdb ou postgres. 
@@ -379,11 +378,11 @@ def export_to_csv(conn, table_name: str, csv_name: str, df_fetch_func: Callable[
     # Nom du fichier
     file_name = f'sa_{csv_name}_{date}.csv'
     output_path = os.path.join(output_folder, file_name)
-    logging.info(f"📤 Export de '{table_name}' → {output_path}")
+    logger.info(f"📤 Export de '{table_name}' → {output_path}")
 
     try:
         df = df_fetch_func(conn, table_name)
         df.to_csv(output_path, index=False, sep=";", encoding="utf-8-sig")
-        logging.info(f"✅ Export réussi : {file_name}")
+        logger.info(f"✅ Export réussi : {file_name}")
     except Exception as e:
-        logging.error(f"❌ Erreur d'export pour '{table_name}' → {e}")
+        logger.error(f"❌ Erreur d'export pour '{table_name}' → {e}")

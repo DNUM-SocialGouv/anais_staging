@@ -1,4 +1,4 @@
-CREATE TABLE sa_pmsi (
+CREATE TABLE IF NOT EXISTS sa_pmsi (
 	column1 INTEGER,
 	mois VARCHAR,
 	finess VARCHAR,

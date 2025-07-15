@@ -1,4 +1,4 @@
-CREATE TABLE dc_det (
+CREATE TABLE IF NOT EXISTS dc_det (
 	date VARCHAR,
 	adec INTEGER,
 	mdec INTEGER,

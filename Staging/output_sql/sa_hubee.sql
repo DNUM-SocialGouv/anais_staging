@@ -1,4 +1,4 @@
-CREATE TABLE sa_hubee (
+CREATE TABLE IF NOT EXISTS sa_hubee (
 	type_d_organisation VARCHAR,
 	companyregister_de_l_organisation TEXT,
 	branchcode_de_l_organisation VARCHAR,

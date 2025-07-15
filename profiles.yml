@@ -32,15 +32,32 @@ CertDC:
       path: data/duckdb_database.duckdb
       schema: main
   
-# DNUM - Layer InspectionControle (dépend de la base de Staging)
-InspectionControle:
+# DNUM - Layer InspectionControle Personnes Agées (dépend de la base de Staging)
+InspectionControlePA:
   target: local
   outputs:
     anais:
       type: postgres
       host: 10.89.136.17
       user: inspection_controle_admin
-      password: "{{ env_var('INSPECTION_CONTROLE_ADMIN_PASSWORD') }}"
+      password: "{{ env_var('INSPECTION_CONTROLE_ADMIN_PA_PASSWORD') }}"
+      port: 5432
+      schema: public
+      dbname: inspection_controle
+    local:
+      type: duckdb
+      path: data/duckdb_database.duckdb
+      schema: main
+
+# DNUM - Layer InspectionControle Personnes Handicapées (dépend de la base de Staging)
+InspectionControlePH:
+  target: local
+  outputs:
+    anais:
+      type: postgres
+      host: 10.89.136.17
+      user: inspection_controle_admin
+      password: "{{ env_var('INSPECTION_CONTROLE_ADMIN_PH_PASSWORD') }}"
       port: 5432
       schema: public
       dbname: inspection_controle

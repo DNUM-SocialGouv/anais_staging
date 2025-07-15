@@ -1,4 +1,4 @@
-CREATE TABLE sa_insee_histo (
+CREATE TABLE IF NOT EXISTS sa_insee_histo (
 	adec INTEGER,
 	mdec INTEGER,
 	jdec INTEGER,

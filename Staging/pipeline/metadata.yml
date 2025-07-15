@@ -91,6 +91,8 @@ tables:
 Staging:
   input_directory: "input/"
   view_directory: "base"
+  output_directory: "output/"
+  output_sql_directory: "Staging/output_sql/"
   base:
     sa_insern.csv: /SCN_BDD/INSERN
     sa_siicea_cibles.csv: /SCN_BDD/SIICEA
@@ -105,14 +107,6 @@ Staging:
     v_commune_depuis.csv: /SCN_BDD/INSEE
     v_departement.csv: /SCN_BDD/INSEE
     v_region.csv: /SCN_BDD/INSEE
-  views:
-    ods_insee: ods_insee
-    ods_insern_edc: ods_insern_edc
-    ods_insern_insee_tx_edc: ods_insern_insee_tx_edc
-    ods_insern: ods_insern
-    ods_pmsi: ods_pmsi
-    ods_insern_pmsi_es: ods_insern_pmsi_es
-
 
 Helios:
   input_directory: "input/"
@@ -159,12 +153,24 @@ Ref:
     staging__ref_geo: ref_geo
     staging__ref_regions: ref_regions
 
-InspectionControle:
+InspectionControlePA:
   input_directory: "input/"
   view_directory: "tdb"
   output_directory: "output/"
   output_sql_directory: "Staging/output_sql/"
   remote_directory: "/SCN_BDD/INSPECTION_CONTROLE/PA/input"
+  views:
+    staging__tdb_ic_finess_500: tdb_ic_finess_500
+    staging__tdb_ic_siicea_cibles: tdb_ic_siicea_cibles
+    staging__tdb_ic_siicea_missions_prog: tdb_ic_siicea_missions_prog
+    staging__tdb_ic_siicea_missions_real: tdb_ic_siicea_missions_real
+
+InspectionControlePH:
+  input_directory: "input/"
+  view_directory: "tdb"
+  output_directory: "output/"
+  output_sql_directory: "Staging/output_sql/"
+  remote_directory: "/SCN_BDD/INSPECTION_CONTROLE/PH/input"
   views:
     staging__tdb_ic_finess_500: tdb_ic_finess_500
     staging__tdb_ic_siicea_cibles: tdb_ic_siicea_cibles

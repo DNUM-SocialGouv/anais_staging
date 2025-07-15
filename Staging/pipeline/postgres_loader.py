@@ -2,7 +2,6 @@
 # Packages
 import os
 import pandas as pd
-import logging
 from sqlalchemy import create_engine, inspect, text
 from dotenv import load_dotenv
 from pathlib import Path
@@ -16,16 +15,6 @@ from pipeline.load_yml import resolve_env_var
 # Chargement des variables d’environnement
 load_dotenv()
 
-# Configuration du logger PostgreSQL
-os.makedirs("logs", exist_ok=True)
-for handler in logging.root.handlers[:]:
-    logging.root.removeHandler(handler)
-logging.basicConfig(
-    filename="logs/postgres_loader.log",
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s"
-)
-
 
 # Classe PostgreSQLLoader qui gère les actions relatives à une database postgres
 class PostgreSQLLoader(DataBasePipeline):
@@ -33,7 +22,8 @@ class PostgreSQLLoader(DataBasePipeline):
                  db_config: dict,
                  sql_folder: str = "Staging/output_sql/",
                  csv_folder_input: str = "input/",
-                 csv_folder_output: str = "output/"
+                 csv_folder_output: str = "output/",
+                 logger=None
                  ):
         """
         Initialisation de la base Postgres. Classe héritière de DataBasePipeline.
@@ -51,8 +41,9 @@ class PostgreSQLLoader(DataBasePipeline):
         """
         super().__init__(sql_folder=sql_folder,
                          csv_folder_input=csv_folder_input,
-                         csv_folder_output=csv_folder_output)
-
+                         csv_folder_output=csv_folder_output,
+                         logger=logger)
+        self.logger = logger
         self.typedb = "postgres"
         self.host = db_config["host"]
         self.port = db_config["port"]
@@ -62,16 +53,17 @@ class PostgreSQLLoader(DataBasePipeline):
         self.schema = db_config["schema"]
         self.engine = self.init_engine()
         self.conn = self.engine.connect()
+        
 
     def init_engine(self):
         """ Connexion à la base postgres. """
         try:
             url = f"postgresql+psycopg2://{self.user}:{self.password}@{self.host}:{self.port}/{self.database}"
             engine = create_engine(url)
-            logging.info("Connexion PostgreSQL établie avec succès.")
+            self.logger.info("Connexion PostgreSQL établie avec succès.")
             return engine
         except Exception as e:
-            logging.error(f"Erreur de connexion PostgreSQL : {e}")
+            self.logger.error(f"Erreur de connexion PostgreSQL : {e}")
             raise
 
     def postgres_drop_table(self, conn, query_params: dict):
@@ -99,11 +91,11 @@ class PostgreSQLLoader(DataBasePipeline):
 
         for schema, view in views:
             # Suppression des vues liées à la table
-            logging.info(f"🗑 Vue '{view}' existante → suppression totale (DROP VIEW)")
+            self.logger.info(f"🗑 Vue '{view}' existante → suppression totale (DROP VIEW)")
             conn.execute(text(f'DROP VIEW IF EXISTS "{schema}"."{view}" CASCADE'))
 
         # Suppression de la table
-        logging.info(f"🗑 Table '{table_name}' existante → suppression totale (DROP TABLE)")
+        self.logger.info(f"🗑 Table '{table_name}' existante → suppression totale (DROP TABLE)")
         conn.execute(text(f"DROP TABLE IF EXISTS {table_name} CASCADE"))
 
     def create_table(self, conn, sql_query: str, query_params: str):
@@ -127,7 +119,7 @@ class PostgreSQLLoader(DataBasePipeline):
             trans.commit()
         except Exception as e:
             trans.rollback()
-            logging.error(f"❌ Erreur lors de l'exécution : {e}")
+            self.logger.error(f"❌ Erreur lors de l'exécution : {e}")
             raise
 
     def get_postgres_schema(self, conn, table_name: str) -> pd.DataFrame:
@@ -180,11 +172,11 @@ class PostgreSQLLoader(DataBasePipeline):
 
         if table_exists:
             if print_log:
-                logging.warning(f"✅ La table '{query_params['table']}' existe déjà.")
+                self.logger.info(f"✅ La table '{query_params['table']}' existe.")
             return True
         else:
             if print_log:
-                logging.warning(f"❌ La table '{query_params['table']}' du schéma {query_params['schema']} n'existe pas.")
+                self.logger.warning(f"❌ La table '{query_params['table']}' du schéma {query_params['schema']} n'existe pas.")
             return False
 
     def show_row_count(self, conn, query_params: dict):
@@ -206,9 +198,9 @@ class PostgreSQLLoader(DataBasePipeline):
             FROM {schema}.{table}""")).scalar()
 
         if row_count == 0:
-            logging.warning(f"⚠️ La table '{table}' du schéma {schema} est vide.")
+            self.logger.warning(f"⚠️ La table '{table}' du schéma {schema} est vide.")
         else:
-            logging.info(f"✅ La table '{table}' du schéma {schema} contient {row_count} lignes.")
+            self.logger.info(f"✅ La table '{table}' du schéma {schema} contient {row_count} lignes.")
 
     def print_table(self, conn, query_params: dict, limit: int):
         """
@@ -227,7 +219,7 @@ class PostgreSQLLoader(DataBasePipeline):
         table = query_params["table"]
 
         df = conn.execute(text(f"SELECT * FROM {schema}.{table} LIMIT {limit}"))
-        logging.info(f"🔍 Aperçu de '{table}' du schéma {schema} ({limit} lignes) :\n{df.to_string(index=False)}")
+        self.logger.info(f"🔍 Aperçu de '{table}' du schéma {schema} ({limit} lignes) :\n{df.to_string(index=False)}")
 
     def load_csv_file(self, conn, csv_file: Path):
         """
@@ -240,23 +232,23 @@ class PostgreSQLLoader(DataBasePipeline):
         csv_file : Path
             Fichier csv.
         """
-        logging.info(f"📥 Chargement du fichier : {csv_file}")
+        self.logger.info(f"📥 Chargement du fichier : {csv_file}")
         table_name = csv_file.stem
         query_params = {"schema": self.schema, "table": table_name}
 
         try:
             if not self.is_table_exist(conn, query_params):
-                logging.warning(f"Table {table_name} non trouvée, impossible de charger {csv_file.name}")
+                self.logger.warning(f"Table {table_name} non trouvée, impossible de charger {csv_file.name}")
                 return
 
             schema_df = self.get_postgres_schema(conn, table_name)
 
             # Chargement des csv et datamanagement
-            df = csv_pipeline(csv_file, schema_df)
-            logging.info(f"Taille de '{table_name}' : {df.shape}")
+            df = csv_pipeline(csv_file, schema_df, logger=self.logger)
+            self.logger.info(f"Taille de '{table_name}' : {df.shape}")
             
             # Création de la table avec la structure du CSV
-            logging.info(f"🆕 Injection dans la table '{table_name}' à partir du CSV {csv_file}")
+            self.logger.info(f"🆕 Injection dans la table '{table_name}' à partir du CSV {csv_file}")
 
             trans = conn.get_transaction()
             try:
@@ -272,13 +264,13 @@ class PostgreSQLLoader(DataBasePipeline):
                 trans.commit()
             except Exception as e:
                 trans.rollback()
-                logging.error(f"❌ Erreur lors de l'exécution : {e}")
+                self.logger.error(f"❌ Erreur lors de l'exécution : {e}")
                 raise
 
-            logging.info(f"✅ Table '{table_name}' créée et remplie avec succès ({csv_file})")
+            self.logger.info(f"✅ Table '{table_name}' créée et remplie avec succès ({csv_file})")
 
         except Exception as e:
-            logging.error(f"❌ Erreur pour le fichier {csv_file} → {e}")
+            self.logger.error(f"❌ Erreur pour le fichier {csv_file} → {e}")
 
     def fetch_df(self, conn, table_name: str) -> pd.DataFrame:
         """
@@ -303,4 +295,4 @@ class PostgreSQLLoader(DataBasePipeline):
     def close(self):
         """Ferme la connexion à la base de données postgres."""
         self.conn.close()
-        logging.info("Connexion à postgres fermée.")
+        self.logger.info("Connexion à postgres fermée.")

@@ -1,4 +1,4 @@
-CREATE TABLE cert_dc_insern_n2_n1 (
+CREATE TABLE IF NOT EXISTS cert_dc_insern_n2_n1 (
 	index VARCHAR,
 	annee INTEGER,
 	mois INTEGER,

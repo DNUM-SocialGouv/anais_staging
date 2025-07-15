@@ -1,4 +1,4 @@
-CREATE TABLE  IF NOT EXISTS sa_insern (
+CREATE TABLE IF NOT EXISTS sa_insern (
     annee INTEGER,
     mois INTEGER,
     jour INTEGER,

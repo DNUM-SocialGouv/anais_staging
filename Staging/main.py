@@ -4,7 +4,6 @@ from pathlib import Path
 from datetime import date
 import argparse
 import subprocess
-import logging
 from typing import Literal
 from dotenv import load_dotenv
 
@@ -15,22 +14,12 @@ from pipeline.postgres_loader import PostgreSQLLoader
 from pipeline.load_yml import load_metadata_YAML
 from pipeline.logging_management import setup_logger
 
-# dbt_logger = setup_logger("DBT", "logs/dbt.log")
-
-# Configuration du logger DBT
-os.makedirs("logs", exist_ok=True)
-dbt_logger = logging.getLogger("dbt_logger")
-file_handler = logging.FileHandler("logs/dbt.log")
-formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
-file_handler.setFormatter(formatter)
-dbt_logger.addHandler(file_handler)
-dbt_logger.setLevel(logging.INFO)
 
 # Date du jour
 today = date.strftime(date.today(), "%Y_%m_%d")
 load_dotenv()
 
-def run_dbt(profile: str, target: Literal["local", "anais"], view_directory: str, project_dir: str = "./Staging/dbtStaging", profiles_dir: str = "."):
+def run_dbt(profile: str, target: Literal["local", "anais"], view_directory: str, project_dir: str = "./Staging/dbtStaging", profiles_dir: str = ".", logger=None):
     """
     Fonction exécutant la commande 'dbt run' avec les différentes options.
     Exécute obligatoirement le répertoire 'base' dans les modèles dbt, ainsi que le répertoire choisi.
@@ -65,12 +54,12 @@ def run_dbt(profile: str, target: Literal["local", "anais"], view_directory: str
             text=True,
             check=True
         )
-        dbt_logger.info(f"✅ Dbt run de {view_directory} terminé avec succès")
-        dbt_logger.info(result.stdout)
+        logger.info(f"✅ Dbt run de {view_directory} terminé avec succès")
+        logger.info(result.stdout)
 
     except subprocess.CalledProcessError as e:
-        dbt_logger.error("❌ Erreur lors du dbt run :")
-        dbt_logger.error(e.stdout)
+        logger.error("❌ Erreur lors du dbt run :")
+        logger.error(e.stdout)
 
 
 def main(env: str, profile: str, metadata: str = "metadata.yml"):
@@ -94,13 +83,14 @@ def main(env: str, profile: str, metadata: str = "metadata.yml"):
     metadata : str, optional
         Nom du fichier de metadata contenant les informations relatives à chaque profile, by default "metadata.yml".
     """
-    PROJECT_PARAMS = load_metadata_YAML(metadata, profile)
-    FILES_TO_DOWNLOAD = load_metadata_YAML(metadata, 'tables')
-    DB_CONFIG = load_metadata_YAML("profiles.yml", profile, ".")["outputs"][env]
+    logger = setup_logger(env, f"logs/log_{env}.log")
+    PROJECT_PARAMS = load_metadata_YAML(metadata, profile, logger=logger)
+    FILES_TO_DOWNLOAD = load_metadata_YAML(metadata, 'tables', logger=logger)
+    DB_CONFIG = load_metadata_YAML("profiles.yml", profile, ".", logger=logger)["outputs"][env]
 
     if env == "anais":
         # Récupération des fichiers sur le sftp
-        sftp = SFTPSync()
+        sftp = SFTPSync(logger)
         sftp.download_all(FILES_TO_DOWNLOAD["files_to_download"])
 
         # Remplissage des tables de la base postgres
@@ -108,14 +98,16 @@ def main(env: str, profile: str, metadata: str = "metadata.yml"):
             db_config=DB_CONFIG,
             sql_folder=PROJECT_PARAMS["output_sql_directory"],
             csv_folder_input=PROJECT_PARAMS["input_directory"],
-            csv_folder_output=PROJECT_PARAMS["output_directory"])
+            csv_folder_output=PROJECT_PARAMS["output_directory"],
+            logger=logger)
         pg_loader.run()
 
         # Création des vues et export
-        run_dbt(profile=profile, target="anais", view_directory=PROJECT_PARAMS["view_directory"])
-        pg_loader.export_csv(PROJECT_PARAMS["views"], date=today)
-        pg_loader.close()
-        sftp.upload_file_to_sftp(PROJECT_PARAMS["views"], PROJECT_PARAMS["output_directory"], PROJECT_PARAMS["remote_directory"], date=today)
+        run_dbt(profile=profile, target="anais", view_directory=PROJECT_PARAMS["view_directory"], logger=logger)
+        if "views" in PROJECT_PARAMS:
+            pg_loader.export_csv(PROJECT_PARAMS["views"], date=today)
+            pg_loader.close()
+            sftp.upload_file_to_sftp(PROJECT_PARAMS["views"], PROJECT_PARAMS["output_directory"], PROJECT_PARAMS["remote_directory"], date=today)
 
     if env == "local":
         # Remplissage des tables de la base DuckDBP
@@ -123,18 +115,20 @@ def main(env: str, profile: str, metadata: str = "metadata.yml"):
             db_path=DB_CONFIG["path"],
             sql_folder=PROJECT_PARAMS["output_sql_directory"],
             csv_folder_input=PROJECT_PARAMS["input_directory"],
-            csv_folder_output=PROJECT_PARAMS["output_directory"]
+            csv_folder_output=PROJECT_PARAMS["output_directory"],
+            logger=logger
             )
         loader.run()
         loader.close()
 
         # Création des vues et export
-        run_dbt(profile=profile, target="local", view_directory=PROJECT_PARAMS["view_directory"])
+        run_dbt(profile=profile, target="local", view_directory=PROJECT_PARAMS["view_directory"], logger=logger)
         loader = DuckDBPipeline(
             db_path=DB_CONFIG["path"],
             sql_folder=PROJECT_PARAMS["output_sql_directory"],
             csv_folder_input=PROJECT_PARAMS["input_directory"],
-            csv_folder_output=PROJECT_PARAMS["output_directory"]
+            csv_folder_output=PROJECT_PARAMS["output_directory"],
+            logger=logger
             )
         loader.export_csv(PROJECT_PARAMS["views"], date=today)
         loader.close()
@@ -143,7 +137,7 @@ def main(env: str, profile: str, metadata: str = "metadata.yml"):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Exécution du pipeline")
     parser.add_argument("--env", choices=["local", "anais"], default="local", help="Environnement d'exécution")
-    parser.add_argument("--profile", choices=["Staging", "Helios", "InspectionControle", "Matrice_PA", "Matrice_PH", "CertDC"], default="Staging", help="Profile dbt d'exécution")
+    parser.add_argument("--profile", choices=["Staging", "Helios", "InspectionControlePA", "Matrice_PA", "Matrice_PH", "CertDC"], default="Staging", help="Profile dbt d'exécution")
     args = parser.parse_args()
 
     main(args.env, args.profile)
