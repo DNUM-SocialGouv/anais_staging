@@ -64,23 +64,35 @@ Seul le password des bases postgres n'est pas indiqué -> il est indiqué dans l
 
 Le fichier `metadata.yml` contient le paramétrage relatif aux fichiers en entrée et en sortie pour les différents projets.
 
-### Section **tables**
+Chaque projet à sa section.
+
+### Section directory
+
+Contient les informations relatives aux fichiers et répertoires du projet.
+- input_directory = répertoire où sont trouvables les fichiers csv en entrée. Exemple: "input/<Nom_projet>"
+- view_directory = répertoire dans lequel sont enregistrés les modèles dbt du projet. <Nom_projet>" trouvable dans '/anais_staging/Staging/dbtStaging/models/'
+- output_directory = répertoire où sont enregistrés les fichiers csv en sortie. Exemple: "output/<Nom_projet>"
+- output_sql_directory = répertoire où sont enregistrés les fichiers SQL Create table. Exemple: 'Staging/output_sql/<Nom_projet>'
+- output_sql_staging_directory = répertoire où sont enregistrés les fichiers SQL Create table de Staging. Permet la création des tables de Staging dans la base du projet. Exemple: 'Staging/output_sql/staging'
+- remote_directory = listes des répertoires sur le SFTP où sont enregistrés les fichiers csv en sortie. Exemple: "/SCN_BDD/<Nom_projet>/output"
+
+
+### Section **files_to_download**
 
 Contient les informations relatives aux fichiers csv provenant du SFTP.
-La section `files_to_download` (fichier à télécharger) contient :
+La section `files_to_download` (fichier à récupérer) contient :
 - path = Chemin du fichier sur le SFTP. Exemple : "/SCN_BDD/INSERN"
 - keyword = Terme dans le nom du fichier qui permet de le distinguer des autres fichiers. Exemple : "DNUM_TdB_CertDc" pour un fichier nommer DNUM_TdB_CertDcT42024T12025.csv
 - file = Nom d'enregistrement du fichier une fois importé. Exemple : "sa_insern.csv"
 
-### Section **<Nom_projet>**
+### Section **files_to_upload**
 
-Contient les informations relatives aux fichiers et répertoires du projet.
-- input_directory = répertoire où sont trouvables les fichiers csv en entrée. Par défaut "input/"
-- view_directory = répertoire dans lequel sont enregistrés les modèles dbt du projet. Exemple: "certdc", touvable dans '/anais_staging/Staging/dbtStaging/models/'
-- output_directory = répertoire où sont enregistrés les fichiers csv en sortie. Par défaut "output/"
-- output_sql_directory = répertoire où sont enregistrés les fichiers SQL Create table. Par dafaut 'Staging/output_sql/'
-- remote_directory = répertoire sur le SFTP où sont enregistrés les fichiers csv en sortie. Exemple: "/SCN_BDD/CERTELEC_DC/input"
-- views = Nom des modèles dbt exportés. Avec en premier élément : nom de la vue sql (nom du modèle dbt). En second élément : radical du nom donné au fichier csv exporté. Le nom final sera 'sa_<radical>_<date_du_jour>.csv'. Exemple: ods_insee: ods_insee
+Contient les informations relatives aux vues à exporter en csv.
+La section `files_to_upload` à envoyer contient :
+- nom de la vue sql (nom du modèle dbt)
+- radical du nom donné au fichier csv exporté. Le nom final sera '<radical>_<date_du_jour>.csv'. 
+Exemple: ods_insee: ods_insee
+
 
 ---
 ## 4. Lancement du pipeline :

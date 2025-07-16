@@ -11,7 +11,7 @@ from pipeline.csv_management import TransformExcel
 
 # Classe SFTPSync
 class SFTPSync:
-    def __init__(self, logger=None):
+    def __init__(self, output_folder: str, logger=None):
         """ Connexion au SFTP pour la récupération et l'upload de fichier. """
         self.logger = logger
         load_dotenv()
@@ -19,7 +19,14 @@ class SFTPSync:
         self.port = int(os.getenv("SFTP_PORT"))
         self.username = os.getenv("SFTP_USERNAME")
         self.password = os.getenv("SFTP_PASSWORD")
-        self.output_folder = os.getenv("SFTP_OUTPUT_FOLDER", "input/")
+        self.output_folder = output_folder
+        self.ensure_directories_exist()
+    
+    def ensure_directories_exist(self):
+        """ Crée les dossiers nécessaires s'ils n'existent pas. """
+        for folder in [self.output_folder]:
+            os.makedirs(folder, exist_ok=True)
+            self.logger.info(f"Dossier vérifié/créé : {folder}")
 
     def connect(self):
         """
@@ -146,7 +153,7 @@ class SFTPSync:
                     self.download_file(remote_path, local_path)
         self.close()
 
-    def upload_file_to_sftp(self, views_to_export: dict, output_dir: str, remote_dir: str, date: str):
+    def upload_file_to_sftp(self, views_to_export: dict, output_dir: str, remote_directory: str, date: str):
         """
         Exporte les vues enregistrées en csv du répertoire local au répertoire distant.
 
@@ -156,32 +163,31 @@ class SFTPSync:
             Liste des vues à upload.
         output_dir : str
             Répertoire dans lequels trouver les fichiers csv.
-        remote_dir : str
+        remote_directory : str
             Répertoire sur le SFTP où upload les fichiers.
         date : str
             Date présente dans le nom des fichiers à exporter.
         """
         self.connect()
-        if not self.sftp_dir_exists(remote_dir):
-            self.logger.error(f"❌ Répertoire SFTP inexistant : {remote_dir}")
-            self.close()
-            return
-
-        for _, csv_name in views_to_export.items():
-            # Récupère le nom du fichier csv
-            file_name = f'sa_{csv_name}_{date}.csv'
-            local_path = os.path.join(output_dir, file_name)
-            remote_path = os.path.join(remote_dir, file_name)
-
-            # Vérifie l'existence du fichier csv dans output
-            if os.path.exists(local_path):
-                try:
-                    self.sftp.put(local_path, remote_path)
-                    self.logger.info(f"✅ Upload réussi: {file_name} → {remote_path}")
-                except Exception as e:
-                    self.logger.error(f"❌ Échec de l'upload {file_name} → {e}")
+        for remote_dir in remote_directory:
+            if not self.sftp_dir_exists(remote_dir):
+                self.logger.error(f"❌ Répertoire SFTP inexistant : {remote_dir}")
             else:
-                self.logger.warning(f"⚠️ Fichier introuvable : {local_path}")
+                for _, csv_name in views_to_export.items():
+                    # Récupère le nom du fichier csv
+                    file_name = f'{csv_name}_{date}.csv'
+                    local_path = os.path.join(output_dir, file_name)
+                    remote_path = os.path.join(remote_dir, file_name)
+
+                    # Vérifie l'existence du fichier csv dans output
+                    if os.path.exists(local_path):
+                        try:
+                            self.sftp.put(local_path, remote_path)
+                            self.logger.info(f"✅ Upload réussi: {file_name} → {remote_path}")
+                        except Exception as e:
+                            self.logger.error(f"❌ Échec de l'upload {file_name} → {e}")
+                    else:
+                        self.logger.warning(f"⚠️ Fichier introuvable : {local_path}")
         self.close()
 
     def close(self):

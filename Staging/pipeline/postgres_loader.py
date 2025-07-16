@@ -23,6 +23,7 @@ class PostgreSQLLoader(DataBasePipeline):
                  sql_folder: str = "Staging/output_sql/",
                  csv_folder_input: str = "input/",
                  csv_folder_output: str = "output/",
+                 sql_folder_staging: str = None,
                  logger=None
                  ):
         """
@@ -38,10 +39,13 @@ class PostgreSQLLoader(DataBasePipeline):
             Répertoire des fichiers csv importés, by default "input/"
         csv_folder_output : str, optional
             Répertoire des fichiers csv exportés, by default "output/"
+        sql_folder_staging : str, optional
+            Chemin des fichiers SQL Create table de Staging, by default None
         """
         super().__init__(sql_folder=sql_folder,
                          csv_folder_input=csv_folder_input,
                          csv_folder_output=csv_folder_output,
+                         sql_folder_staging=sql_folder_staging,
                          logger=logger)
         self.logger = logger
         self.typedb = "postgres"

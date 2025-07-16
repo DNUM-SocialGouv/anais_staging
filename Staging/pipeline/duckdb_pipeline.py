@@ -15,6 +15,7 @@ class DuckDBPipeline(DataBasePipeline):
                 sql_folder: str = "Staging/output_sql/",
                 csv_folder_input: str = "input/",
                 csv_folder_output: str = "output/",
+                sql_folder_staging: str = None,
                 db_path: str = 'data/duckdb_database.duckdb',
                 logger=None):
         """
@@ -28,12 +29,15 @@ class DuckDBPipeline(DataBasePipeline):
             Répertoire des fichiers csv importés, by default "input/".
         csv_folder_output : str, optional
             Répertoire des fichiers csv exportés, by default "output/".
+        sql_folder_staging : str, optional
+            Chemin des fichiers SQL Create table de Staging, by default None
         db_path : str, optional
             Répertoire de la base duckdb, by default 'data/duckdb_database.duckdb'.
         """
         super().__init__(sql_folder=sql_folder,
                          csv_folder_input=csv_folder_input,
                          csv_folder_output=csv_folder_output,
+                         sql_folder_staging=sql_folder_staging,
                          logger=logger)
         self.logger = logger
         self.db_path = db_path
@@ -44,6 +48,12 @@ class DuckDBPipeline(DataBasePipeline):
 
     def init_duckdb(self):
         """ Vérifie si la base DuckDB existe, sinon la crée. """
+        db_dir = os.path.dirname(self.db_path)
+
+        if db_dir and not os.path.exists(db_dir):
+            os.makedirs(db_dir, exist_ok=True)
+            self.logger.info(f"Dossier créé pour la base DuckDB : {db_dir}")
+
         if not os.path.exists(self.db_path):
             self.logger.info("Création de la base DuckDB...")
             conn = duckdb.connect(self.db_path)

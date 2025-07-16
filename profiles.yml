@@ -12,7 +12,7 @@ Staging:
       dbname: staging
     local:
       type: duckdb
-      path: data/duckdb_database.duckdb
+      path: data/staging/duckdb_database.duckdb
       schema: main
 
 # DNUM - Layer CertDC (dépend de la base de Staging)
@@ -29,7 +29,7 @@ CertDC:
       dbname: certelec_dc
     local:
       type: duckdb
-      path: data/duckdb_database.duckdb
+      path: data/certdc/duckdb_database.duckdb
       schema: main
   
 # DNUM - Layer InspectionControle Personnes Agées (dépend de la base de Staging)
@@ -46,7 +46,7 @@ InspectionControlePA:
       dbname: inspection_controle
     local:
       type: duckdb
-      path: data/duckdb_database.duckdb
+      path: data/inspection_controle_pa/duckdb_database.duckdb
       schema: main
 
 # DNUM - Layer InspectionControle Personnes Handicapées (dépend de la base de Staging)
@@ -63,7 +63,7 @@ InspectionControlePH:
       dbname: inspection_controle
     local:
       type: duckdb
-      path: data/duckdb_database.duckdb
+      path: data/inspection_controle_ph/duckdb_database.duckdb
       schema: main
 
 # DNUM - Layer Helios (dépend de la base de Staging)
@@ -80,7 +80,7 @@ Helios:
       dbname: helios
     local:
       type: duckdb
-      path: data/duckdb_database.duckdb
+      path: data/helios/duckdb_database.duckdb
       schema: main
 
 # DNUM - Layer Matrice Personnes Agées (dépend de la base de Staging)
@@ -97,7 +97,7 @@ Matrice_PA:
       dbname: matrice_ph
     local:
       type: duckdb
-      path: data/duckdb_database.duckdb
+      path: data/matrice_pa/duckdb_database.duckdb
       schema: main
   
 # DNUM - Layer Matrice Personnes Handicapées (dépend de la base de Staging)
@@ -114,5 +114,5 @@ Matrice_PH:
       dbname: matrice_ph
     local:
       type: duckdb
-      path: data/duckdb_database.duckdb
+      path: data/matrice_ph/duckdb_database.duckdb
       schema: main

@@ -85,13 +85,12 @@ def main(env: str, profile: str, metadata: str = "metadata.yml"):
     """
     logger = setup_logger(env, f"logs/log_{env}.log")
     PROJECT_PARAMS = load_metadata_YAML(metadata, profile, logger=logger)
-    FILES_TO_DOWNLOAD = load_metadata_YAML(metadata, 'tables', logger=logger)
     DB_CONFIG = load_metadata_YAML("profiles.yml", profile, ".", logger=logger)["outputs"][env]
 
     if env == "anais":
         # Récupération des fichiers sur le sftp
-        sftp = SFTPSync(logger)
-        sftp.download_all(FILES_TO_DOWNLOAD["files_to_download"])
+        sftp = SFTPSync(PROJECT_PARAMS["input_directory"], logger)
+        sftp.download_all(PROJECT_PARAMS["files_to_download"])
 
         # Remplissage des tables de la base postgres
         pg_loader = PostgreSQLLoader(
@@ -99,15 +98,16 @@ def main(env: str, profile: str, metadata: str = "metadata.yml"):
             sql_folder=PROJECT_PARAMS["output_sql_directory"],
             csv_folder_input=PROJECT_PARAMS["input_directory"],
             csv_folder_output=PROJECT_PARAMS["output_directory"],
+            sql_folder_staging=PROJECT_PARAMS["output_sql_staging_directory"],
             logger=logger)
         pg_loader.run()
 
         # Création des vues et export
         run_dbt(profile=profile, target="anais", view_directory=PROJECT_PARAMS["view_directory"], logger=logger)
-        if "views" in PROJECT_PARAMS:
-            pg_loader.export_csv(PROJECT_PARAMS["views"], date=today)
-            pg_loader.close()
-            sftp.upload_file_to_sftp(PROJECT_PARAMS["views"], PROJECT_PARAMS["output_directory"], PROJECT_PARAMS["remote_directory"], date=today)
+
+        pg_loader.export_csv(PROJECT_PARAMS["files_to_upload"], date=today)
+        pg_loader.close()
+        sftp.upload_file_to_sftp(PROJECT_PARAMS["files_to_upload"], PROJECT_PARAMS["output_directory"], PROJECT_PARAMS["remote_directory"], date=today)
 
     if env == "local":
         # Remplissage des tables de la base DuckDBP
@@ -116,6 +116,7 @@ def main(env: str, profile: str, metadata: str = "metadata.yml"):
             sql_folder=PROJECT_PARAMS["output_sql_directory"],
             csv_folder_input=PROJECT_PARAMS["input_directory"],
             csv_folder_output=PROJECT_PARAMS["output_directory"],
+            sql_folder_staging=PROJECT_PARAMS["output_sql_staging_directory"],
             logger=logger
             )
         loader.run()
@@ -130,7 +131,7 @@ def main(env: str, profile: str, metadata: str = "metadata.yml"):
             csv_folder_output=PROJECT_PARAMS["output_directory"],
             logger=logger
             )
-        loader.export_csv(PROJECT_PARAMS["views"], date=today)
+        loader.export_csv(PROJECT_PARAMS["files_to_upload"], date=today)
         loader.close()
 
 

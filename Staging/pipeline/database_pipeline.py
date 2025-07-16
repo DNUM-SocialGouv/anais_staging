@@ -14,6 +14,7 @@ class DataBasePipeline:
                 sql_folder: str = "Staging/output_sql/",
                 csv_folder_input: str = "input/",
                 csv_folder_output: str = "output/",
+                sql_folder_staging: str = None,
                 logger=None):
         """
         Classe qui réalise les actions communes pour n'importe quel database.
@@ -35,15 +36,24 @@ class DataBasePipeline:
             Chemine des fichiers csv en entrée, by default "input/"
         csv_folder_output : str, optional
             Chemin des fichiers csv en sortie, by default "output/"
+        sql_folder_staging : str, optional
+            Chemin des fichiers SQL Create table de Staging, by default None
         """
         self.sql_folder = sql_folder
         self.csv_folder_input = csv_folder_input
         self.csv_folder_output = csv_folder_output
+        self.sql_folder_staging = sql_folder_staging
         self.logger = logger
 
     def ensure_directories_exist(self):
         """ Crée les dossiers nécessaires s'ils n'existent pas. """
-        for folder in [self.sql_folder, self.csv_folder_input, self.csv_folder_output]:
+        folders = [self.sql_folder, self.csv_folder_input, self.csv_folder_output]
+
+        # Ajoute sql_folder_staging seulement s'il est défini (non None)
+        if self.sql_folder_staging is not None:
+            folders.append(self.sql_folder_staging)
+
+        for folder in folders:
             os.makedirs(folder, exist_ok=True)
             self.logger.info(f"Dossier vérifié/créé : {folder}")
 
@@ -192,6 +202,10 @@ class DataBasePipeline:
         conn = self.conn
         for sql_file in Path(self.sql_folder).glob("*.sql"):
             self.execute_sql_file(conn, sql_file, self.create_table)
+
+        if self.sql_folder_staging:
+            for sql_file in Path(self.sql_folder_staging).glob("*.sql"):
+                self.execute_sql_file(conn, sql_file, self.create_table)
 
         self.logger.info(f"Début du chargement des fichiers CSV vers {self.typedb}.")
         for csv_file in Path(self.csv_folder_input).glob("*.csv"):

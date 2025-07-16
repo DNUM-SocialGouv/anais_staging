@@ -177,10 +177,11 @@ class ReadCsvWithDelimiter:
             Dataframe du csv.
         """
         try:
-            if self.file_path.name == "sa_sivss.csv":
-                return self.read_csv_with_custom_delimiter("¤")
-            else:
-                return self.read_csv_resilient()
+            # if self.file_path.name == "sa_sivss.csv":
+            #     return self.read_csv_with_custom_delimiter("¤")
+            # else:
+            #     return self.read_csv_resilient()
+            return self.read_csv_resilient()
         except Exception as e:
             self.logger.error(f"❌ Lecture échouée pour {self.file_path.name} → {e}")
             return
@@ -275,6 +276,31 @@ def check_missing_columns(csv_file_name: str, df: pd.DataFrame, schema_df: pd.Da
         df = df[table_columns]
 
 
+def get_column_length(schema_df: pd.DataFrame)-> pd.DataFrame:
+    """
+    Sépare le type de la colonne et la longueur dans le schéma de la table.
+    Par exemple, VARCHAR(50) sera séparé en VARCHAR dans column_base_type et 50 dans column_length.
+    Si la longueur n'existe pas, alors column_length est vide (NA).
+
+    Parameters
+    ----------
+    schema_df : pd.DataFrame
+        Schema de la table SQL, contenant le nom des colonnes et leur type.
+
+    Returns
+    -------
+    pd.DataFrame
+        Schema avec le type et la longueur des colonnes de la table séparés.
+    """
+    schema_df["column_base_type"] = schema_df["column_type"].astype(str).str.extract(r"^(\w+)")
+    schema_df["column_length"] = (
+        schema_df["column_type"].astype(str)
+        .str.extract(r"\((\d+)\)")
+        .astype("Int64")
+    )
+    return schema_df
+
+
 def convert_columns_type(type_mapping: dict, df: pd.DataFrame, schema_df: pd.DataFrame, logger=None) -> pd.DataFrame:
     """
     Convertie les colonnes du dataframe selon le type dans les tables SQL.
@@ -295,7 +321,8 @@ def convert_columns_type(type_mapping: dict, df: pd.DataFrame, schema_df: pd.Dat
     """
     for _, row in schema_df.iterrows():
         col_name = row["column_name"]
-        col_type = str(row["column_type"])
+        col_type = str(row["column_base_type"])
+        col_length = row["column_length"]
 
         if col_name in df.columns and col_type in type_mapping:
             try:
@@ -305,6 +332,10 @@ def convert_columns_type(type_mapping: dict, df: pd.DataFrame, schema_df: pd.Dat
                     df[col_name] = df[col_name].replace({None: False, "": False, pd.NA: False}).astype(bool)
                 elif type_mapping[col_type] == "datetime64":
                     df[col_name] = pd.to_datetime(df[col_name], format="%d-%m-%Y", errors="coerce")
+                elif type_mapping[col_type] == "string":
+                    df[col_name] = df[col_name].astype(type_mapping[col_type])
+                    if not pd.isna(col_length):
+                        df[col_name] = df[col_name].str[:col_length]
                 else:
                     df[col_name] = df[col_name].astype(type_mapping[col_type])
             except ValueError as e:
@@ -338,6 +369,8 @@ def csv_pipeline(csv_file: Path, schema_df: pd.DataFrame, logger=None) -> pd.Dat
         "FLOAT": "float",
         "DOUBLE": "float",
         "REAL": "float",
+        "TEXT": "string",
+        "VARCHAR": "string",
         "BOOLEAN": "bool",
         "DATE": "datetime64",
         "TIMESTAMP": "datetime64",
@@ -348,6 +381,7 @@ def csv_pipeline(csv_file: Path, schema_df: pd.DataFrame, logger=None) -> pd.Dat
     standardizer.standardize_column_names()
     df = standardizer.df
     check_missing_columns(csv_file.name, df, schema_df, logger=logger)
+    schema_df = get_column_length(schema_df)
     df = convert_columns_type(TYPE_MAPPING, df, schema_df, logger=logger)
 
     return df
@@ -376,7 +410,7 @@ def export_to_csv(conn, table_name: str, csv_name: str, df_fetch_func: Callable[
     os.makedirs(output_folder, exist_ok=True)
 
     # Nom du fichier
-    file_name = f'sa_{csv_name}_{date}.csv'
+    file_name = f'{csv_name}_{date}.csv'
     output_path = os.path.join(output_folder, file_name)
     logger.info(f"📤 Export de '{table_name}' → {output_path}")
 
