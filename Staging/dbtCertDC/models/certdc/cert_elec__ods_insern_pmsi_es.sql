@@ -59,7 +59,7 @@ WITH finess_categories AS (
         lieu_de_deces AS DECES_LIEU,
         ods_insern.source AS DECES_SRC,
         deces_nb AS DECES_NB
-    FROM {{ ref('ods_insern') }} ods_insern
+    FROM {{ ref('cert_elec__ods_insern') }} ods_insern
     LEFT JOIN {{ ref('staging__sa_t_finess') }} t_finess ON {{ iif_replacement("LENGTH(ods_insern.et_finess)=9","CAST(ods_insern.et_finess AS VARCHAR)","'0'||CAST(ods_insern.et_finess AS VARCHAR)") }} = t_finess.finess
     LEFT JOIN (
         SELECT 
@@ -145,7 +145,7 @@ WITH finess_categories AS (
         ods_pmsi.mois AS DECES_MOIS,
         ods_pmsi.source AS DECES_SOURCE,
         ods_pmsi.deces_nb AS DECES_NB
-	FROM {{ ref('ods_pmsi') }} ods_pmsi
+	FROM {{ ref('cert_elec__ods_pmsi') }} ods_pmsi
 	LEFT JOIN {{ ref('staging__sa_t_finess') }} t_finess ON {{ iif_replacement("LENGTH(ods_pmsi.finess)=8", "'0' || CAST(ods_pmsi.finess AS VARCHAR)", "CAST(ods_pmsi.finess AS VARCHAR)") }} = t_finess.finess
 	LEFT JOIN (
 		SELECT 

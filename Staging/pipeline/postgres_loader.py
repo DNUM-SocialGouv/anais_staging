@@ -18,14 +18,7 @@ load_dotenv()
 
 # Classe PostgreSQLLoader qui gère les actions relatives à une database postgres
 class PostgreSQLLoader(DataBasePipeline):
-    def __init__(self,
-                 db_config: dict,
-                 sql_folder: str = "Staging/output_sql/",
-                 csv_folder_input: str = "input/",
-                 csv_folder_output: str = "output/",
-                 sql_folder_staging: str = None,
-                 logger=None
-                 ):
+    def __init__(self, db_config: dict, config: dict, logger=None):
         """
         Initialisation de la base Postgres. Classe héritière de DataBasePipeline.
 
@@ -42,11 +35,7 @@ class PostgreSQLLoader(DataBasePipeline):
         sql_folder_staging : str, optional
             Chemin des fichiers SQL Create table de Staging, by default None
         """
-        super().__init__(sql_folder=sql_folder,
-                         csv_folder_input=csv_folder_input,
-                         csv_folder_output=csv_folder_output,
-                         sql_folder_staging=sql_folder_staging,
-                         logger=logger)
+        super().__init__(db_config, config, logger)
         self.logger = logger
         self.typedb = "postgres"
         self.host = db_config["host"]
@@ -56,9 +45,7 @@ class PostgreSQLLoader(DataBasePipeline):
         self.database = db_config["dbname"]
         self.schema = db_config["schema"]
         self.engine = self.init_engine()
-        self.conn = self.engine.connect()
         
-
     def init_engine(self):
         """ Connexion à la base postgres. """
         try:
@@ -69,6 +56,10 @@ class PostgreSQLLoader(DataBasePipeline):
         except Exception as e:
             self.logger.error(f"Erreur de connexion PostgreSQL : {e}")
             raise
+
+    def connect(self):
+        """ Connexion à la base postgres. """
+        self.conn = self.engine.connect()
 
     def postgres_drop_table(self, conn, query_params: dict):
         """

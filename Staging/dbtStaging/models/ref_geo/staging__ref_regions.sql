@@ -12,7 +12,7 @@ WITH regions AS (
     UNION
 
     SELECT
-        COMER AS reg,
+        comer AS reg,
         ncc,
         libelle
     FROM {{ ref('staging__v_comer') }} 

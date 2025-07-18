@@ -22,7 +22,7 @@ WITH brut_insee_deces AS (
         DECES_MOIS,
         DECES_JOUR,
         SUM(DECES_NB) AS DECES_NB
-    FROM {{ ref('ods_insee') }}
+    FROM {{ ref('cert_elec__ods_insee') }}
     GROUP BY
         REGION_CD,
         REGION_LB,
@@ -67,7 +67,7 @@ WITH brut_insee_deces AS (
         mois AS DECES_MOIS,
         jour AS DECES_JOUR,
         SUM(deces_nb) AS DECES_NB
-	FROM {{ ref('ods_insern') }} ods_insern
+	FROM {{ ref('cert_elec__ods_insern') }} ods_insern
 	LEFT JOIN (
 		SELECT 
             CAST(com AS VARCHAR) AS com,

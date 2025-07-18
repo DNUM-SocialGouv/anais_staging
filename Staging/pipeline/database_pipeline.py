@@ -6,15 +6,13 @@ from typing import Callable, Any
 import re
 
 # Modules
-from pipeline.csv_management import export_to_csv
+from pipeline.csv_management import import_to_csv, export_to_csv
 
 # Classe DataBasePipeline qui gère les actions relatives à n'importe quel database
 class DataBasePipeline:
     def __init__(self,
-                sql_folder: str = "Staging/output_sql/",
-                csv_folder_input: str = "input/",
-                csv_folder_output: str = "output/",
-                sql_folder_staging: str = None,
+                db_config: dict,
+                config: dict,
                 logger=None):
         """
         Classe qui réalise les actions communes pour n'importe quel database.
@@ -30,28 +28,18 @@ class DataBasePipeline:
             - load_csv_file(self, conn, csv_file: Path) = fonction d'injection des données d'un csv vers une table de la base de données
         Parameters
         ----------
-        sql_folder : str, optional
-            Chemin des fichiers SQL Create table, by default "Staging/output_sql/"
-        csv_folder_input : str, optional
-            Chemine des fichiers csv en entrée, by default "input/"
-        csv_folder_output : str, optional
-            Chemin des fichiers csv en sortie, by default "output/"
-        sql_folder_staging : str, optional
-            Chemin des fichiers SQL Create table de Staging, by default None
+        config : dict
         """
-        self.sql_folder = sql_folder
-        self.csv_folder_input = csv_folder_input
-        self.csv_folder_output = csv_folder_output
-        self.sql_folder_staging = sql_folder_staging
+        self.sql_folder = config["create_table_directory"]
+        self.csv_folder_input = config["local_directory_input"]
+        self.csv_folder_output = config["local_directory_output"]
+        self.db_config = db_config
         self.logger = logger
+        self.ensure_directories_exist()
 
     def ensure_directories_exist(self):
         """ Crée les dossiers nécessaires s'ils n'existent pas. """
         folders = [self.sql_folder, self.csv_folder_input, self.csv_folder_output]
-
-        # Ajoute sql_folder_staging seulement s'il est défini (non None)
-        if self.sql_folder_staging is not None:
-            folders.append(self.sql_folder_staging)
 
         for folder in folders:
             os.makedirs(folder, exist_ok=True)
@@ -173,6 +161,24 @@ class DataBasePipeline:
             except Exception as e:
                 self.logger.error(f"❌ Erreur lors de l'exécution du SQL {sql_file.name}: {e}")
 
+    def import_csv(self, views_to_import: dict):
+        """
+        Exporte les vues vers un format csv.
+
+        Parameters
+        ----------
+        views_to_import : dict
+            Liste des vues à importer.
+        date : str
+            Date présente dans le nom des fichiers à exporter.
+        """
+        conn = self.conn
+        for table_name, csv_name in views_to_import.items():
+            if table_name:
+                import_to_csv(conn, table_name, csv_name, self.fetch_df, self.csv_folder_input, logger=self.logger)
+            else:
+                self.logger.warning("⚠️ Aucune table spécifiée")   
+
     def export_csv(self, views_to_export: dict, date: str):
         """
         Exporte les vues vers un format csv.
@@ -198,14 +204,9 @@ class DataBasePipeline:
             - Chargement des CSV et injection dans les tables
             - Vérification de leur création
         """
-        self.ensure_directories_exist()
         conn = self.conn
         for sql_file in Path(self.sql_folder).glob("*.sql"):
             self.execute_sql_file(conn, sql_file, self.create_table)
-
-        if self.sql_folder_staging:
-            for sql_file in Path(self.sql_folder_staging).glob("*.sql"):
-                self.execute_sql_file(conn, sql_file, self.create_table)
 
         self.logger.info(f"Début du chargement des fichiers CSV vers {self.typedb}.")
         for csv_file in Path(self.csv_folder_input).glob("*.csv"):

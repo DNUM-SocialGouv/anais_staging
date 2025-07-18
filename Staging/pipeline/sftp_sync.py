@@ -20,13 +20,6 @@ class SFTPSync:
         self.username = os.getenv("SFTP_USERNAME")
         self.password = os.getenv("SFTP_PASSWORD")
         self.output_folder = output_folder
-        self.ensure_directories_exist()
-    
-    def ensure_directories_exist(self):
-        """ Crée les dossiers nécessaires s'ils n'existent pas. """
-        for folder in [self.output_folder]:
-            os.makedirs(folder, exist_ok=True)
-            self.logger.info(f"Dossier vérifié/créé : {folder}")
 
     def connect(self):
         """
@@ -153,7 +146,7 @@ class SFTPSync:
                     self.download_file(remote_path, local_path)
         self.close()
 
-    def upload_file_to_sftp(self, views_to_export: dict, output_dir: str, remote_directory: str, date: str):
+    def upload_file_to_sftp(self, views_to_export: dict, output_dir: str, remote_dir: str, date: str):
         """
         Exporte les vues enregistrées en csv du répertoire local au répertoire distant.
 
@@ -163,13 +156,13 @@ class SFTPSync:
             Liste des vues à upload.
         output_dir : str
             Répertoire dans lequels trouver les fichiers csv.
-        remote_directory : str
+        remote_dir : str
             Répertoire sur le SFTP où upload les fichiers.
         date : str
             Date présente dans le nom des fichiers à exporter.
         """
         self.connect()
-        for remote_dir in remote_directory:
+        if remote_dir:
             if not self.sftp_dir_exists(remote_dir):
                 self.logger.error(f"❌ Répertoire SFTP inexistant : {remote_dir}")
             else:

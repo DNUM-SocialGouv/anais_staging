@@ -5,6 +5,7 @@
 *.cpython-39.pyc
 *.cpython-312.pyc
 *__pycache__
-Staging/show_column.py
-Staging/dbtStaging/target/*
-data/duckdb_database.duckdb
+/Staging/dbtStaging/target/
+/Staging/dbtInspectionControle/target/
+/Staging/dbtCertDC/target/
+/data/

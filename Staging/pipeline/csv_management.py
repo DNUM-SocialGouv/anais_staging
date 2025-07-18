@@ -177,11 +177,11 @@ class ReadCsvWithDelimiter:
             Dataframe du csv.
         """
         try:
-            # if self.file_path.name == "sa_sivss.csv":
-            #     return self.read_csv_with_custom_delimiter("¤")
-            # else:
-            #     return self.read_csv_resilient()
-            return self.read_csv_resilient()
+            if self.file_path.name == "sa_sivss.csv":
+                return self.read_csv_with_custom_delimiter("¤")
+            else:
+                return self.read_csv_resilient()
+            # return self.read_csv_resilient()
         except Exception as e:
             self.logger.error(f"❌ Lecture échouée pour {self.file_path.name} → {e}")
             return
@@ -420,3 +420,36 @@ def export_to_csv(conn, table_name: str, csv_name: str, df_fetch_func: Callable[
         logger.info(f"✅ Export réussi : {file_name}")
     except Exception as e:
         logger.error(f"❌ Erreur d'export pour '{table_name}' → {e}")
+
+
+def import_to_csv(conn, table_name: str, csv_name: str, df_fetch_func: Callable[[str], pd.DataFrame], input_folder: str, logger=None):
+    """
+    Exporte une table SQL vers un format csv.
+    Le dataframe peut être issue d'un requêtage duckdb ou postgres. 
+
+    Parameters
+    ----------
+    conn : duckdb.DuckDBPyConnection | sqlalchemy.engine.base.Connection
+        Connexion à la base de données.
+    table_name : str
+        Nom de la table SQL
+    csv_name : str
+        Nom du fichier csv en issue.
+    df_fetch_func : Callable[[str], pd.DataFrame]
+        Fonction de requêtage de la table. Une fonction existe pour duckdb et une autre pour postegres.
+    input_folder : str
+        Répertoire d'import du fichier.
+    """
+    os.makedirs(input_folder, exist_ok=True)
+
+    # Nom du fichier
+    file_name = f'{csv_name}.csv'
+    input_path = os.path.join(input_folder, file_name)
+    logger.info(f"📤 Import de '{table_name}' → {input_path}")
+
+    try:
+        df = df_fetch_func(conn, table_name)
+        df.to_csv(input_path, index=False, sep=";", encoding="utf-8-sig")
+        logger.info(f"✅ Import réussi : {file_name}")
+    except Exception as e:
+        logger.error(f"❌ Erreur d'import pour '{table_name}' → {e}")

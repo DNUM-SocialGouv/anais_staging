@@ -74,7 +74,7 @@ Contient les informations relatives aux fichiers et répertoires du projet.
 - output_directory = répertoire où sont enregistrés les fichiers csv en sortie. Exemple: "output/<Nom_projet>"
 - output_sql_directory = répertoire où sont enregistrés les fichiers SQL Create table. Exemple: 'Staging/output_sql/<Nom_projet>'
 - output_sql_staging_directory = répertoire où sont enregistrés les fichiers SQL Create table de Staging. Permet la création des tables de Staging dans la base du projet. Exemple: 'Staging/output_sql/staging'
-- remote_directory = listes des répertoires sur le SFTP où sont enregistrés les fichiers csv en sortie. Exemple: "/SCN_BDD/<Nom_projet>/output"
+- remote_directory_output = listes des répertoires sur le SFTP où sont enregistrés les fichiers csv en sortie. Exemple: "/SCN_BDD/<Nom_projet>/output"
 
 
 ### Section **files_to_download**

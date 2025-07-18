@@ -1,15 +1,10 @@
 Staging:
-  input_directory: "input/staging/"
-  view_directory: ""
-  output_directory: "output/staging/"
-  output_sql_directory: "Staging/output_sql/staging/"
-  output_sql_staging_directory: null
-  remote_directory: 
-    - "/SCN_BDD/CERTELEC_DC/input"
-    - "/SCN_BDD/HELIOS/input"
-    # - "/SCN_BDD/PRECIBLAGE/input"
-    # - "/SCN_BDD/REFERENTIELS"
-    # - "/SCN_BDD/INSPECTION_CONTROLE/PA/input"
+  local_directory_input: "input/staging/"
+  models_directory: "Staging/dbtStaging/"
+  local_directory_output: "output/staging/"
+  create_table_directory: "Staging/output_sql/staging/"
+  remote_directory_input: null
+  remote_directory_output: null
   files_to_download:
     - path: "/SCN_BDD/INSERN"
       keyword: "DNUM_TdB_CertDc"
@@ -50,74 +45,11 @@ Staging:
     - path: "/SCN_BDD/INSEE"
       keyword: "v_region"
       file: "v_region.csv"
-  files_to_upload:
-    sa_insern: sa_insern
-    sa_siicea_cibles: sa_siicea_cibles
-    sa_siicea_missions: sa_siicea_missions
-    sa_siicea_suites: sa_siicea_suites
-    sa_sirec: sa_sirec
-    sa_sivss: sa_sivss
-    sa_t_finess: sa_t_finess
-    v_comer: sa_v_comer
-    v_commune: sa_v_commune
-    v_commune_comer: sa_v_commune_comer
-    v_commune_depuis: sa_v_commune_depuis
-    v_departement: sa_v_departement
-    v_region: sa_v_region
-
-CertDC:
-  input_directory: "input/certdc/"
-  view_directory: "certdc"
-  output_directory: "output/certdc/"
-  output_sql_directory: "Staging/output_sql/certdc/"
-  output_sql_staging_directory: "Staging/output_sql/staging/"
-  remote_directory:
-    - "/SCN_BDD/CERTELEC_DC/output"
-  files_to_download:
-    - path: "/SCN_BDD/CERTELEC_DC/input"
-      keyword: "sa_insern"
-      file: "sa_insern.csv"
-    - path: "/SCN_BDD/CERTELEC_DC/input"
-      keyword: "sa_siicea_cibles"
-      file: "sa_siicea_cibles.csv"
-    - path: "/SCN_BDD/CERTELEC_DC/input"
-      keyword: "sa_siicea_missions"
-      file: "sa_siicea_missions.csv"
-    - path: "/SCN_BDD/CERTELEC_DC/input"
-      keyword: "sa_siicea_suites"
-      file: "sa_siicea_suites.csv"
-    - path: "/SCN_BDD/CERTELEC_DC/input"
-      keyword: "sa_sirec"
-      file: "sa_sirec.csv"
-    - path: "/SCN_BDD/CERTELEC_DC/input"
-      keyword: "sa_sivss"
-      file: "sa_sivss.csv"
-    - path: "/SCN_BDD/CERTELEC_DC/input"
-      keyword: "sa_t_finess"
-      file: "sa_t_finess.csv"
-    - path: "/SCN_BDD/CERTELEC_DC/input"
-      keyword: "sa_v_comer"
-      file: "v_comer.csv"
-    - path: "/SCN_BDD/CERTELEC_DC/input"
-      keyword: "sa_v_commune_comer"
-      file: "v_commune_comer.csv"
-    - path: "/SCN_BDD/CERTELEC_DC/input"
-      keyword: "sa_v_commune_depuis"
-      file: "v_commune_depuis.csv"
-    - path: "/SCN_BDD/CERTELEC_DC/input"
-      keyword: "sa_v_commune_2024"
-      file: "v_commune.csv"
-    - path: "/SCN_BDD/CERTELEC_DC/input"
-      keyword: "sa_v_departement"
-      file: "v_departement.csv"
-    - path: "/SCN_BDD/CERTELEC_DC/input"
-      keyword: "sa_v_region"
-      file: "v_region.csv"
     - path: "/SCN_BDD/INSERN/historique"
       keyword: "sa_insern_n_2_n_1"
       file: "cert_dc_insern_n2_n1.csv"
     - path: "/SCN_BDD/INSERN/historique"
-      keyword: "cert_dc_insern_2023_2024"
+      keyword: "CertDCInsern_2023_2024"
       file: "cert_dc_insern_2023_2024.csv"
     - path: "/SCN_BDD/DIAMANT/pour le script etl"
       keyword: "sa_esms"
@@ -140,13 +72,39 @@ CertDC:
     - path: "/SCN_BDD/INSEE/historique"
       keyword: "sa_insee_n_2_n_3"
       file: "sa_insee_histo.csv"
+  input_to_upload: null
+  files_to_upload: null
+
+CertDC:
+  local_directory_input: "input/certdc/"
+  local_directory_output: "output/certdc/"
+  models_directory: "Staging/dbtCertDC/"
+  create_table_directory: "Staging/output_sql/certdc/"
+  remote_directory_input: "/SCN_BDD/CERTELEC_DC/input"
+  remote_directory_output: "/SCN_BDD/CERTELEC_DC/output"
+  input_to_upload:
+    cert_dc_insern_2023_2024: cert_dc_insern_2023_2024
+    cert_dc_insern_n2_n1: cert_dc_insern_n2_n1
+    staging__cert_dc_insern: cert_dc_insern
+    dc_det: dc_det
+    sa_esms: sa_esms
+    sa_hubee: sa_hubee
+    sa_insee_histo: sa_insee_histo
+    sa_pmsi: sa_pmsi
+    sa_rpu: sa_rpu
+    sa_t_finess: sa_t_finess
+    sa_usld: sa_usld
+    v_commune_depuis: v_commune_depuis
+    v_commune: v_commune
+    v_departement: v_departement
+    v_region: v_region
   files_to_upload:
-    ods_insee: ods_insee
-    ods_insern_edc: ods_insern_edc
-    ods_insern_insee_tx_edc: ods_insern_insee_tx_edc
-    ods_insern: ods_insern
-    ods_pmsi: ods_pmsi
-    ods_insern_pmsi_es: ods_insern_pmsi_es
+    cert_elec__ods_insee: ods_insee
+    cert_elec__ods_insern_edc: ods_insern_edc
+    cert_elec__ods_insern_insee_tx_edc: ods_insern_insee_tx_edc
+    cert_elec__ods_insern: ods_insern
+    cert_elec__ods_pmsi: ods_pmsi
+    cert_elec__ods_insern_pmsi_es: ods_insern_pmsi_es
 
 Helios:
   input_directory: "input/helios/"
@@ -154,8 +112,8 @@ Helios:
   output_directory: "output/helios/"
   output_sql_directory: "Staging/output_sql/helios/"
   output_sql_staging_directory: "Staging/output_sql/staging/"
-  remote_directory:
-    - "/SCN_BDD/HELIOS/output"
+  remote_directory_input: "/SCN_BDD/HELIOS/input"
+  remote_directory_output: "/SCN_BDD/HELIOS/output"
   files_to_download:
     - path: "/SCN_BDD/HELIOS/input"
       keyword: "sa_insern"
@@ -208,8 +166,8 @@ Matrice_PA:
   output_directory: "output/matrice_pa/"
   output_sql_directory: "Staging/output_sql/matrice_pa/"
   output_sql_staging_directory: "Staging/output_sql/staging/"
-  remote_directory:
-    - "/SCN_BDD/PRECIBLAGE/output"
+  remote_directory_input: "/SCN_BDD/PRECIBLAGE/input"
+  remote_directory_output: "/SCN_BDD/PRECIBLAGE/output"
   files_to_download:
     - path: "/SCN_BDD/PRECIBLAGE/input"
       keyword: "sa_insern"
@@ -261,8 +219,8 @@ Matrice_PH:
   output_directory: "output/matrice_ph/"
   output_sql_directory: "Staging/output_sql/matrice_ph/"
   output_sql_staging_directory: "Staging/output_sql/staging/"
-  remote_directory:
-    - "/SCN_BDD/PRECIBLAGE/output"
+  remote_directory_input: "/SCN_BDD/PRECIBLAGE/input"
+  remote_directory_output: "/SCN_BDD/PRECIBLAGE/output"
   files_to_download:
     - path: "/SCN_BDD/PRECIBLAGE/input"
       keyword: "sa_insern"
@@ -314,8 +272,8 @@ Ref:
   output_directory: "output/ref_geo/"
   output_sql_directory: "Staging/output_sql/ref_geo/"
   output_sql_staging_directory: "Staging/output_sql/staging/"
-  remote_directory:
-    - "/SCN_BDD/REFERENTIELS/"
+  remote_directory_input: "/SCN_BDD/REFERENTIELS"
+  remote_directory_output: "/SCN_BDD/REFERENTIELS"
   files_to_download:
     - path: "/SCN_BDD/REFERENTIELS"
       keyword: "sa_insern"
@@ -368,8 +326,8 @@ InspectionControlePA:
   output_directory: "output/inspection_controle_pa/"
   output_sql_directory: "Staging/output_sql/inspection_controle_pa/"
   output_sql_staging_directory: "Staging/output_sql/staging/"
-  remote_directory:
-    - "/SCN_BDD/INSPECTION_CONTROLE/PA/output"
+  remote_directory_input: "/SCN_BDD/INSPECTION_CONTROLE/PA/input"
+  remote_directory_output: "/SCN_BDD/INSPECTION_CONTROLE/PA/output"
   files_to_download:
     - path: "/SCN_BDD/INSPECTION_CONTROLE/PA/input"
       keyword: "sa_insern"
@@ -423,8 +381,8 @@ InspectionControlePH:
   output_directory: "output/inspection_controle_ph/"
   output_sql_directory: "Staging/output_sql/inspection_controle_ph/"
   output_sql_staging_directory: "Staging/output_sql/staging/"
-  remote_directory:
-    - "/SCN_BDD/INSPECTION_CONTROLE/PH/output"
+  remote_directory_input: "/SCN_BDD/INSPECTION_CONTROLE/PH/input"
+  remote_directory_output: "/SCN_BDD/INSPECTION_CONTROLE/PH/output"
   files_to_download:
     - path: "/SCN_BDD/INSPECTION_CONTROLE/PH/input"
       keyword: "sa_insern"

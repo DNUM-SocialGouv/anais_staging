@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS v_departement (
     dep VARCHAR,
-    reg INTEGER,
+    reg VARCHAR,
     cheflieu VARCHAR,
     tncc INTEGER,
     ncc VARCHAR,
