@@ -7,7 +7,7 @@ sources:
       - name: sa_insern
       - name: sa_siicea_cibles
       - name: sa_siicea_missions
-      - name: sa_siicea_suites
+      - name: sa_siicea_decisions
       - name: sa_sirec
       - name: sa_sivss
       - name: sa_t_finess
@@ -26,6 +26,8 @@ sources:
       - name: sa_pmsi
       - name: sa_rpu
       - name: sa_usld
+      - name: sa_siicea_missions_real
+      - name: sa_siicea_missions_prog
 
 # Sources pour PostgreSQL
   - name: public
@@ -33,7 +35,7 @@ sources:
       - name: sa_insern
       - name: sa_siicea_cibles
       - name: sa_siicea_missions
-      - name: sa_siicea_suites
+      - name: sa_siicea_decisions
       - name: sa_sirec
       - name: sa_sivss
       - name: sa_t_finess
@@ -52,3 +54,5 @@ sources:
       - name: sa_pmsi
       - name: sa_rpu
       - name: sa_usld
+      - name: sa_siicea_missions_real
+      - name: sa_siicea_missions_prog

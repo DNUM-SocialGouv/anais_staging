@@ -104,7 +104,7 @@ def projects_pipeline(env, profile, metadata, logger=None):
     config = load_metadata_YAML(metadata, profile, logger=logger)
     db_config = load_metadata_YAML("profiles.yml", profile, ".", logger=logger)["outputs"][env]
     staging_db_config = load_metadata_YAML("profiles.yml", "Staging", ".", logger=logger)["outputs"][env]
-
+    
     if env == "anais":
         # --- Staging ---
         # Initialisation de la config postgres
@@ -133,12 +133,14 @@ def projects_pipeline(env, profile, metadata, logger=None):
         run_dbt(profile=profile, target="anais", project_dir=config["models_directory"], logger=logger)
 
         # Upload les tables qui servent à la création des vues
+        sftp = SFTPSync(config["local_directory_input"], logger)
+
         pg_loader.export_csv(config["input_to_upload"], date=today)
-        # sftp.upload_file_to_sftp(config["input_to_upload"], config["local_directory_output"], config["remote_directory_input"], date=today)
+        sftp.upload_file_to_sftp(config["input_to_upload"], config["local_directory_output"], config["remote_directory_input"], date=today)
         
         # Upload les vues
         pg_loader.export_csv(config["files_to_upload"], date=today)
-        # sftp.upload_file_to_sftp(config["files_to_upload"], config["local_directory_output"], config["remote_directory_output"], date=today)
+        sftp.upload_file_to_sftp(config["files_to_upload"], config["local_directory_output"], config["remote_directory_output"], date=today)
         pg_loader.close()
 
 

@@ -1,5 +1,4 @@
-CREATE TABLE TdBICSiiceaMissionsprog_20240912 (
-    column1 INTEGER,
+CREATE TABLE IF NOT EXISTS sa_siicea_missions_real (
     identifiant_de_la_mission VARCHAR,
     mission_proposee_par VARCHAR,
     secteur_d_intervention VARCHAR,
@@ -28,9 +27,10 @@ CREATE TABLE TdBICSiiceaMissionsprog_20240912 (
     adresse VARCHAR,
     groupe_de_cibles VARCHAR,
     cible VARCHAR,
+    service_cible VARCHAR,
     caractere_juridique VARCHAR,
     type_de_cible VARCHAR,
-    code_finess TEXT,
+    finess_geographique TEXT,
     nom_agent_1 VARCHAR,
     prenom_agent_1 VARCHAR,
     role_mission_agent_1 VARCHAR,
@@ -124,10 +124,9 @@ CREATE TABLE TdBICSiiceaMissionsprog_20240912 (
     prescription INTEGER,
     recommandation INTEGER,
     saisine_cng INTEGER,
-    saisine_juridiction/ordinale INTEGER,
+    saisine_juridiction_ordinale INTEGER,
     saisine_parquet INTEGER,
     autre_saisine INTEGER,
     commentaire_2 VARCHAR,
-    statut_de_la_mission VARCHAR,
-    cd_finess TEXT
+    statut_de_la_mission VARCHAR
 )

@@ -31,7 +31,7 @@ WITH all_com AS (
         vcd.COM AS com,
         rd.reg AS reg,
         CASE
-            WHEN CAST(vcd.COM AS INTEGER) >= 97000 THEN SUBSTRING(vcd.COM, 1, 3)
+            WHEN vcd.COM >= '97000' THEN SUBSTRING(vcd.COM, 1, 3)
             ELSE SUBSTRING(vcd.COM, 1, 2)
         END AS dep,
         vcd.NCC AS ncc,
@@ -39,7 +39,7 @@ WITH all_com AS (
     FROM {{ ref('staging__v_commune_depuis') }} vcd
     LEFT JOIN {{ ref('staging__ref_departements') }} rd
         ON (CASE
-                WHEN CAST(vcd.COM AS INTEGER) >= 97000 THEN SUBSTRING(vcd.COM, 1, 3)
+                WHEN vcd.COM >= '97000' THEN SUBSTRING(vcd.COM, 1, 3)
                 ELSE SUBSTRING(vcd.COM, 1, 2)
             END) = rd.dep
 )
