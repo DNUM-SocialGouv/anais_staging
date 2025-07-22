@@ -83,13 +83,13 @@ def anais_staging_pipeline(profile: str, config: dict, db_config: dict, logger: 
     sftp = SFTPSync(config["local_directory_input"], logger)
     sftp.download_all(config["files_to_download"])
 
-    # Remplissage des tables de la base postgres
-    pg_loader.connect()
-    pg_loader.run()
-    pg_loader.close()
+    # # Remplissage des tables de la base postgres
+    # pg_loader.connect()
+    # pg_loader.run()
+    # pg_loader.close()
 
-    # Création des vues et export
-    run_dbt(profile, "anais", config["models_directory"], ".", logger)
+    # # Création des vues et export
+    # run_dbt(profile, "anais", config["models_directory"], ".", logger)
 
 
 def local_staging_pipeline(profile: str, config: dict, db_config: dict, logger: Logger):
