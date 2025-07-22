@@ -1,19 +1,18 @@
-# Packages
-import duckdb
+# === Packages ===
 import os
 from pathlib import Path
 from typing import Callable, Any
 import re
+from logging import Logger
 
-# Modules
-from pipeline.csv_management import import_to_csv, export_to_csv
+# === Modules ===
+from pipeline.csv_management import TableInCsv
 
+
+# === Classes ===
 # Classe DataBasePipeline qui gère les actions relatives à n'importe quel database
 class DataBasePipeline:
-    def __init__(self,
-                db_config: dict,
-                config: dict,
-                logger=None):
+    def __init__(self, db_config: dict, config: dict, logger: Logger):
         """
         Classe qui réalise les actions communes pour n'importe quel database.
         Cette classe est héritée par une classe relative au type de base.
@@ -26,9 +25,15 @@ class DataBasePipeline:
             - print_table(self, conn, query_params: dict, limit: int) = fonction qui affiche la table
             - create_table(self, conn, sql_query: str, query_params: str) = fonction d'exécution des fichier SQL de CREATE TABLE
             - load_csv_file(self, conn, csv_file: Path) = fonction d'injection des données d'un csv vers une table de la base de données
+
         Parameters
         ----------
+        db_config : dict
+            Paramètres de connexion vers la base.
         config : dict
+            Metadata du profile (dans metadata.yml).
+        logger : logging.Logger
+            Fichier de log.
         """
         self.sql_folder = config["create_table_directory"]
         self.csv_folder_input = config["local_directory_input"]
@@ -57,7 +62,7 @@ class DataBasePipeline:
         Returns
         -------
         str
-            Contenu du fichier SQL.        
+            Contenu du fichier SQL.      
         """
         with open(sql_file, "r", encoding="utf-8") as f:
             return f.read()
@@ -163,21 +168,19 @@ class DataBasePipeline:
 
     def import_csv(self, views_to_import: dict):
         """
-        Exporte les vues vers un format csv.
+        Importe les vues vers un format csv.
 
         Parameters
         ----------
         views_to_import : dict
             Liste des vues à importer.
-        date : str
-            Date présente dans le nom des fichiers à exporter.
         """
         conn = self.conn
         for table_name, csv_name in views_to_import.items():
             if table_name:
-                import_to_csv(conn, table_name, csv_name, self.fetch_df, self.csv_folder_input, logger=self.logger)
+                TableInCsv.import_to_csv(conn, table_name, csv_name, self.fetch_df, self.csv_folder_input, self.logger)
             else:
-                self.logger.warning("⚠️ Aucune table spécifiée")   
+                self.logger.warning("⚠️ Aucune table spécifiée")
 
     def export_csv(self, views_to_export: dict, date: str):
         """
@@ -193,7 +196,7 @@ class DataBasePipeline:
         conn = self.conn
         for table_name, csv_name in views_to_export.items():
             if table_name:
-                export_to_csv(conn, table_name, csv_name, self.fetch_df, self.csv_folder_output, date, logger=self.logger)
+                TableInCsv.export_to_csv(conn, table_name, csv_name, self.fetch_df, self.csv_folder_output, self.logger, date=date)
             else:
                 self.logger.warning("⚠️ Aucune table spécifiée")
 

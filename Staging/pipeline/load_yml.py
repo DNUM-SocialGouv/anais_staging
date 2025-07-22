@@ -1,13 +1,13 @@
-# --- Importation de fichier de configuration ou de correspondance
-# Importation des packages
+# === Packages ===
 import os
 from pathlib import Path
 import yaml
 import re
+from logging import Logger
 
 
-# Fonction
-def load_YAML(file_name: str, config_file_dir: str = None, logger=None) -> dict:
+# === Fonctions ===
+def load_YAML(file_name: str, config_file_dir: str, logger: Logger) -> dict:
     """
     Charge un fichier YAML.
 
@@ -17,6 +17,8 @@ def load_YAML(file_name: str, config_file_dir: str = None, logger=None) -> dict:
         Nom du fichier de configuration YAML.
     config_file_dir : str
         Chemin du fichier, by default None.
+    logger : Logger
+        Fichier de log.
 
     Returns
     -------
@@ -28,7 +30,9 @@ def load_YAML(file_name: str, config_file_dir: str = None, logger=None) -> dict:
     FileNotFoundError
         Si le fichier de configuration est introuvable.
     yaml.YAMLError
-        Si le fichier YAML est mal formaté.  
+        Si le fichier YAML est mal formaté.
+    logger : logging.Logger
+        Fichier de log.
     """
     if config_file_dir:
         path = os.path.join(config_file_dir, file_name)
@@ -52,7 +56,7 @@ def load_YAML(file_name: str, config_file_dir: str = None, logger=None) -> dict:
         raise
 
 
-def load_metadata_YAML(file_name: str, table: str, config_file_dir: str = None, logger=None) -> dict:
+def load_metadata_YAML(file_name: str, table: str, logger: Logger, config_file_dir: str = None) -> dict:
     """
     Charge le fichier de configuration et récupère la liste des colonnes d'une table donnée.
 
@@ -62,6 +66,8 @@ def load_metadata_YAML(file_name: str, table: str, config_file_dir: str = None, 
         Nom du fichier de configuration YAML.
     table : str
         Nom de la table dont on veut récupérer les colonnes.
+    logger : logging.Logger
+        Fichier de log.
     config_file_dir : str
         Chemin du fichier, by default None.
 

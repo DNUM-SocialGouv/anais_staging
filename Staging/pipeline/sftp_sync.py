@@ -1,25 +1,35 @@
-# Packages
+# === Packages ===
 import os
 from paramiko import SFTPClient, Transport, SFTPAttributes
 import datetime
 from dotenv import load_dotenv
-from typing import Tuple, Optional, List, Dict
+from typing import Optional, List, Dict
+from logging import Logger
 
-# Modules
+# === Modules ===
 from pipeline.csv_management import TransformExcel
 
-
+# === Classes ===
 # Classe SFTPSync
 class SFTPSync:
-    def __init__(self, output_folder: str, logger=None):
-        """ Connexion au SFTP pour la récupération et l'upload de fichier. """
+    def __init__(self, output_folder: str, logger: Logger):
+        """
+        Connexion au SFTP pour la récupération et l'upload de fichier.
+
+        Parameters
+        ----------
+        output_folder : str
+            Répertoire de destination des fichiers téléchargés.
+        logger : logging.Logger
+            Fichier de log.
+        """
         self.logger = logger
+        self.output_folder = output_folder
         load_dotenv()
         self.host = os.getenv("SFTP_HOST")
         self.port = int(os.getenv("SFTP_PORT"))
         self.username = os.getenv("SFTP_USERNAME")
         self.password = os.getenv("SFTP_PASSWORD")
-        self.output_folder = output_folder
 
     def connect(self):
         """

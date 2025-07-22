@@ -78,7 +78,7 @@ Staging:
     - path: "/SCN_BDD/SIICEA/"
       keyword: "MISSIONSREAL"
       file: "sa_siicea_missions_real.csv"
-  input_to_upload: null
+  input_to_download: null
   files_to_upload: null
 
 CertDC:
@@ -88,7 +88,7 @@ CertDC:
   create_table_directory: "Staging/output_sql/certdc/"
   remote_directory_input: "/SCN_BDD/CERTELEC_DC/input"
   remote_directory_output: "/SCN_BDD/CERTELEC_DC/output"
-  input_to_upload:
+  input_to_download:
     cert_dc_insern_2023_2024: cert_dc_insern_2023_2024
     cert_dc_insern_n2_n1: cert_dc_insern_n2_n1
     staging__cert_dc_insern: cert_dc_insern
@@ -327,58 +327,27 @@ Ref:
     staging__ref_regions: ref_regions
 
 InspectionControlePA:
-  input_directory: "input/inspection_controle_pa/"
-  view_directory: "tdb"
-  output_directory: "output/inspection_controle_pa/"
-  output_sql_directory: "Staging/output_sql/inspection_controle_pa/"
-  output_sql_staging_directory: "Staging/output_sql/staging/"
+  local_directory_input: "input/inspection_controle_pa/"
+  local_directory_output: "output/inspection_controle_pa/"
+  models_directory: "Staging/dbtInspectionControlePA"
+  create_table_directory: "Staging/output_sql/inspection_controle_pa/"
   remote_directory_input: "/SCN_BDD/INSPECTION_CONTROLE/PA/input"
   remote_directory_output: "/SCN_BDD/INSPECTION_CONTROLE/PA/output"
-  files_to_download:
-    - path: "/SCN_BDD/INSPECTION_CONTROLE/PA/input"
-      keyword: "sa_insern"
-      file: "sa_insern.csv"
-    - path: "/SCN_BDD/INSPECTION_CONTROLE/PA/input"
-      keyword: "sa_siicea_cibles"
-      file: "sa_siicea_cibles.csv"
-    - path: "/SCN_BDD/INSPECTION_CONTROLE/PA/input"
-      keyword: "sa_siicea_missions"
-      file: "sa_siicea_missions.csv"
-    - path: "/SCN_BDD/INSPECTION_CONTROLE/PA/input"
-      keyword: "sa_siicea_decisions"
-      file: "sa_siicea_decisions.csv"
-    - path: "/SCN_BDD/INSPECTION_CONTROLE/PA/input"
-      keyword: "sa_sirec"
-      file: "sa_sirec.csv"
-    - path: "/SCN_BDD/INSPECTION_CONTROLE/PA/input"
-      keyword: "sa_sivss"
-      file: "sa_sivss.csv"
-    - path: "/SCN_BDD/INSPECTION_CONTROLE/PA/input"
-      keyword: "sa_t_finess"
-      file: "sa_t_finess.csv"
-    - path: "/SCN_BDD/INSPECTION_CONTROLE/PA/input"
-      keyword: "sa_v_comer"
-      file: "v_comer.csv"
-    - path: "/SCN_BDD/INSPECTION_CONTROLE/PA/input"
-      keyword: "sa_v_commune_comer"
-      file: "v_commune_comer.csv"
-    - path: "/SCN_BDD/INSPECTION_CONTROLE/PA/input"
-      keyword: "sa_v_commune_depuis"
-      file: "v_commune_depuis.csv"
-    - path: "/SCN_BDD/INSPECTION_CONTROLE/PA/input"
-      keyword: "sa_v_commune_2024"
-      file: "v_commune.csv"
-    - path: "/SCN_BDD/INSPECTION_CONTROLE/PA/input"
-      keyword: "sa_v_departement"
-      file: "v_departement.csv"
-    - path: "/SCN_BDD/INSPECTION_CONTROLE/PA/input"
-      keyword: "sa_v_region"
-      file: "v_region.csv"
-  files_to_upload:
+  input_to_download:
+    staging__ref_geo: ref_geo
+    staging__ref_departements: ref_departements
+    staging__ref_regions: ref_regions
+    staging__sa_siicea_cibles: sa_siicea_cibles
+    staging__sa_siicea_decisions: sa_siicea_decisions
     staging__tdb_ic_finess_500: tdb_ic_finess_500
     staging__tdb_ic_siicea_cibles: tdb_ic_siicea_cibles
-    staging__tdb_ic_siicea_missions_prog: tdb_ic_siicea_missions_prog
-    staging__tdb_ic_siicea_missions_real: tdb_ic_siicea_missions_real
+    tdb_ic__siicea_missions_PA_prog: tbd_ic_siicea_missions_prog
+    tdb_ic__siicea_missions_PA_real: tbd_ic_siicea_missions_real
+    staging__v_departement: v_departement
+    staging__v_region: v_region
+    staging__v_commune: v_commune
+  files_to_upload:
+    exemple_model: exemple_csv
 
 
 InspectionControlePH:

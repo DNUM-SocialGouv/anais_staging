@@ -1,39 +1,35 @@
-
-# Packages
-import os
+# === Packages ===
 import pandas as pd
 from sqlalchemy import create_engine, inspect, text
 from dotenv import load_dotenv
 from pathlib import Path
 import urllib.parse
+from logging import Logger
 
-# Modules
-from pipeline.csv_management import csv_pipeline
+# === Modules ===
+from pipeline.csv_management import ColumnsManagement
 from pipeline.database_pipeline import DataBasePipeline
 from pipeline.load_yml import resolve_env_var
 
-# Chargement des variables d’environnement
+# === Chargement des variables d’environnement ===
 load_dotenv()
 
 
+# === Classes ===
 # Classe PostgreSQLLoader qui gère les actions relatives à une database postgres
 class PostgreSQLLoader(DataBasePipeline):
-    def __init__(self, db_config: dict, config: dict, logger=None):
+    def __init__(self, db_config: dict, config: dict, logger: Logger):
         """
         Initialisation de la base Postgres. Classe héritière de DataBasePipeline.
 
         Parameters
         ----------
         db_config : dict
-            Configuration de la base postgres.
-        sql_folder : str, optional
-            Répertoire des fichiers SQL CREATE TABLE, by default "Staging/output_sql/"
-        csv_folder_input : str, optional
-            Répertoire des fichiers csv importés, by default "input/"
-        csv_folder_output : str, optional
-            Répertoire des fichiers csv exportés, by default "output/"
-        sql_folder_staging : str, optional
-            Chemin des fichiers SQL Create table de Staging, by default None
+            Paramètres de connexion vers la base.
+        config : dict
+            Metadata du profile (dans metadata.yml).
+        logger : logging.Logger
+            Fichier de log.
         """
         super().__init__(db_config, config, logger)
         self.logger = logger
@@ -45,9 +41,9 @@ class PostgreSQLLoader(DataBasePipeline):
         self.database = db_config["dbname"]
         self.schema = db_config["schema"]
         self.engine = self.init_engine()
-        
+
     def init_engine(self):
-        """ Connexion à la base postgres. """
+        """ Initialisation de la connexion postgres. """
         try:
             url = f"postgresql+psycopg2://{self.user}:{self.password}@{self.host}:{self.port}/{self.database}"
             engine = create_engine(url)
@@ -238,10 +234,11 @@ class PostgreSQLLoader(DataBasePipeline):
 
             schema_df = self.get_postgres_schema(conn, table_name)
 
-            # Chargement des csv et datamanagement
-            df = csv_pipeline(csv_file, schema_df, logger=self.logger)
+            # Chargement du csv et datamanagement
+            pipeline = ColumnsManagement(csv_file=csv_file, schema_df=schema_df, logger=self.logger)
+            df = pipeline.df
             self.logger.info(f"Taille de '{table_name}' : {df.shape}")
-            
+
             # Création de la table avec la structure du CSV
             self.logger.info(f"🆕 Injection dans la table '{table_name}' à partir du CSV {csv_file}")
 

@@ -1,8 +1,9 @@
-# Package
+# === Packages ===
 import os
 import logging
 
 
+# === Fonctions ===
 def setup_logger(name: str, log_file: str, level=logging.INFO) -> logging.Logger:
     """
     Crée ou récupère un logger qui écrit dans le fichier spécifié.

@@ -1,32 +1,31 @@
-# Packages
+# === Packages ===
 import duckdb
 import os
 from pathlib import Path
 import pandas as pd
+from logging import Logger
 
+# === Modules ===
 # Modules
-from pipeline.csv_management import csv_pipeline
+from pipeline.csv_management import ColumnsManagement
 from pipeline.database_pipeline import DataBasePipeline
 
 
+# === Classes ===
 # Classe DuckDBPipeline qui gère les actions relatives à une database duckdb
 class DuckDBPipeline(DataBasePipeline):
-    def __init__(self, db_config: dict, config: dict, logger=None):
+    def __init__(self, db_config: dict, config: dict, logger: Logger):
         """
         Initialisation de la base DuckDB. Classe héritière de DataBasePipeline.
 
         Parameters
         ----------
-        sql_folder : str, optional
-            Répertoire des fichiers SQL CREATE TABLE, by default "Staging/output_sql/".
-        csv_folder_input : str, optional
-            Répertoire des fichiers csv importés, by default "input/".
-        csv_folder_output : str, optional
-            Répertoire des fichiers csv exportés, by default "output/".
-        sql_folder_staging : str, optional
-            Chemin des fichiers SQL Create table de Staging, by default None
-        db_path : str, optional
-            Répertoire de la base duckdb, by default 'data/duckdb_database.duckdb'.
+        db_config : dict
+            Paramètres de connexion vers la base.
+        config : dict
+            Metadata du profile (dans metadata.yml).
+        logger : logging.Logger
+            Fichier de log.
         """
         super().__init__(db_config, config, logger)
         self.logger = logger
@@ -99,7 +98,7 @@ class DuckDBPipeline(DataBasePipeline):
             Paramètres à injecter dans la requête SQL.
         print_log : bool
             True si on souhaite afficher la log, False sinon, by default False.
-            
+
         Returns
         -------
         bool
@@ -181,7 +180,8 @@ class DuckDBPipeline(DataBasePipeline):
         schema_df = self.get_duckdb_schema(conn, table_name)
 
         # Chargement du csv
-        df = csv_pipeline(csv_file, schema_df, logger=self.logger)
+        pipeline = ColumnsManagement(csv_file=csv_file, schema_df=schema_df, logger=self.logger)
+        df = pipeline.df
 
         # Vérification de la présence de la table
         row_count = conn.execute(f"SELECT COUNT(*) FROM {table_name}").fetchone()[0]
