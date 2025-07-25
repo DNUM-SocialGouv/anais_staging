@@ -39,7 +39,8 @@ def run_dbt(profile: str, target: Literal["local", "anais"], project_dir: str, p
              "--project-dir", project_path,
              "--profiles-dir", profiles_path,
              "--profile", profile,
-             "--target", target
+             "--target", target,
+             "--select", f"+{project_dir}"
              ],
             capture_output=True,
             text=True,
@@ -218,17 +219,6 @@ def local_project_pipeline(profile: str, config: dict, db_config: dict, staging_
     logger : Logger
         Fichier de log.
     """
-    # Initialisation de la config duckDB
-    ddb_staging_loader = DuckDBPipeline(
-        db_config=staging_db_config,
-        config=config,
-        logger=logger)
-
-    # Récupération des tables provenant de Staging
-    ddb_staging_loader.connect()
-    ddb_staging_loader.import_csv(config["input_to_download"])
-    ddb_staging_loader.close()
-
     # Initialisation de la config DuckDB
     ddb_loader = DuckDBPipeline(
         db_config=db_config,
