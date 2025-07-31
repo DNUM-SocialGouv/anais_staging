@@ -11,3 +11,6 @@
 /data/
 /Staging/dbtInspectionControlePA/
 /Staging/**/logs/
+**/target/
+uv.lock
+.user.yml
