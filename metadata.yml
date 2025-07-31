@@ -1,7 +1,7 @@
 Staging:
   local_directory_input: "input/staging/"
-  models_directory: "dbtStaging/"
   local_directory_output: "output/staging/"
+  models_directory: "dbtStaging"
   create_table_directory: "output_sql/staging/"
   remote_directory_input: null
   remote_directory_output: null

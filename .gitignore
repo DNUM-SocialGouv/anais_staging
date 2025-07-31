@@ -1,16 +1,14 @@
 *.csv
 .env
 *.log
-*.log.1
 *.cpython-39.pyc
 *.cpython-312.pyc
 *__pycache__
-/Staging/dbtStaging/target/
-/Staging/dbtInspectionControle/target/
-/Staging/dbtCertDC/target/
+/Staging/** */
 /data/
-/Staging/dbtInspectionControlePA/
-/Staging/**/logs/
 **/target/
 uv.lock
 .user.yml
+logs/**
+input/**
+output/**
