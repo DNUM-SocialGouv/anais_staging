@@ -20,9 +20,9 @@ WITH missions AS (
     )
     AND statut_de_la_mission IN ('Clôturé', 'Maintenu')
     AND (
-        CAST(SUBSTRING("date_reelle_visite", 1, 4) || 
-             SUBSTRING("date_reelle_visite", 6, 2) || 
-             SUBSTRING("date_reelle_visite", 9, 2) AS INTEGER)
+        CAST(SUBSTRING("date_reelle_visite", 7, 4) || 
+             SUBSTRING("date_reelle_visite", 4, 2) || 
+             SUBSTRING("date_reelle_visite", 1, 2) AS INTEGER)
         BETWEEN 20220101 AND 20241231
     )
 )
