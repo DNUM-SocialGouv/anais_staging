@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS sa_siicea_missions (
+CREATE TABLE IF NOT EXISTS sa_siicea_missions_real (
     identifiant_de_la_mission VARCHAR,
     mission_proposee_par VARCHAR,
     secteur_d_intervention VARCHAR,

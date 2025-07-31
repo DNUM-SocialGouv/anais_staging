@@ -6,7 +6,7 @@ sources:
     tables:
       - name: sa_insern
       - name: sa_siicea_cibles
-      - name: sa_siicea_missions
+      - name: sa_siicea_missions_real
       - name: sa_siicea_decisions
       - name: sa_sirec
       - name: sa_sivss
@@ -34,7 +34,7 @@ sources:
     tables:
       - name: sa_insern
       - name: sa_siicea_cibles
-      - name: sa_siicea_missions
+      - name: sa_siicea_missions_real
       - name: sa_siicea_decisions
       - name: sa_sirec
       - name: sa_sivss
