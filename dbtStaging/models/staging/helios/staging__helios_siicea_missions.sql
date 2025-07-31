@@ -9,7 +9,7 @@ WITH missions AS (
             WHEN LENGTH(finess_geographique) = 8 THEN '0' || finess_geographique
             ELSE finess_geographique
         END AS cd_finess
-    FROM {{ ref('staging__sa_siicea_missions') }}
+    FROM {{ ref('staging__sa_siicea_missions_real') }}
     WHERE code_theme_igas IN (
         'MS634D13', 'MS634N1', 'MS634E1', 'MS634D12', 'MS634R1',
         'MS634D11', 'MS634D15', 'MS634C10'
