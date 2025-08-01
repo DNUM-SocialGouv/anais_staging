@@ -27,6 +27,8 @@ sources:
       - name: sa_pmsi
       - name: sa_rpu
       - name: sa_usld
+      - name: sa_ciblage
+      - name: sa_tdb_esms
 
 # Sources pour PostgreSQL
   - name: public
@@ -54,3 +56,5 @@ sources:
       - name: sa_pmsi
       - name: sa_rpu
       - name: sa_usld
+      - name: sa_ciblage
+      - name: sa_tdb_esms

@@ -22,32 +22,32 @@ WITH etab AS (
     -- source : catégories sélectionnées par Nicolas
     -- on filtre ici et pas dans la requête finale afin de contrôler les cas où on ne retrouve pas le finess dans le référentiel ou finess non renseigné dans SIICEA
     categ_code IN (
-    "182",
-    "183",
-    "186",
-    "188",
-    "189",
-    "190",
-    "192",
-    "194",
-    "195",
-    "196",
-    "198",
-    "221",
-    "238",
-    "246",
-    "249",
-    "255",
-    "370",
-    "377",
-    "379",
-    "390",
-    "395",
-    "396",
-    "402",
-    "437",
-    "445",
-    "448"
+    '182',
+    '183',
+    '186',
+    '188',
+    '189',
+    '190',
+    '192',
+    '194',
+    '195',
+    '196',
+    '198',
+    '221',
+    '238',
+    '246',
+    '249',
+    '255',
+    '370',
+    '377',
+    '379',
+    '390',
+    '395',
+    '396',
+    '402',
+    '437',
+    '445',
+    '448'
     )
 )
 , tdb_esms AS (
@@ -98,11 +98,11 @@ WITH etab AS (
         modalite_d_investigation,
         type_de_planification,
         modalite_de_la_mission,
-        mission_conjointe_1,
-        mission_conjointe_2,
+        mission_conjointe_avec_1,
+        mission_conjointe_avec_2,
         groupe_de_cibles,
-        Cible,
-        categorie_de_cible,
+        cible,
+        groupe_de_cibles,
         date_reelle_visite,
         statut_de_la_mission
     FROM
@@ -121,11 +121,11 @@ WITH etab AS (
         -- filtre des thèmes IGAS (on ne conserve que ce qui concerne les soins)
         AND
         theme_igas IN (
-        "ESMS - Prise en charge des Adultes handicapés",
-        "ESMS - Prise en charge des Enfants handicapés",
-        "ESMS - enfants handicapés - droits, individualisation des parcours",
-        "ONIC ESMS - PH adultes",
-        "ONIC ESMS - PH enfants"
+        'ESMS - Prise en charge des Adultes handicapés',
+        'ESMS - Prise en charge des Enfants handicapés',
+        'ESMS - enfants handicapés - droits, individualisation des parcours',
+        'ONIC ESMS - PH adultes',
+        'ONIC ESMS - PH enfants'
         )
         -- filtre sur la période
         AND (
@@ -136,12 +136,12 @@ WITH etab AS (
         <=20250630
         )
         AND
-        date_reelle_visite != ""
+        date_reelle_visite != ''
         -- filtre sur le statut réalisé
         AND
         statut_de_la_mission IN (
-        "Clôturé",
-        "Maintenu")
+        'Clôturé',
+        'Maintenu')
 )
 
 SELECT
@@ -152,8 +152,8 @@ SELECT
     modalite_d_investigation AS investigation,
     type_de_planification AS planification,
     modalite_de_la_mission AS modalite,
-    mission_conjointe_1 AS conjointe_1,
-    mission_conjointe_2 AS conjointe_2,
+    mission_conjointe_avec_1 AS conjointe_1,
+    mission_conjointe_avec_2 AS conjointe_2,
     groupe_de_cibles AS groupe,
     date_reelle_visite AS visite_reelle_dt,
     statut_de_la_mission AS statut,
