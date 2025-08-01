@@ -75,6 +75,12 @@ Staging:
     - path: "/SCN_BDD/SIICEA/"
       keyword: "MISSIONSREAL"
       file: "sa_siicea_missions_real.csv"
+    - path: "/SCN_BDD/TMP/"
+      keyword: "ciblage"
+      file: "sa_ciblage.csv"
+    - path: "/SCN_BDD/TMP/"
+      keyword: "sa_tdb_esms"
+      file: "sa_tdb_esms.csv"
   input_to_download: null
   files_to_upload: null
 
