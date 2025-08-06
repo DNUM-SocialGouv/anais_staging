@@ -12,3 +12,4 @@ uv.lock
 logs/**
 input/**
 output/**
+uv.lock
