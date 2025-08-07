@@ -23,7 +23,7 @@ WITH missions AS (
         CAST(SUBSTRING("date_reelle_visite", 7, 4) || 
              SUBSTRING("date_reelle_visite", 4, 2) || 
              SUBSTRING("date_reelle_visite", 1, 2) AS INTEGER)
-        BETWEEN 20220101 AND 20241231
+        BETWEEN 20220101 AND 20250331
     )
 )
 
