@@ -14,7 +14,7 @@ WITH finess_500 AS (
         statut_jur_niv2_lib,
         etat
     FROM {{ ref('staging__sa_t_finess') }}
-    WHERE categ_code::int = 500
+    WHERE categ_code = '500'
     AND etat = 'ACTUEL'
 )
 
