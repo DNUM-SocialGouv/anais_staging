@@ -29,7 +29,7 @@
 -- Renvoie le dernier mois de l'année précédente 'YYYYmm'
 {% macro get_last_month_of_last_year(reference_date=None) %}
   {% set ref_date = dbtStaging.get_reference_date(reference_date) %}
-  {{ (ref_date.year - 1) | string ~ '12' }}
+  {{ return((ref_date.year - 1) | string ~ '12') }}
 {% endmacro %}
 
 -- Renvoie la première date d'il y a x année 'YYYY-mm-dd'
