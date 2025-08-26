@@ -19,7 +19,7 @@ WITH N_2 AS (
     FROM {{ ref('staging__cert_dc_insern_n2_n1') }}
     WHERE 1 = 1
     -- param Ã  variabiliser dans le code
-    AND annee::INT = {{ get_previous_year(3) }}
+    AND annee::INT = {{ get_previous_year(3, reference_date) }}
 )
 , N_1 AS (
     SELECT
@@ -36,7 +36,7 @@ WITH N_2 AS (
     FROM {{ ref('staging__cert_dc_insern_2023_2024') }}
     WHERE 1 = 1
     -- param Ã  variabiliser dans le code
-    AND annee::INT = {{ get_previous_year(2) }}
+    AND annee::INT = {{ get_previous_year(2, reference_date) }}
 )
 , N AS (
     SELECT
@@ -53,7 +53,7 @@ WITH N_2 AS (
     FROM {{ ref('staging__cert_dc_insern_2023_2024') }}
     WHERE 1 = 1
     -- param Ã  variabiliser dans le code
-    AND {{ where_remaining_last_year_months(reference_date=reference_date) }}
+    AND {{ where_remaining_last_year_months(reference_date) }}
 )
 , N_0 AS (
     SELECT
@@ -70,7 +70,7 @@ WITH N_2 AS (
     FROM {{ ref('staging__cert_dc_insern') }}
     WHERE 1 = 1
     -- param Ã  variabiliser dans le code
-    AND {{ where_last_6_months(reference_date=reference_date) }}
+    AND {{ where_last_6_months(reference_date) }}
 )
 , consolide AS (
     SELECT *

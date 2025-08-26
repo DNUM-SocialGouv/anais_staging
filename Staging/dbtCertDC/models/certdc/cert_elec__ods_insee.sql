@@ -8,7 +8,7 @@ WITH sa_insee_total AS (
         *
         , 1 AS Total
     FROM {{ ref('staging__sa_insee_histo') }}
-    WHERE adec::INT = {{ get_previous_year(3) }} OR adec::INT = {{ get_previous_year(2) }}
+    WHERE adec::INT = {{ get_previous_year(3, reference_date) }} OR adec::INT = {{ get_previous_year(2, reference_date) }}
     UNION
     SELECT 
         adec::INT,
