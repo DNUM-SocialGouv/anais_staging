@@ -24,7 +24,7 @@ WITH missions AS (
         SUBSTRING(date_reelle_visite, 7, 4) || '-' ||
              SUBSTRING(date_reelle_visite, 4, 2) || '-' ||
              SUBSTRING(date_reelle_visite, 1, 2)
-        BETWEEN '{{ get_first_day_of_x_years_ago(3, reference_date) }}' AND '{{ get_yesterday(reference_date) }}' -- A confirmer '2022-01-01' AND '2025-07-31'
+        BETWEEN '{{ dbtStaging.get_first_day_of_x_years_ago(3, reference_date) }}' AND '{{ dbtStaging.get_yesterday(reference_date) }}' -- A confirmer '2022-01-01' AND '2025-07-31'
     )
 )
 

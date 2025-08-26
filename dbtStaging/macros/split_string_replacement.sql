@@ -1,5 +1,5 @@
 {% macro split_string_by_pipe(column, table_alias='b') %}
-    {% set schema = get_source_schema() %}
+    {% set schema = dbtStaging.get_source_schema() %}
 
     {% if schema == 'main' %}
         unnest(string_split({{ table_alias }}.{{ column }}, '|')) as motif(motif_value)

@@ -2,4 +2,4 @@
     materialized='view'
 ) }}
 
-SELECT * FROM {{ source(get_source_schema(), 'sa_ciblage') }}
+SELECT * FROM {{ source(dbtStaging.get_source_schema(), 'sa_ciblage') }}
