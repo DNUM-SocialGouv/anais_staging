@@ -20,7 +20,7 @@
   {% set ref_year = dbtStaging.get_reference_date(reference_date).year %}
   (
       {%- for i in range(x, 0, -1) -%}
-          {{ (ref_year - i) }}
+          {{ (ref_year - i) | string }}
           {%- if not loop.last %}, {% endif %}
       {%- endfor -%}
   )
