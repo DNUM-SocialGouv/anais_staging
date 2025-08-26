@@ -9,9 +9,7 @@ WITH missions AS (
         CASE 
             WHEN LENGTH(finess_geographique) = 8 THEN '0' || finess_geographique
             ELSE finess_geographique
-        END AS cd_finess,
-        {{ dbtStaging.get_first_day_of_x_years_ago(3, reference_date) }} as testo,
-        {{ dbtStaging.get_yesterday(reference_date) }} as testa
+        END AS cd_finess
     FROM {{ ref('staging__sa_siicea_missions_real') }}
     WHERE code_theme_igas IN (
         'MS634D13', 'MS634N1', 'MS634E1', 'MS634D12', 'MS634R1',
