@@ -11,16 +11,16 @@
 -- Renvoie l'année précédente (ou l'année - i)
 {% macro get_previous_year(i=1, reference_date=None) %}
   {% set ref_year = dbtStaging.get_reference_date(reference_date).year %}
-    {{ (ref_year - i) }}
+    {{ return(ref_year - i) }}
 {% endmacro %}
 
 
 -- Renvoie les x années précédentes sous la forme ('YYYY', ... ,'YYYY')
 {% macro get_x_previous_year(x=3, reference_date=None) %}
-  {% set ref_year = dbtStaging.get_reference_date(reference_date).year %}
+  {% set ref_date = dbtStaging.get_reference_date(reference_date).year %}
   (
       {%- for i in range(x, 0, -1) -%}
-          {{ (ref_year - i) }}
+          '{{ dbtStaging.get_previous_year(i, ref_date)  }}'
           {%- if not loop.last %}, {% endif %}
       {%- endfor -%}
   )
@@ -35,13 +35,13 @@
 -- Renvoie la première date d'il y a x année 'YYYY-mm-dd'
 {% macro get_first_day_of_x_years_ago(x=3, reference_date=None) %}
   {% set ref_date = dbtStaging.get_reference_date(reference_date) %}
-  {{ (ref_date.year - x) | string ~ '-01-01' }}
+    {{ return((ref_date.year - x) | string ~ '-01-01') }}
 {% endmacro %}
 
 -- Renvoie la date du jour précédent 'YYYY-mm-dd'
 {% macro get_yesterday(reference_date=None) %}
   {% set ref_date = dbtStaging.get_reference_date(reference_date) %}
-  {{ ref_date - modules.datetime.timedelta(days=1) }}
+    {{ return(ref_date - modules.datetime.timedelta(days=1)) }}
 {% endmacro %}
 
 -- Renvoie les 6 derniers mois de l'année en cours 
