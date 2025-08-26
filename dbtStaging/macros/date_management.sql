@@ -10,14 +10,14 @@
 
 -- Renvoie l'année précédente (ou l'année - i)
 {% macro get_previous_year(i=1, reference_date=None) %}
-  { set ref_year = dbtStaging.get_reference_date(reference_date).year }
+  {% set ref_year = dbtStaging.get_reference_date(reference_date).year %}
     {{ (ref_year - i) }}
 {% endmacro %}
 
 
 -- Renvoie les x années précédentes sous la forme ('YYYY', ... ,'YYYY')
 {% macro get_x_previous_year(x=3, reference_date=None) %}
-  { set ref_year = dbtStaging.get_reference_date(reference_date).year }
+  {% set ref_year = dbtStaging.get_reference_date(reference_date).year %}
   (
       {%- for i in range(x, 0, -1) -%}
           {{ (ref_year - i) }}
