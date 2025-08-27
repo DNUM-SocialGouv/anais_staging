@@ -1,7 +1,6 @@
 {{ config(
     materialized='view'
 ) }}
-{% set reference_date = '2025-04-01' %}
 
 WITH missions AS (
     SELECT 
@@ -24,7 +23,7 @@ WITH missions AS (
         CAST(SUBSTRING(date_reelle_visite, 7, 4) || '-' ||
              SUBSTRING(date_reelle_visite, 4, 2) || '-' ||
              SUBSTRING(date_reelle_visite, 1, 2) AS VARCHAR)
-        BETWEEN '{{ dbtStaging.get_first_day_of_x_years_ago(3, reference_date) }}' AND '{{ dbtStaging.get_yesterday(reference_date) }}' -- A confirmer '2022-01-01' AND '2025-07-31'
+        BETWEEN '{{ dbtStaging.get_first_day_of_x_years_ago(3) }}' AND '{{ dbtStaging.get_yesterday() }}' -- A confirmer '2022-01-01' AND '2025-07-31'
     )
 )
 
