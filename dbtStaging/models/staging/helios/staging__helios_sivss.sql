@@ -47,7 +47,7 @@ WITH sivss AS (
         SUBSTRING(date_cloture, 1, 2) AS date_cloture,
         motif_cloture
     FROM {{ ref('staging__sa_sivss') }}
-    WHERE (SUBSTRING(date_cloture, 7, 4) || SUBSTRING(date_cloture, 4, 2)) <= '{{ dbtStaging.get_last_month_of_last_year() }}' -- A confirmer '202412'
+    WHERE (SUBSTRING(date_reception, 7, 4) || SUBSTRING(date_reception, 4, 2)) <= '{{ dbtStaging.get_last_completed_quarter() }}' -- A confirmer '202412' -> '202506'
 )
 
 SELECT * FROM sivss

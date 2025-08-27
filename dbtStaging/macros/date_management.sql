@@ -26,10 +26,28 @@
   )
 {% endmacro %}
 
--- Renvoie le dernier mois de l'année précédente 'YYYYmm'
-{% macro get_last_month_of_last_year(reference_date=None) %}
+-- Renvoie le dernier trimestre complet 'YYYYmm'
+{% macro get_last_completed_quarter(reference_date=None) %}
   {% set ref_date = dbtStaging.get_reference_date(reference_date) %}
-  {{ return((ref_date.year - 1) | string ~ '12') }}
+  {% set ref_year = ref_date.year %}
+  {% set ref_month = ref_date.month %}
+
+  {% if ref_month <= 3 %} -- Q1 en cours -> dernier trimestre complet = Q4 de l'an passé (décembre)
+    {% set out_year = ref_year - 1 %}
+    {% set out_month = 12 %}
+  {% elif ref_month <= 6 %} -- Q2 en cours -> dernier trimestre complet = Q1 (mars)
+    {% set out_year = ref_year %}
+    {% set out_month = 3 %}
+  {% elif ref_month <= 9 %} -- Q3 en cours -> dernier trimestre complet = Q2 (juin)
+    {% set out_year = ref_year %}
+    {% set out_month = 6 %}
+  {% else %} -- Q4 en cours -> dernier trimestre complet = Q3 (septembre)
+    {% set out_year = ref_year %}
+    {% set out_month = 9 %}
+  {% endif %}
+
+  {% set out_month_str = '%02d' % out_month %}
+  {{ return((out_year | string) ~ out_month_str) }}
 {% endmacro %}
 
 -- Renvoie la première date d'il y a x année 'YYYY-mm-dd'
