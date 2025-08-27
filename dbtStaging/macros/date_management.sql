@@ -80,7 +80,7 @@
 
 -- Renvoie la date de fin de l'année glissante
 {% macro get_last_date_last_rolling_years(reference_date=None) %}
-  {% set ref_date = get_yesterday(reference_date) %}
+  {% set ref_date = dbtStaging.get_yesterday(reference_date) %}
     {{ return(ref_date.strftime('%Y%m%d') | int) }}
 {% endmacro %}
 
