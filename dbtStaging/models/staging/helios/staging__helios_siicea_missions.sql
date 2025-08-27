@@ -1,7 +1,7 @@
 {{ config(
     materialized='view'
 ) }}
-{% set reference_date = '2025-07-31' %}
+{% set reference_date = '2025-04-01' %}
 
 WITH missions AS (
     SELECT 

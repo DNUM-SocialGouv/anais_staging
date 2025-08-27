@@ -1,7 +1,7 @@
 {{ config(
     materialized='view'
 ) }}
-{% set reference_date = '2025-07-31' %}
+{% set reference_date = '2025-08-01' %}
 
 WITH sirec AS (
     SELECT * FROM {{ ref('staging__sa_sirec') }}
