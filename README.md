@@ -27,6 +27,9 @@ uv sync
 
 ---
 ## 2. ⚙️Configuration du projet
+
+Plusieurs fichiers doivent être correctement configurés et placés dans le bon répertoire pour le bon fonctionnement de la pipeline.
+
 ### 2.1 Fichier `profiles.yml`
 
 DBT nécessite un fichier de configuration appelé `profiles.yml`, qui contient les informations de connexion à la base de données.
@@ -35,7 +38,7 @@ DBT nécessite un fichier de configuration appelé `profiles.yml`, qui contient 
 
 Il doit se trouver dans le répertoire suivant :
 - **Linux/macOS** : `~/.dbt/profiles.yml`
-- **Windows** : `C:\Users\<VotreNom>\.dbt\profiles.yml`
+- **Windows** : `C:\Users\<NomUtilisateur>\.dbt\profiles.yml`
 
 > Si le dossier `.dbt` n’existe pas encore, vous pouvez le créer manuellement.  
 
@@ -43,7 +46,7 @@ Il doit se trouver dans le répertoire suivant :
 
 Il doit être placé dans à la racine du projet Anais_staging (au même niveau que le README et pyproject.toml) :
 - **VM Cegedim** : `~/anais_staging/profiles.yml`
-- **Local** : `C:\Users\<VotreNom>\...\<projet>\profiles.yml`
+- **Local** : `C:\Users\<NomUtilisateur>\...\<projet>\profiles.yml`
  
 Le fichier `profiles.yml` est disponible à la racine du repo.  
 
@@ -57,94 +60,165 @@ Il contient les informations relatives aux bases de données des différents pro
 - InspectionControlePA et InspectionControlePH (DuckDB et postgres)
 - CertDC (DuckDB et postgres)
 
-Seul le password des bases postgres n'est pas indiqué -> il est indiqué dans le `.env`
+Exemple :
+```yaml
+Staging:
+  target: local
+  outputs:
+    anais:
+      type: postgres
+      host: xx.xx.xx.xx
+      user: <Nom_utilisateur>
+      password: "{{ env_var('STAGING_PASSWORD') }}"
+      port: xxxx
+      schema: public
+      dbname: staging
+    local:
+      type: duckdb
+      path: data/staging/duckdb_database.duckdb
+      schema: main
+```
+
+Seul le mot de passe des bases postgres n'est pas indiqué dans le fichier profiles.yml -> il est indiqué dans le `.env`
 
 ### 2.2 Fichier `.env`
 
-La connexion aux bases postgres et la connexion au SFTP nécessite un fichier de configuration appelé `.env`.
-Ce fichier contient les mots de passe d'accès aux bases postgres et au SFTP.
-Il est secret donc indisponible sur le git.
-Il doit donc être créé
+Ce fichier `.env` contient les mots de passe d'accès aux bases postgres et au SFTP.
+Il est secret, donc indisponible sur le git.
+Il doit donc être créé manuellement.
 
 #### Où placer le fichier ?
 
 Il doit être placé dans à la racine du projet Anais_staging (au même niveau que le README et pyproject.toml) :
-- **VM Cegedim** : `~/anais_staging/profiles.yml`
-- **Local** : `C:\Users\<VotreNom>\...\<projet>\profiles.yml`
+- **VM Cegedim** : `~/anais_staging/.env`
+- **Local** : `C:\Users\<NomUtilisateur>\...\<projet>\.env`
  
-Le fichier `profiles.yml` est disponible à la racine du repo.
+Le fichier `.env` est disponible à la racine du repo.
 
 #### Que contient le fichier ?
 
 Il contient les variables suivantes, avec leurs valeurs entre guillement `" "` :
 
-SFTP_HOST = "<host du SFTP>"
-SFTP_PORT= <port du SFTP>
-SFTP_USERNAME = "<nom de l'utilisateur>"
-SFTP_PASSWORD = "<Mot de passe du SFTP>"
-
-STAGING_PASSWORD = "<Mot de passe de la base staging>"
-HELIOS_PASSWORD = "<Mot de passe de la base helios>"
-INSPECTION_CONTROLE_ADMIN_PA_PASSWORD = "<Mot de passe de la base inspection_controle>"
-INSPECTION_CONTROLE_ADMIN_PH_PASSWORD = "<Mot de passe de la base inspection_controle>"
-MATRICE_PA_PASSWORD = "<Mot de passe de la base matrice>"
-MATRICE_PH_PASSWORD = "<Mot de passe de la base matrice>"
-CERTDC_PASSWORD = "<Mot de passe de la base certelec_dc>"
+- `SFTP_HOST = "<host du SFTP>"`
+- `SFTP_PORT = <port du SFTP>`
+- `SFTP_USERNAME = "<nom de l'utilisateur>"`
+- `SFTP_PASSWORD = "<Mot de passe du SFTP>"`
+- `STAGING_PASSWORD = "<Mot de passe de la base staging>"`
+- `HELIOS_PASSWORD = "<Mot de passe de la base helios>"`
+- `INSPECTION_CONTROLE_ADMIN_PA_PASSWORD = "<Mot de passe de la base inspection_controle>"`
+- `INSPECTION_CONTROLE_ADMIN_PH_PASSWORD = "<Mot de passe de la base inspection_controle>"`
+- `MATRICE_PA_PASSWORD = "<Mot de passe de la base matrice>"`
+- `MATRICE_PH_PASSWORD = "<Mot de passe de la base matrice>"`
+- `CERTDC_PASSWORD = "<Mot de passe de la base certelec_dc>"`
 
 
 ### 2.3 ⚙️ Fichier `metadata.yml`
 
-Le fichier `metadata.yml` contient le paramétrage relatif aux fichiers en entrée et en sortie pour le projet.
+Le fichier `metadata.yml` contient le paramétrage relatif aux fichiers en entrée et en sortie et aux répertoires du projet.
 
-Chaque projet a sa section.
+#### Section *directory*
 
-#### Section **directory**
+Contient les répertoires du projet :
+```yaml
+  local_directory_input: "input/<Nom_projet>/"
+  local_directory_output: "output/<Nom_projet>/"
+  models_directory: "<dbtNom_projet>"
+  create_table_directory: "output_sql/<Nom_projet>/"
+  remote_directory_input: "/SCN_BDD/<Nom_projet>/input"
+  remote_directory_output: "/SCN_BDD/<Nom_projet>/output"
+```
 
-Contient les informations relatives aux fichiers et répertoires du projet.
-- local_directory_input = répertoire en local où sont trouvables les fichiers csv en entrée. Exemple: "input/<Nom_projet>"
-- local_directory_output = répertoire en local où sont enregistrés les fichiers csv en sortie. Exemple: "output/<Nom_projet>"
-- models_directory = répertoire dans lequel sont enregistrés les modèles dbt du projet. Exemple: "<dbtNom_projet>"
-- create_table_directory = répertoire où sont enregistrés les fichiers SQL Create table. Exemple: "output_sql/<Nom_projet>"
-- remote_directory_input = répertoire sur le SFTP où sont enregistrés les fichiers csv des tables d'origine en sortie. Pour faciliter la recette. Exemple: "/SCN_BDD/<Nom_projet>/input"
-- remote_directory_output = répertoire sur le SFTP où sont enregistrés les fichiers csv en sortie. Exemple: "/SCN_BDD/<Nom_projet>/output"
+Avec :
+- `local_directory_input` = répertoire en local où sont trouvables les fichiers csv en entrée.
+- `local_directory_output` = répertoire en local où sont enregistrés les fichiers csv en sortie.
+- `models_directory` = répertoire dans lequel sont enregistrés les modèles dbt du projet.
+- `create_table_directory` = répertoire où sont enregistrés les fichiers SQL Create table.
+- `remote_directory_input` = répertoire SFTP où sont enregistrés les fichiers csv des tables d'origine en sortie. Ce répertoire existe pour faciliter la recette. Le projet Staging ne nécessite pas de valeur -> `null`
+- `remote_directory_output` = répertoire SFTP où sont enregistrés les fichiers csv en sortie. Le projet Staging ne nécessite pas de valeur -> `null`
 
-#### Section **files_to_download**
+
+#### Section *files_to_download*
 
 Contient les informations relatives aux fichiers csv provenant du SFTP.
 La section `files_to_download` (fichier à récupérer) contient :
-- path = Chemin du fichier sur le SFTP. Exemple : "/SCN_BDD/INSERN"
-- keyword = Terme dans le nom du fichier qui permet de le distinguer des autres fichiers. Exemple : "DNUM_TdB_CertDc" pour un fichier nommé DNUM_TdB_CertDcT42024T12025.csv
-- file = Nom d'enregistrement du fichier une fois importé. Exemple : "sa_insern.csv"
+
+``` yaml
+  files_to_download:
+    - path: "/SCN_BDD/INSERN"
+      keyword: "DNUM_TdB_CertDc"
+      file: "sa_insern.csv"
+```
+
+Avec :
+- `path` = Chemin du fichier sur le SFTP.
+- `keyword` = Terme dans le nom du fichier qui permet de le distinguer des autres fichiers. Le fichier le plus récent contenant ce terme sera récupéré.
+- `file` = Nom d'enregistrement du fichier une fois importé.
 
 Section inutilisée en local.
 
-#### Section **input_to_download** et **files_to_upload**
+#### Section *input_to_download* et *files_to_upload*
 
 La section `input_to_download` indique les tables à envoyer en csv dans le remote_directory_input. Nécessaire pour la recette.
 La section `files_to_upload` indique les vues à envoyer en csv dans le remote_directory_output.
 
-Sous le format suivant :
-- nom de la vue sql (nom du modèle dbt)
-- radical du nom donné au fichier csv exporté. Exemple: '<radical>_<date_du_jour>.csv'. On peut également préciser le répertoire de destination dans le nom. 
-Exemple: helios__missions: SIICEA/helios_missions
+```yaml
+  input_to_download:
+    <Nom_de_la_vue_sql>: <radical_du_fichier_csv_exporté>
+    ...
+    <Nom_de_la_vue_sql>: <radical_du_fichier_csv_exporté>
+  files_to_upload:
+    <Nom_de_la_vue_sql>: <radical_du_fichier_csv_exporté>
+    ...
+    <Nom_de_la_vue_sql>: <radical_du_fichier_csv_exporté>
+```
+
+Avec :
+- `<Nom_de_la_vue_sql>`: le nom de la vue SQL dans la base de données. Aussi le nom du modèle déployé
+- `<radical_du_fichier_csv_exporté>`: radical du nom du csv à exporter. La date du jour d'exécution sera ajouté automatiquement au nom du fichier exporté : `'<radical_du_fichier_csv_exporté>_<date_du_jour>.csv'`. On peut également préciser le répertoire de destination dans le nom.
+
+### 2.4 Fichier `sources.yml`
+
+Ce fichier `sources.yml` contient la liste des des tables sources nécessaires pour lancer les modèles dbt, pour local et pour anais. 
+
+#### Où placer le fichier ?
+
+Il doit être placé au même endroit que les modèles dbt du projet (au même niveau que le README et pyproject.toml) :
+- **VM Cegedim** : `~/anais_staging/<dbtNom_Projet>/models/sources.yml`
+- **Local** : `C:\Users\<NomUtilisateur>\...\<projet>\<dbtNom_Projet>\models\sources.yml`
+
+#### Que contient le fichier ?
+
+Il contient la liste des tables sources nécessaires (celles créées via CREATE TABLE) pour le lancement des modèles dbt.
+La liste est dupliquée pour les deux sources : local (public) et anais (main).
+
+```yaml
+sources:
+  - name: main
+    tables:
+      - name: sa_insern
+      ...
+      - name: sa_tdb_esms
+  - name: public
+    tables:
+      - name: sa_insern
+      ...
+      - name: sa_tdb_esms
+```
+Avec main ou public respectivement le nom des schémas des bases postgres et duckDB. Nom indiqué dans `profiles.yml`.
 
 ---
-
 ## 3. Lancement du pipeline :
 
-L'ensemble de la Pipeline est exécuté depuis le `main.py`.
-La Pipeline exécutée est celle du package `anais_pipeline` dans la branche du même nom du repo anais_staging. Elle est importée comme un package dans le pyproject.toml.
+L'ensemble de la Pipeline est exécutée depuis le `main.py`.
+La Pipeline exécutée est celle du package `anais_pipeline` dans la branche du même nom du repo anais_staging. Elle est importée comme un package dans le `pyproject.toml`.
 
 ### 3.1 Exécution de la pipeline pour Staging:
-1. Placez-vous dans le bon répertoire `anais_staging`
 
 ```bash
 # Placer vous dans anais_staging
 cd anais_staging
-```
 
-2. Lancer le `main.py`
-```bash
+#  Lancer le `main.py`
 uv run main.py --env "local" --profile "Staging"
 ```
 Avec env = 'local' ou 'anais' selon votre environnement de travail
@@ -154,7 +228,7 @@ et profile = 'Staging'
 1. Récupération des fichiers d'input. Ces fichiers doivent être placés manuellement dans le dossier `input/` sous format **.csv** (les délimiteurs sont gérés automatiquement).
 2. Création de la base DuckDB si inexistante.
 3. Connexion à la base DuckDB.
-4. Création des tables si inexistantes. Les fichiers sql de création de table (CREATE TABLE) doivent être placés dans le répertoire `create_table_directory` de metadata.
+4. Création des tables, même si déjà existantes. Les fichiers sql de création de table (CREATE TABLE) doivent être placés dans le répertoire indiqué dans le `create_table_directory` de `metadata.yml`.
 5. Lecture des csv avec standardisation des colonnes (ni caractères spéciaux, ni majuscule) -> injection des données dans les tables.
 6. Vérification de la réussite de l'injection.
 7. Fermeture de la connexion à la base DuckDB.
@@ -162,19 +236,18 @@ et profile = 'Staging'
 
 
 #### Pipeline Staging sur env 'anais':
-1. Récupération des fichiers d'input. Ces fichiers sont récupérés automatiquement sur le SFTP et placés dans le dossier `input/` sous format **.csv** (les délimiteurs sont gérés automatiquement).
-2. Création de la base Postgres si inexistante.
-3. Connexion à la base Postgres.
-4. Création des tables si inexistantes. Les fichiers sql de création de table (CREATE TABLE) doivent être placés dans le répertoire `create_table_directory` de metadata.
-5. Lecture des csv avec standardisation des colonnes (ni caractères spéciaux, ni majuscule) -> injection des données dans les tables.
-6. Vérification de la réussite de l'injection.
-7. Fermeture de la connexion à la base Postgres.
-8. Exécution de la commande `run dbt` -> Création des vues relatives au projet.
+1. Récupération des fichiers d'input depuis le SFTP. Ces fichiers sont placés dans le dossier `input/` sous format **.csv** (les délimiteurs sont gérés automatiquement).
+2. Connexion à la base Postgres.
+3. Création des tables, même si déjà existantes. Les fichiers sql de création de table (CREATE TABLE) doivent être placés dans le répertoire indiqué dans le `create_table_directory` de `metadata.yml`.
+4. Lecture des csv avec standardisation des colonnes (ni caractères spéciaux, ni majuscule) -> injection des données dans les tables.
+5. Vérification de la réussite de l'injection.
+6. Fermeture de la connexion à la base Postgres.
+7. Exécution de la commande `run dbt` -> Création des vues relatives au projet.
 
 ### 3.2 Exécution de parties de la pipeline
 #### Importation seule des fichiers depuis le SFTP
 
-Pour seulement importer les fichiers csv du SFTP vers le répertoire local :
+Pour seulement importer les fichiers .csv du SFTP vers le répertoire local :
 
 ```bash
 uv run -m pipeline.utils.sftp_sync --env "local" --profile "Staging"
@@ -189,13 +262,11 @@ Pour seulement exécuter le dbt run afin de tester le fonctionnement des modèle
 uv run -m pipeline.utils.dbt_tools --env "local" --profile "Staging"
 ```
 
-## 4. Déployement de la documentation
+# Documentation et architecture du projet
+## 1. Déployement de la documentation
 En cours
 
-## 5. Architecture du projet
-# MonProjet
-
-## 🏗️ Architecture du projet
+## 2. Architecture du projet
 
 ```plaintext
 .
@@ -206,7 +277,6 @@ En cours
 │   ├── analyses
 │   ├── dbt_packages
 │   ├── dbt_project.yml
-│   ├── dev.duckdb
 │   ├── logs
 │   │   └── dbt.log
 │   ├── macros
@@ -289,35 +359,6 @@ En cours
 ├── output
 │   └── staging
 ├── output_sql
-   │   ├── certdc
-│   │   │   ├── cert_dc_insern_2023_2024.sql
-│   │   │   ├── cert_dc_insern_n2_n1.sql
-│   │   │   ├── cert_dc_insern.sql
-│   │   │   ├── dc_det.sql
-│   │   │   ├── sa_esms.sql
-│   │   │   ├── sa_hubee.sql
-│   │   │   ├── sa_insee_histo.sql
-│   │   │   ├── sa_pmsi.sql
-│   │   │   ├── sa_rpu.sql
-│   │   │   ├── sa_t_finess.sql
-│   │   │   ├── sa_usld.sql
-│   │   │   ├── v_commune_depuis.sql
-│   │   │   ├── v_commune.sql
-│   │   │   ├── v_departement.sql
-│   │   │   └── v_region.sql
-│   │   ├── inspection_controle_PA
-│   │   │   ├── ref_departements.sql
-│   │   │   ├── ref_geo.sql
-│   │   │   ├── ref_regions.sql
-│   │   │   ├── sa_siicea_cibles.sql
-│   │   │   ├── sa_siicea_decisions.sql
-│   │   │   ├── tdb_ic_finess_500.sql
-│   │   │   ├── tdb_ic_siicea_cibles.sql
-│   │   │   ├── tdb_ic_siicea_missions_prog.sql
-│   │   │   ├── tdb_ic_siicea_missions_real.sql
-│   │   │   ├── v_commune.sql
-│   │   │   ├── v_departement.sql
-│   │   │   └── v_region.sql
 │   │   └── staging
 │   │       ├── cert_dc_insern_2023_2024.sql
 │   │       ├── cert_dc_insern_n2_n1.sql
@@ -352,36 +393,26 @@ En cours
 └── README.md
 ```
 
-## 6. Utilités des fichiers
-### ./Staging/dbtStaging/
-Répertoire de fonctionnement des modèles DBT -> création de vues SQL.
-
-dbt_project.yml : Fichier de configuration de DBT (obligatoire)
-
-macros/ : Répertoire de stockage des macros jinja
-
-models/ : Répertoire de stockage des modèles dbt
-
-models/staging/sources.yml : Fichier contenant le nom des tables sources nécessaires pour le lancement des modèles 
-
-### ./
+## 3. Utilités des fichiers
+### 3.1 Fichiers à la racine `./`
 Répertoire d'orchestration de la pipeline Python.
 
-.env : Fichier secret contenant le paramétrage vers le SFTP et les mots de passe des bases de données postgres.
+- `.env `: Fichier secret contenant le paramétrage vers le SFTP et les mots de passe des bases de données postgres.
+- `metadata.yml` : Contient les configurations du projets et la liste des fichiers .csv provenant du SFTP.
+- `main.py` : Programme d'exécution de la pipeline.
+- `output_sql/` : Répertoire qui contient les fichiers .sql de création de table (CREATE TABLE).
+- `logs/` : Répertoire des logs local et anais.
+- `data/` : Répertoire des bases de données DuckDB.
+- `input/` : Répertoire de stockage des fichiers .csv en entrée.
+- `output/` : Répertoire de stockage des fichiers .csv en sortie.
+- `profiles.yml` : Contient les informations relatives aux bases des différents projets.
+- `pyproject.toml` : Fichier contenant les dépendances et packages nécessaires pour le lancement de la pipeline.
 
-metadata.yml : Contient les informations relatives aux fichiers .csv provenant du SFTP.
+### 3.2 Fichiers dans dbtStaging `./Staging/dbtStaging/`
+Répertoire de fonctionnement des modèles DBT -> création de vues SQL.
 
-main.py : Programme d'exécution de la pipeline
+- `dbt_project.yml` : Fichier de configuration de DBT (obligatoire).
+- `macros/` : Répertoire de stockage des macros jinja.
+- `models/` : Répertoire de stockage des modèles dbt.
+- `models/staging/sources.yml` : Fichier contenant le nom des tables sources nécessaires pour le lancement des modèles .
 
-output_sql/ : Répertoire qui contient les fichiers .sql de création de table (CREATE TABLE)
-
-logs/ : Répertoire des logs
-
-data/duckdb_database.duckdb : Base DuckDB
-
-input/ : Répertoire de stockage des fichiers .csv en entrée
-output/ : Répertoire de stockage des fichiers .csv en sortie
-
-profiles.yml : Contient les informations relatives aux bases des différents projets.
-
-pyproject.toml : Fichier contenant les dépendances et packages nécessaires pour le lancement de la pipeline.
