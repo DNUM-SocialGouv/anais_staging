@@ -136,7 +136,6 @@ Avec :
 - `remote_directory_input` = répertoire SFTP où sont enregistrés les fichiers csv des tables d'origine en sortie. Ce répertoire existe pour faciliter la recette. Le projet Staging ne nécessite pas de valeur -> `null`
 - `remote_directory_output` = répertoire SFTP où sont enregistrés les fichiers csv en sortie. Le projet Staging ne nécessite pas de valeur -> `null`
 
-
 #### Section *files_to_download*
 
 Contient les informations relatives aux fichiers csv provenant du SFTP.
@@ -156,12 +155,18 @@ Avec :
 
 Section inutilisée en local.
 
-#### Section *input_to_download* et *files_to_upload*
 
+#### Section *table_to_copy*, *input_to_download* et *files_to_upload*
+
+La section `table_to_copy` indique les tables de staging à copier dans la base du projet.
 La section `input_to_download` indique les tables à envoyer en csv dans le remote_directory_input. Nécessaire pour la recette.
 La section `files_to_upload` indique les vues à envoyer en csv dans le remote_directory_output.
 
 ```yaml
+  table_to_copy:
+    <Nom_de_la_vue_sql>: <nom_de_la_table>
+    ...
+    <Nom_de_la_vue_sql>: <nom_de_la_table>
   input_to_download:
     <Nom_de_la_vue_sql>: <radical_du_fichier_csv_exporté>
     ...
