@@ -220,7 +220,7 @@ La Pipeline exécutée est celle du package `anais_pipeline` dans la branche du 
 ### 3.1 Exécution de la pipeline pour Staging:
 
 ```bash
-# Placer vous dans anais_staging
+# Se placer dans anais_staging
 cd anais_staging
 
 #  Lancer le `main.py`
@@ -235,9 +235,10 @@ et profile = 'Staging'
 3. Connexion à la base DuckDB.
 4. Création des tables, même si déjà existantes. Les fichiers sql de création de table (CREATE TABLE) doivent être placés dans le répertoire indiqué dans le `create_table_directory` de `metadata.yml`.
 5. Lecture des csv avec standardisation des colonnes (ni caractères spéciaux, ni majuscule) -> injection des données dans les tables.
-6. Vérification de la réussite de l'injection.
-7. Fermeture de la connexion à la base DuckDB.
-8. Exécution de la commande `run dbt` -> Création des vues relatives au projet.
+6. Historisation des données pour chaque table vers les tables `z<nom_de_la_table` avec indication que la date d'injection dans la colonne `date_ingestion`.
+7. Vérification de la réussite de l'injection.
+8. Fermeture de la connexion à la base DuckDB.
+9. Exécution de la commande `run dbt` -> Création des vues relatives au projet.
 
 
 #### Pipeline Staging sur env 'anais':
@@ -245,9 +246,10 @@ et profile = 'Staging'
 2. Connexion à la base Postgres.
 3. Création des tables, même si déjà existantes. Les fichiers sql de création de table (CREATE TABLE) doivent être placés dans le répertoire indiqué dans le `create_table_directory` de `metadata.yml`.
 4. Lecture des csv avec standardisation des colonnes (ni caractères spéciaux, ni majuscule) -> injection des données dans les tables.
-5. Vérification de la réussite de l'injection.
-6. Fermeture de la connexion à la base Postgres.
-7. Exécution de la commande `run dbt` -> Création des vues relatives au projet.
+5. Historisation des données pour chaque table vers les tables `z<nom_de_la_table` avec indication que la date d'injection dans la colonne `date_ingestion`.
+6. Vérification de la réussite de l'injection.
+7. Fermeture de la connexion à la base Postgres.
+8. Exécution de la commande `run dbt` -> Création des vues relatives au projet.
 
 ### 3.2 Exécution de parties de la pipeline
 #### Importation seule des fichiers depuis le SFTP
@@ -413,7 +415,7 @@ Répertoire d'orchestration de la pipeline Python.
 - `profiles.yml` : Contient les informations relatives aux bases des différents projets.
 - `pyproject.toml` : Fichier contenant les dépendances et packages nécessaires pour le lancement de la pipeline.
 
-### 3.2 Fichiers dans dbtStaging `./Staging/dbtStaging/`
+### 3.2 Fichiers dans dbtStaging `./dbtStaging/`
 Répertoire de fonctionnement des modèles DBT -> création de vues SQL.
 
 - `dbt_project.yml` : Fichier de configuration de DBT (obligatoire).
