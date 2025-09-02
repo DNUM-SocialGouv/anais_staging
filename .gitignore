@@ -1,15 +1,16 @@
 *.csv
 .env
 *.log
-*.cpython-39.pyc
-*.cpython-312.pyc
 *__pycache__
-/Staging/** */
-/data/
-**/target/
-uv.lock
-.user.yml
-logs/**
+
+**/logs/**
 input/**
 output/**
+/data/**
+**/dbt_packages/
+**/target/
+
+**/package-lock.yml
+.user.yml
 uv.lock
+poetry.lock
