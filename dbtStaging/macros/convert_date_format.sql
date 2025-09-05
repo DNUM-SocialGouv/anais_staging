@@ -18,20 +18,18 @@
         ('MI',   '\\d{2}'),
         ('SS',   '\\d{2}')
     ] %}
-
-    {% set format_date = expected_format %}
-    {% set regex_pattern = expected_format %}
+    {% set format_date = namespace(val=expected_format) %}
+    {% set regex_pattern = namespace(val=expected_format) %}
 
     {% if schema == 'main' %}
         {% for k, v in mapping %}
-            {% set format_date = format_date.replace(k, v) %}
+            {% set format_date.val = format_date.val |replace(k, v) %}
         {% endfor %}
     {% endif %}
     
     {% for k, v in regex_mapping %}
-        {% set regex_pattern = regex_pattern.replace(k, v) %}
+        {% set regex_pattern.val = regex_pattern.val | replace(k, v) %}
     {% endfor %}
-    {% set format_date = format_date.replace('YYYY-MM-DD', '%Y-%m-%d') %}
-    {% set regex_pattern = regex_pattern.replace('YYYY-MM-DD', '\d{4}-\d{2}-\d{2}') %}
-    {{ return({'format': format_date, 'regex': '^' ~ regex_pattern ~ '$'}) }}
+
+    {{ return({'format': format_date.val, 'regex': '^' ~ regex_pattern.val ~ '$'}) }}
 {% endmacro %}

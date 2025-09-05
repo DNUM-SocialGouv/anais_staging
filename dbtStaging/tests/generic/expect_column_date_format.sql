@@ -13,7 +13,7 @@ with column_info as (
 ),
 formatted_values as (
     select
-        "{{ column_name }}" as raw_value,
+        '{{ column_name }}' as raw_value,
         case
             when lower(data_type) in ('date', 'timestamp', 'timestamp without time zone', 'timestamp with time zone')
             {% if model.schema == 'main' %}

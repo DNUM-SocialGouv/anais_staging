@@ -1,4 +1,12 @@
-{% test expect_format_for_column(model, column_name, expected_type) %}
+{% test expect_type_for_column(model, column_name, expected_type) %}
+   {% set type_mapping = {
+        'INTEGER': ('integer', 'bigint'),
+        'VARCHAR': ('varchar', 'text', 'character varying'),
+        'FLOAT':   ('float', 'double precision', 'real', 'numeric'),
+        'DATE': ('date', 'date'),
+        'BOOLEAN': ('bool', 'boolean')
+    } %}
+{% set allowed_types = type_mapping[expected_type] %}
 
 with actual_columns as (
     select
@@ -16,6 +24,6 @@ select
     'La colonne {{ column_name }} a un type différent de {{ expected_type }} (trouvé: ' || data_type || ')' as message
 from actual_columns
 where column_name = '{{ column_name }}'
-  and lower(data_type) != lower('{{ expected_type }}')
+      and data_type not in {{ type_mapping[expected_type] }}
 
 {% endtest %}
