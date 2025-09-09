@@ -8,6 +8,10 @@ with actual_columns as (
 )
 
 select '{{ column_name }}' as missing_column
-where '{{ column_name }}' not in (select column_name from actual_columns)
+where not exists (
+    select 1
+    from actual_columns
+    where lower(column_name) = lower('{{ column_name }}')
+)
 
 {% endtest %}
