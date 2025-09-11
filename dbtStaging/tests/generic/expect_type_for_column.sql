@@ -1,4 +1,6 @@
 {% test expect_type_for_column(model, column_name, expected_type) %}
+    {% set column_expr = dbtStaging.reduce_colname_size(column_name) %}
+
    {% set type_mapping = {
         'INTEGER': ('integer', 'bigint'),
         'VARCHAR': ('varchar', 'text', 'character varying'),
@@ -18,12 +20,12 @@
     )
 
     select
-        '{{ column_name }}' as column_name,
+        '{{ column_expr }}' as column_name,
         data_type as actual_type,
         '{{ expected_type }}' as expected_type,
-        'La colonne {{ column_name }} a un type différent de {{ expected_type }} (trouvé: ' || data_type || ')' as message
+        'La colonne {{ column_expr }} a un type différent de {{ expected_type }} (trouvé: ' || data_type || ')' as message
     from actual_columns
-    where column_name = '{{ column_name }}'
+    where column_name = '{{ column_expr }}'
         and data_type not in {{ type_mapping[expected_type] }}
 
 {% endtest %}
