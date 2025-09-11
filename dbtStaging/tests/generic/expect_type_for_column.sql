@@ -1,5 +1,5 @@
 {% test expect_type_for_column(model, column_name, expected_type) %}
-    {% set column_expr = dbtStaging.reduce_colname_size(column_name) %}
+    {% set column_expr = dbtStaging.reduce_colname_size(model.schema, column_name) %}
 
    {% set type_mapping = {
         'INTEGER': ('integer', 'bigint'),

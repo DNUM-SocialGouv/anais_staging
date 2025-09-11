@@ -1,5 +1,5 @@
 {% test expect_column_bool_format(model, column_name) %}
-  {% set column_expr = dbtStaging.reduce_colname_size(column_name) %}
+  {% set column_expr = dbtStaging.reduce_colname_size(model.schema, column_name) %}
 
   select *
     from {{ model }}

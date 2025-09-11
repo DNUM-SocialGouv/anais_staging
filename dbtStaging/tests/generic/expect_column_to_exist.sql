@@ -1,5 +1,5 @@
 {% test expect_column_to_exist(model, column_name) %}
-    {% set column_expr = dbtStaging.reduce_colname_size(column_name) %}
+    {% set column_expr = dbtStaging.reduce_colname_size(model.schema, column_name) %}
 
     with actual_columns as (
         select column_name

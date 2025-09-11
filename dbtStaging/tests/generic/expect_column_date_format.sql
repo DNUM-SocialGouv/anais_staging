@@ -2,7 +2,7 @@
     {% set format = dbtStaging.convert_date_format(model.schema, expected_format) %}
     {% set fmt_pattern = format['regex'] %}
     {% set fmt_format = format['format'] %}
-    {% set column_expr = dbtStaging.reduce_colname_size(column_name) %}
+    {% set column_expr = dbtStaging.reduce_colname_size(model.schema, column_name) %}
 
     with column_info as (
         select
