@@ -1,4 +1,4 @@
-{% test expect_type_for_column(model, column_name) %}
+{% test expect_type_for_column(model, column_name, expected_type) %}
    {% set type_mapping = {
         'INTEGER': ('integer', 'bigint'),
         'VARCHAR': ('varchar', 'text', 'character varying'),
@@ -6,13 +6,7 @@
         'DATE': ('date', 'date'),
         'BOOLEAN': ('bool', 'boolean')
     } %}
-    {% set expected_type = column.get('data_type') %}
-
-    {% if not expected_type %}
-        {% do exceptions.raise_compiler_error(
-            "Le champ 'data_type' est requis dans le schema.yml pour la colonne '" ~ column_name ~ "'"
-        ) %}
-    {% endif %}
+    {% set allowed_types = type_mapping[expected_type] %}
 
     with actual_columns as (
         select
