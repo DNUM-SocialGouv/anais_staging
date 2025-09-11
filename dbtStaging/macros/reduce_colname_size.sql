@@ -2,7 +2,7 @@
     {% if schema_name == 'public' %}
         {% set apostrophe_count = colname.count("''") %}
         {% set adjusted_size = size + apostrophe_count %}
-        {{ return(colname[:adjusted_size].strip()) }}
+        {{ return(colname.strip()[:adjusted_size].strip()) }}
     {% else %}
         {{ return(colname.strip()) }}
     {% endif %}
