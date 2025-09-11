@@ -17,9 +17,9 @@ formatted_values as (
         case
             when lower(data_type) in ('date', 'timestamp', 'timestamp without time zone', 'timestamp with time zone')
             {% if model.schema == 'main' %}
-                then strftime("{{ column_name }}", '{{ fmt_format }}')
+                then strftime(try_cast("{{ column_name }}" as DATE), '{{ fmt_format }}')
             {% else %}
-                then to_char("{{ column_name }}", '{{ fmt_format }}')
+                then to_char(cast("{{ column_name }}" as DATE), '{{ fmt_format }}')
             {% endif %}
             else cast("{{ column_name }}" as varchar)
         end as formatted_value
