@@ -1,6 +1,8 @@
-{% macro reduce_colname_size(schema_name, colname, size=62) %}
+{% macro reduce_colname_size(schema_name, colname, size=63) %}
     {% if schema_name == 'public' %}
-        {{ return(colname.strip()[:size]) }}
+        {% set apostrophe_count = colname.count("''") %}
+        {% set adjusted_size = size + apostrophe_count %}
+        {{ return(colname[:apostrophe_count].strip()) }}
     {% else %}
         {{ return(colname.strip()) }}
     {% endif %}
