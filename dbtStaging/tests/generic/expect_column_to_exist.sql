@@ -8,11 +8,11 @@
         and lower(table_name) = lower('{{ model.name }}')
     )
 
-    select '{{ column_expr }}' as missing_column
+    select '{{ column_name }}' as missing_column
     where not exists (
         select 1
         from actual_columns
-        where lower(column_name) = lower('{{ column_expr }}')
+        where lower(column_name) = lower('{{ column_name }}')
     )
 
 {% endtest %}
