@@ -1,42 +1,48 @@
+{% macro count_double_apostophes(colname) %}
+    {# Compte les doubles apostrophes #}
+    {{ (colname|string).count("''") }}
+{% endmacro %}
+
+{% macro count_accent_characters(colname) %}
+    {% set col_without_accents = colname|string %}
+    
+    {% set col_without_accents = col_without_accents
+        | replace("à", "")
+        | replace("â", "")
+        | replace("ä", "")
+        | replace("é", "")
+        | replace("è", "")
+        | replace("ê", "")
+        | replace("ë", "")
+        | replace("î", "")
+        | replace("ï", "")
+        | replace("ô", "")
+        | replace("ö", "")
+        | replace("ù", "")
+        | replace("û", "")
+        | replace("ü", "")
+        | replace("ç", "") %}
+
+    {% set accent_count = (colname|length) - (col_without_accents|length) %}
+    {{ accent_count }}
+{% endmacro %}
+
 {% macro reduce_colname_size(schema_name, colname, size=63) %}
     {% if schema_name == 'public' %}
         {% set col_str = colname|string %}
-        {# Compte les doubles apostrophes #}
-        {% set apostrophe_count = col_str.count("''") %}
-        
-        {# Liste des accents les plus fréquents #}
-        {% set accents = ["a", "à","â","ä","é","è","ê","ë","î","ï","ô","ö","ù","û","ü","ç"] %}
-        
-        {% set col_without_accents = colname|string %}
-        {{ log("Avant replace: " ~ col_without_accents, info=True) }}
-        
-        {% set col_without_accents = col_without_accents | replace("à", "") %}
-        {% set col_without_accents = col_without_accents | replace("â", "") %}
-        {% set col_without_accents = col_without_accents | replace("ä", "") %}
-        {% set col_without_accents = col_without_accents | replace("é", "") %}
-        {% set col_without_accents = col_without_accents | replace("è", "") %}
-        {% set col_without_accents = col_without_accents | replace("ê", "") %}
-        {% set col_without_accents = col_without_accents | replace("ë", "") %}
-        {% set col_without_accents = col_without_accents | replace("î", "") %}
-        {% set col_without_accents = col_without_accents | replace("ï", "") %}
-        {% set col_without_accents = col_without_accents | replace("ô", "") %}
-        {% set col_without_accents = col_without_accents | replace("ö", "") %}
-        {% set col_without_accents = col_without_accents | replace("ù", "") %}
-        {% set col_without_accents = col_without_accents | replace("û", "") %}
-        {% set col_without_accents = col_without_accents | replace("ü", "") %}
-        {% set col_without_accents = col_without_accents | replace("ç", "") %}
 
-        {{ log("Après replace: " ~ col_without_accents, info=True) }}
-        {% set accent_count = (colname|length) - (col_without_accents|length) %}
+        {# Ajustement : +apostrophes, -accents #}
+        {% set apostrophe_count = count_double_apostophes(col_str[:size]) %}
+        {% set adjusted_size = size + apostrophe_count %}
+        {% set accent_count = count_accent_characters(col_str[:adjusted_size]) %}
+        {% set adjusted_size = size - apostrophe_count %}
 
         {# Log pour debug #}
         {{ log("colname=" ~ colname ~ " | apostrophes=" ~ apostrophe_count ~ " | accents=" ~ accent_count, info=True) }}
 
-        {# Ajustement : +apostrophes, -accents #}
-        {% set adjusted_size = size + apostrophe_count - accent_count %}
-        
-        {{ return(colname.strip()[:adjusted_size]) }}
+    
+        {{ colname.strip()[:adjusted_size] }}
     {% else %}
-        {{ return(colname|string).strip() }}
+        {{ colname|string|trim }}
     {% endif %}
 {% endmacro %}
