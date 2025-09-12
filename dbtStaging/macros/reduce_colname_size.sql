@@ -5,7 +5,7 @@
         {% set apostrophe_count = col_str.count("''") %}
         
         {# Liste des accents les plus fréquents #}
-        {% set accents = ["a","â","ä","é","è","ê","ë","î","ï","ô","ö","ù","û","ü","ç"] %}
+        {% set accents = ["a", "à","â","ä","é","è","ê","ë","î","ï","ô","ö","ù","û","ü","ç"] %}
         
         {% set col_without_accents = col_str %}
         {{ log("Avant replace: " ~ col_without_accents, info=True) }}
@@ -13,7 +13,7 @@
             {% set col_without_accents = col_without_accents | replace(a, "") %}
         {% endfor %}
         
-        {% set accent_count = col_str|length - col_without_accents|length %}
+        {% set accent_count = (col_str|length) - (col_without_accents|length) %}
         
         -- {% set col_without_accents = col_without_accents | replace("é", "") %}
         {{ log("Après replace: " ~ col_without_accents, info=True) }}
