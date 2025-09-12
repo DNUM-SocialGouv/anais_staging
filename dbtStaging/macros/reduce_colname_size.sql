@@ -15,7 +15,6 @@
         
         {% set accent_count = (col_str|length) - (col_without_accents|length) %}
         
-        -- {% set col_without_accents = col_without_accents | replace("é", "") %}
         {{ log("Après replace: " ~ col_without_accents, info=True) }}
 
         {# Log pour debug #}
