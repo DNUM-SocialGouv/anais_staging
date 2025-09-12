@@ -1,7 +1,7 @@
 {% macro replace_double_apostophes(colname) %}
     {# Remplace les doubles apostrophes par § #}
     {% set col_one_apostrophes = col_one_apostrophes | replace("''", "§") %}
-    {{ return((col_one_apostrophes|string)) }}
+    {{ return(col_one_apostrophes) }}
 {% endmacro %}
 
 {% macro double_characters_for_accent(colname) %}
@@ -32,10 +32,10 @@
         {% set col_str = colname|string %}
         {% set col_str = dbtStaging.replace_double_apostophes(col_str) %}
         {% set col_str = dbtStaging.double_characters_for_accent(col_str) %}
-        {% set col_str = col_str[:size] %}
-        {% set col_str = col_str | replace("§", "''") | replace("¤", "") %}
+        {% set truncated  = col_str[:size] %}
+        {% set truncated  = truncated  | replace("§", "''") | replace("¤", "") %}
 
-        {{ return(col_str) }}
+        {{ return(truncated) }}
     {% else %}
         {{ return(colname|string).strip() }}
     {% endif %}
