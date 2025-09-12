@@ -6,8 +6,10 @@
         {% set accents = ["à","â","ä","é","è","ê","ë","î","ï","ô","ö","ù","û","ü","ç"] %}
         
         {% set accent_count = 0 %}
-        {% for a in accents %}
-            {% set accent_count = accent_count + col_lower.count(a) %}
+        {% for c in col_lower %}
+            {% if c | ord > 127 %}
+                {% set accent_count = accent_count + 1 %}
+            {% endif %}
         {% endfor %}
         
         {% set adjusted_size = size + apostrophe_count - accent_count %}
