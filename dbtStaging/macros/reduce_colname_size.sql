@@ -7,11 +7,9 @@
         {# Liste des accents les plus fréquents #}
         {% set accents = ["a", "à","â","ä","é","è","ê","ë","î","ï","ô","ö","ù","û","ü","ç"] %}
         
-        {% set col_without_accents = col_str %}
+        {% set col_without_accents = colname|string %}
         {{ log("Avant replace: " ~ col_without_accents, info=True) }}
         
-        
-        {% set col_without_accents = col_without_accents | replace("a", "") %}
         {% set col_without_accents = col_without_accents | replace("à", "") %}
         {% set col_without_accents = col_without_accents | replace("â", "") %}
         {% set col_without_accents = col_without_accents | replace("ä", "") %}
@@ -27,16 +25,17 @@
         {% set col_without_accents = col_without_accents | replace("û", "") %}
         {% set col_without_accents = col_without_accents | replace("ü", "") %}
         {% set col_without_accents = col_without_accents | replace("ç", "") %}
+
         {{ log("Après replace: " ~ col_without_accents, info=True) }}
-        {% set accent_count = (col_str|length) - (col_without_accents|length) %}
+        {% set accent_count = (colname|length) - (col_without_accents|length) %}
 
         {# Log pour debug #}
-        {{ log("colname=" ~ col_str ~ " | apostrophes=" ~ apostrophe_count ~ " | accents=" ~ accent_count, info=True) }}
+        {{ log("colname=" ~ colname ~ " | apostrophes=" ~ apostrophe_count ~ " | accents=" ~ accent_count, info=True) }}
 
         {# Ajustement : +apostrophes, -accents #}
         {% set adjusted_size = size + apostrophe_count - accent_count %}
         
-        {{ return(col_str.strip()[:adjusted_size]) }}
+        {{ return(colname.strip()[:adjusted_size]) }}
     {% else %}
         {{ return(colname|string).strip() }}
     {% endif %}
