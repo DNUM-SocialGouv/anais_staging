@@ -30,8 +30,8 @@
 {% macro reduce_colname_size(schema_name, colname, size=63) %}
     {% if schema_name == 'public' %}
         {% set col_str = colname|string %}
+        {% set col_str = dbtStaging.replace_double_apostophes(col_str) %}
         {% set col_str = dbtStaging.double_characters_for_accent(col_str) %}
-        {% set col_str = dbtStaging.count_double_apostophes(col_str) %}
         {% set col_str = col_str[:adjusted_size] %}
         {% set col_str = col_str | replace("§", "''") | replace("¤", "") %}
 
