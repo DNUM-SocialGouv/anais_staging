@@ -2,12 +2,12 @@
     {% if schema_name == 'public' %}
         {% set apostrophe_count = colname.count("''") %}
         
+        {% set col_lower = colname | lower %}
         {% set accents = ["à","â","ä","é","è","ê","ë","î","ï","ô","ö","ù","û","ü","ç"] %}
         
         {% set accent_count = 0 %}
-        {% set colname_without_accent = colname}
         {% for a in accents %}
-            {% set accent_count = accent_count + colname.count(a) %}
+            {% set accent_count = accent_count + col_lower.count(a) %}
         {% endfor %}
         
         {% set adjusted_size = size + apostrophe_count - accent_count %}
