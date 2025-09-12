@@ -1,42 +1,41 @@
-{% macro count_double_apostophes(colname) %}
-    {# Compte les doubles apostrophes #}
-    {{ return((colname|string).count("''")) }}
+{% macro replace_double_apostophes(colname) %}
+    {# Remplace les doubles apostrophes par § #}
+    {% set col_double_accents = col_double_accents | replace("''", "§") %}
+    {{ return((col_double_accents|string)) }}
 {% endmacro %}
 
-{% macro count_accent_characters(colname) %}
-    {% set col_without_accents = colname|string %}
+{% macro double_characters_for_accent(colname) %}
+    {% set col_double_accents = colname|string %}
     
-    {% set col_without_accents = col_without_accents
-        | replace("à", "")
-        | replace("â", "")
-        | replace("ä", "")
-        | replace("é", "")
-        | replace("è", "")
-        | replace("ê", "")
-        | replace("ë", "")
-        | replace("î", "")
-        | replace("ï", "")
-        | replace("ô", "")
-        | replace("ö", "")
-        | replace("ù", "")
-        | replace("û", "")
-        | replace("ü", "")
-        | replace("ç", "") %}
+    {% set col_double_accents = col_double_accents
+        | replace("à", "à¤")
+        | replace("â", "â¤")
+        | replace("ä", "ä¤")
+        | replace("é", "é¤")
+        | replace("è", "è¤")
+        | replace("ê", "ê¤")
+        | replace("ë", "ë¤")
+        | replace("î", "î¤")
+        | replace("ï", "ï¤")
+        | replace("ô", "ô¤")
+        | replace("ö", "ö¤")
+        | replace("ù", "ù¤")
+        | replace("û", "û¤")
+        | replace("ü", "ü¤")
+        | replace("ç", "ç¤") %}
 
-    {% set accent_count = (colname|length) - (col_without_accents|length) %}
-    {{ return(accent_count) }}
+    {{ return(col_double_accents) }}
 {% endmacro %}
 
 {% macro reduce_colname_size(schema_name, colname, size=63) %}
     {% if schema_name == 'public' %}
         {% set col_str = colname|string %}
-        {% set apostrophe_count = dbtStaging.count_double_apostophes(col_str[:size]) %}
-        {% set adjusted_size = size + apostrophe_count %}
-        {% set accent_count = dbtStaging.count_accent_characters(col_str[:adjusted_size]) %}
-        {% set adjusted_size = adjusted_size - accent_count %}
-        {# Log pour debug #}
-        {{ log("colname=" ~ colname ~ " | apostrophes=" ~ apostrophe_count ~ " | accents=" ~ accent_count, info=True) }}
-        {{ return(col_str.strip()[:adjusted_size]) }}
+        {% set col_str = dbtStaging.double_characters_for_accent(col_str) %}
+        {% set col_str = dbtStaging.count_double_apostophes(col_str) %}
+        {% set col_str = col_str[:adjusted_size] %}
+        {% set col_str = col_str | replace("§", "''") | replace("¤", "") %}
+
+        {{ return(col_str) }}
     {% else %}
         {{ return(colname|string).strip() }}
     {% endif %}
