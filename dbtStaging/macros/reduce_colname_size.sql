@@ -1,5 +1,6 @@
 {% macro replace_double_apostophes(colname) %}
     {# Remplace les doubles apostrophes par § #}
+    {% set col_one_apostrophes = colname|string %}
     {% set col_one_apostrophes = col_one_apostrophes | replace("''", "§") %}
     {{ return(col_one_apostrophes) }}
 {% endmacro %}
