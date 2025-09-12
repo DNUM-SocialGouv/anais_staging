@@ -5,7 +5,7 @@
         {% set apostrophe_count = col_str.count("''") %}
         
         {# Liste des accents les plus fréquents #}
-        {% set accents = ['à','â','ä','é','è','ê','ë','î','ï','ô','ö','ù','û','ü','ç'] %}
+        {% set accents = ['a','â','ä','é','è','ê','ë','î','ï','ô','ö','ù','û','ü','ç'] %}
         
         {% set col_without_accents = col_str %}
         {% for a in accents %}
