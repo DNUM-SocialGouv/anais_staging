@@ -1,6 +1,6 @@
 {% macro reduce_colname_size(schema_name, colname, size=63) %}
     {% if schema_name == 'public' %}
-        {% set col_str = "colname"|string %}
+        {% set col_str = colname|string %}
         {# Compte les doubles apostrophes #}
         {% set apostrophe_count = col_str.count("''") %}
         
@@ -13,6 +13,9 @@
         {% endfor %}
         
         {% set accent_count = col_str|length - col_without_accents|length %}
+        {{ log("Avant replace: " ~ col_without_accents, info=True) }}
+        {% set col_without_accents = col_without_accents | replace("a", "") %}
+        {{ log("Après replace: " ~ col_without_accents, info=True) }}
 
         {# Log pour debug #}
         {{ log("colname=" ~ col_str ~ " | apostrophes=" ~ apostrophe_count ~ " | accents=" ~ accent_count, info=True) }}
@@ -20,7 +23,7 @@
         {# Ajustement : +apostrophes, -accents #}
         {% set adjusted_size = size + apostrophe_count - accent_count %}
         
-        {{ return(colname.strip()[:adjusted_size]) }}
+        {{ return(col_str.strip()[:adjusted_size]) }}
     {% else %}
         {{ return(colname|string).strip() }}
     {% endif %}
