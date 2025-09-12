@@ -1,8 +1,7 @@
 {% macro reduce_colname_size(schema_name, colname, size=63) %}
     {% if schema_name == 'public' %}
-        {# Compte les doubles apostrophes #}
         {% set apostrophe_count = colname.count("''") %}
-        {% set accent_count = colname.count("a") %}
+        {% set accent_count = colname.count('a') %}
         
         {% set accents = ["a","â","ä","é","è","ê","ë","î","ï","ô","ö","ù","û","ü","ç"] %}
         
