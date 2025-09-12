@@ -9,7 +9,7 @@
         {% set accents = ['a','â','ä','é','è','ê','ë','î','ï','ô','ö','ù','û','ü','ç'] %}
         {% set accent_count = 0 %}
         {% for a in accents %}
-            {% set col_str = col_str replace(a, "") %}
+            {% set col_str = col_str | replace(a, "") %}
         {% endfor %}
         -- {% set accent_count = 0 %}
         -- {% for a in accents %}
