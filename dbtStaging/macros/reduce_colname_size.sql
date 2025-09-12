@@ -10,7 +10,8 @@
         {% set col_without_accents = col_str %}
         {{ log("Avant replace: " ~ col_without_accents, info=True) }}
         {% for a in accents %}
-            {{ col_without_accents = col_without_accents | replace(a, "") }}
+                {% set tmp = col_without_accents | replace(a, "") %}
+                {% set col_without_accents = tmp %}
         {% endfor %}
         
         {% set accent_count = (col_str|length) - (col_without_accents|length) %}
