@@ -1,6 +1,6 @@
 {% macro count_double_apostophes(colname) %}
     {# Compte les doubles apostrophes #}
-    {{ (colname|string).count("''") }}
+    {{ return((colname|string).count("''")) }}
 {% endmacro %}
 
 {% macro count_accent_characters(colname) %}
@@ -24,15 +24,15 @@
         | replace("ç", "") %}
 
     {% set accent_count = (colname|length) - (col_without_accents|length) %}
-    {{ accent_count }}
+    {{ return(accent_count) }}
 {% endmacro %}
 
 {% macro reduce_colname_size(schema_name, colname, size=63) %}
     {% if schema_name == 'public' %}
         {% set col_str = colname|string %}
-        {% set apostrophe_count = dbtStaging.count_double_apostophes(col_str[:size]) | int %}
+        {% set apostrophe_count = dbtStaging.count_double_apostophes(col_str[:size]) %}
         {% set adjusted_size = size + apostrophe_count %}
-        {% set accent_count = dbtStaging.count_accent_characters(col_str[:adjusted_size]) | int %}
+        {% set accent_count = dbtStaging.count_accent_characters(col_str[:adjusted_size]) %}
         {% set adjusted_size = size - accent_count %}
         {# Log pour debug #}
         {{ log("colname=" ~ colname ~ " | apostrophes=" ~ apostrophe_count ~ " | accents=" ~ accent_count, info=True) }}
