@@ -33,7 +33,7 @@
         {% set apostrophe_count = dbtStaging.count_double_apostophes(col_str[:size]) %}
         {% set adjusted_size = size + apostrophe_count %}
         {% set accent_count = dbtStaging.count_accent_characters(col_str[:adjusted_size]) %}
-        {% set adjusted_size = size - accent_count %}
+        {% set adjusted_size = adjusted_size - accent_count %}
         {# Log pour debug #}
         {{ log("colname=" ~ colname ~ " | apostrophes=" ~ apostrophe_count ~ " | accents=" ~ accent_count, info=True) }}
         {{ return(col_str.strip()[:adjusted_size]) }}
