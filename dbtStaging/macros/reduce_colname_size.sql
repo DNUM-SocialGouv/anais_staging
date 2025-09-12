@@ -1,9 +1,7 @@
 {% macro reduce_colname_size(schema_name, colname, size=63) %}
     {% if schema_name == 'public' %}
-        {# Compte les doubles apostrophes #}
         {% set apostrophe_count = colname.count("''") %}
         
-        {# Liste des accents les plus fréquents #}
         {% set accents = ['à','â','ä','é','è','ê','ë','î','ï','ô','ö','ù','û','ü','ç'] %}
         
         {% set accent_count = 0 %}
@@ -13,7 +11,6 @@
             {% endif %}
         {% endfor %}
         
-        {# Ajustement : +apostrophes, -accents #}
         {% set adjusted_size = size + apostrophe_count - accent_count %}
         
         {{ return(colname.strip()[:adjusted_size]) }}
