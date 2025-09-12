@@ -1,7 +1,7 @@
 {% macro replace_double_apostophes(colname) %}
     {# Remplace les doubles apostrophes par § #}
-    {% set col_double_accents = col_double_accents | replace("''", "§") %}
-    {{ return((col_double_accents|string)) }}
+    {% set col_one_apostrophes = col_one_apostrophes | replace("''", "§") %}
+    {{ return((col_one_apostrophes|string)) }}
 {% endmacro %}
 
 {% macro double_characters_for_accent(colname) %}
