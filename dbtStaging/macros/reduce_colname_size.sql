@@ -3,11 +3,14 @@
         {% set col_str = colname | string | lower %}
         {# Compte les doubles apostrophes #}
         {% set apostrophe_count = col_str.count("''") %}
-        {% set accent_count = col_str.count("a") %}
+        {% set accent_count = col_str | count("a") %}
         
         -- {# Liste des accents les plus fréquents #}
-        -- {% set accents = ['a','â','ä','é','è','ê','ë','î','ï','ô','ö','ù','û','ü','ç'] %}
-        
+        {% set accents = ['a','â','ä','é','è','ê','ë','î','ï','ô','ö','ù','û','ü','ç'] %}
+        {% set accent_count = 0 %}
+        {% for a in accents %}
+            {% set col_str = col_str replace(a, "") %}
+        {% endfor %}
         -- {% set accent_count = 0 %}
         -- {% for a in accents %}
         --     {% if a in col_str %}
