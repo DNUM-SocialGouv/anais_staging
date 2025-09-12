@@ -14,7 +14,7 @@
         {% endfor %}
         
         {# Ajustement : +apostrophes, -accents #}
-        {% set adjusted_size = size + apostrophe_count - accent_count %}
+        {% set adjusted_size = size - apostrophe_count - accent_count %}
         
         {{ return(colname.strip()[:adjusted_size]) }}
     {% else %}
