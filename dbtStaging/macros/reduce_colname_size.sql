@@ -9,15 +9,26 @@
         
         {% set col_without_accents = col_str %}
         {{ log("Avant replace: " ~ col_without_accents, info=True) }}
-        {% for a in accents %}
-                {% set tmp = col_without_accents | replace(a, "") %}
-                {% set col_without_accents = tmp %}
-        {% endfor %}
         
-        {% set accent_count = (col_str|length) - (col_without_accents|length) %}
         
-        -- {% set col_without_accents = col_without_accents | replace("é", "") %}
+        {% set col_without_accents = col_without_accents | replace("a", "") %}
+        {% set col_without_accents = col_without_accents | replace("à", "") %}
+        {% set col_without_accents = col_without_accents | replace("â", "") %}
+        {% set col_without_accents = col_without_accents | replace("ä", "") %}
+        {% set col_without_accents = col_without_accents | replace("é", "") %}
+        {% set col_without_accents = col_without_accents | replace("è", "") %}
+        {% set col_without_accents = col_without_accents | replace("ê", "") %}
+        {% set col_without_accents = col_without_accents | replace("ë", "") %}
+        {% set col_without_accents = col_without_accents | replace("î", "") %}
+        {% set col_without_accents = col_without_accents | replace("ï", "") %}
+        {% set col_without_accents = col_without_accents | replace("ô", "") %}
+        {% set col_without_accents = col_without_accents | replace("ö", "") %}
+        {% set col_without_accents = col_without_accents | replace("ù", "") %}
+        {% set col_without_accents = col_without_accents | replace("û", "") %}
+        {% set col_without_accents = col_without_accents | replace("ü", "") %}
+        {% set col_without_accents = col_without_accents | replace("ç", "") %}
         {{ log("Après replace: " ~ col_without_accents, info=True) }}
+        {% set accent_count = (col_str|length) - (col_without_accents|length) %}
 
         {# Log pour debug #}
         {{ log("colname=" ~ col_str ~ " | apostrophes=" ~ apostrophe_count ~ " | accents=" ~ accent_count, info=True) }}
