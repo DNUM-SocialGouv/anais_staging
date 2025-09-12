@@ -2,7 +2,7 @@
     {% if schema_name == 'public' %}
         {# Compte les doubles apostrophes #}
         {% set apostrophe_count = colname.count("''") %}
-        {% set accent_count = colname.count("à") %}
+        {% set accent_count = colname.count("a") %}
         
         {% set accents = ["a","â","ä","é","è","ê","ë","î","ï","ô","ö","ù","û","ü","ç"] %}
         
@@ -14,7 +14,8 @@
         -- {% endfor %}
         
         {% set adjusted_size = size + apostrophe_count - accent_count %}
-        
+        {{ log("colname=" ~ colname ~ " | apostrophes=" ~ apostrophe_count ~ " | accents=" ~ accent_count, info=True) }}
+
         {{ return(colname.strip()[:adjusted_size]) }}
     {% else %}
         {{ return(colname.strip()) }}
