@@ -36,8 +36,8 @@
         {% set adjusted_size = size - accent_count %}
         {# Log pour debug #}
         {{ log("colname=" ~ colname ~ " | apostrophes=" ~ apostrophe_count ~ " | accents=" ~ accent_count, info=True) }}
-        {{ col_str.strip()[:adjusted_size] | trim }}
+        {{ return(col_str.strip()[:adjusted_size]) }}
     {% else %}
-        {{ (colname|string).strip() }}
+        {{ return(colname|string).strip() }}
     {% endif %}
 {% endmacro %}
