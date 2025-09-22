@@ -14,3 +14,9 @@ output/**
 .user.yml
 uv.lock
 poetry.lock
+
+!/data/.gitkeep
+!/input/.gitkeep
+!/logs/.gitkeep
+!/output/.gitkeep
+!/output_sql/.gitkeep
