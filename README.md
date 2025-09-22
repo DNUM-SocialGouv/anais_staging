@@ -214,8 +214,7 @@ Avec main ou public respectivement le nom des schémas des bases postgres et duc
 ---
 ## 3. Lancement du pipeline :
 
-L'ensemble de la Pipeline est exécutée depuis le `main.py`.
-La Pipeline exécutée est celle du package `anais_pipeline` dans la branche du même nom du repo anais_staging. Elle est importée comme un package dans le `pyproject.toml`.
+La Pipeline exécutée est celle du package `anais_pipeline` dans la branche du même nom du repo anais_staging. Elle est importée comme un package dans le `pyproject.toml`. L'ensemble de la Pipeline est exécutée depuis le `main.py`
 
 ### 3.1 Exécution de la pipeline pour Staging:
 
@@ -224,7 +223,7 @@ La Pipeline exécutée est celle du package `anais_pipeline` dans la branche du 
 cd anais_staging
 
 #  Lancer le `main.py`
-uv run main.py --env "local" --profile "Staging"
+uv run -m pipeline.main --env "local" --profile "Staging"
 ```
 Avec env = 'local' ou 'anais' selon votre environnement de travail
 et profile = 'Staging'
@@ -391,7 +390,6 @@ En cours
 │   │       ├── v_commune.sql
 │   │       ├── v_departement.sql
 │   │       └── v_region.sql
-├── main.py
 ├── .env
 ├── metadata.yml
 ├── poetry.lock
@@ -406,7 +404,6 @@ Répertoire d'orchestration de la pipeline Python.
 
 - `.env `: Fichier secret contenant le paramétrage vers le SFTP et les mots de passe des bases de données postgres.
 - `metadata.yml` : Contient les configurations du projets et la liste des fichiers .csv provenant du SFTP.
-- `main.py` : Programme d'exécution de la pipeline.
 - `output_sql/` : Répertoire qui contient les fichiers .sql de création de table (CREATE TABLE).
 - `logs/` : Répertoire des logs local et anais.
 - `data/` : Répertoire des bases de données DuckDB.
