@@ -1,0 +1,34 @@
+{% test expect_column_date_format(model, column_name, expected_format='YYYY-MM-DD') %}
+    {% set format = dbtStaging.convert_date_format(model.schema, expected_format) %}
+    {% set fmt_pattern = format['regex'] %}
+    {% set fmt_format = format['format'] %}
+    {% set column_expr = dbtStaging.reduce_colname_size(model.schema, column_name) %}
+
+    with column_info as (
+        select
+            lower(data_type) as data_type
+        from information_schema.columns
+        where lower(table_schema) = lower('{{ model.schema }}')
+        and lower(table_name) = lower('{{ model.name }}')
+        and column_name = '{{ column_expr }}'
+    ),
+    formatted_values as (
+        select
+            '{{ column_expr }}' as raw_value,
+            case
+                when lower(data_type) in ('date', 'timestamp', 'timestamp without time zone', 'timestamp with time zone')
+                {% if model.schema == 'main' %}
+                    then strftime(try_cast("{{ column_expr }}" as DATE), '{{ fmt_format }}')
+                {% else %}
+                    then to_char(cast("{{ column_expr }}" as DATE), '{{ fmt_format }}')
+                {% endif %}
+                else cast("{{ column_expr }}" as varchar)
+            end as formatted_value
+        from {{ model }}, column_info
+    )
+
+    select *
+    from formatted_values
+    where formatted_value !~ '{{ fmt_pattern }}'  -- regex pour YYYY-MM-DD
+    and raw_value is not null
+{% endtest %}
