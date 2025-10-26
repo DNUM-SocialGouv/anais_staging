@@ -16,7 +16,7 @@ Staging:
       keyword: "DECISIONS_SCN"
       file: "sa_siicea_decisions.csv"
     - path: "/SCN_BDD/SIREC"
-      keyword: "sirec_20250801"
+      keyword: "sirec"
       file: "sa_sirec.csv"
     - path: "/SCN_BDD/SIVSS"
       keyword: "SIVSS_SCN"
