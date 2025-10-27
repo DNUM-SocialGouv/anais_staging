@@ -22,6 +22,10 @@ from dotenv import load_dotenv
 from paramiko import Transport, SFTPClient, RSAKey, Ed25519Key, ECDSAKey
 from typing import Optional
 
+# === Apply Pipeline Patches (MUST BE BEFORE OTHER PIPELINE IMPORTS) ===
+from pipeline_patches import apply_all_patches
+apply_all_patches()
+
 # === Modules ===
 from pipeline.utils.config import setup_config
 from pipeline.utils.load_yml import load_metadata_YAML
