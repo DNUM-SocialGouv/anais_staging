@@ -136,6 +136,48 @@ def patch_boolean_conversion():
         raise
 
 
+def patch_skip_historisation_for_history_tables():
+    """
+    Patch historisation to avoid re-historising already historised tables (z*).
+
+    Why:
+        The upstream pipeline historises each loaded CSV table by creating/appending to a
+        history table named `z{table}`. If the pipeline is ever invoked with a table name
+        that already starts with `z` (e.g. `z_sa_*` or `zsa_*`), it will try to create
+        a nested history table (`zz*`) and can fail with DuckDB errors like:
+
+            Table with name z_sa_xxx does not exist! Did you mean "zsa_xxx"?
+
+        This patch makes historisation idempotent by skipping tables that appear to be
+        history tables already.
+    """
+    try:
+        from pipeline.database_management import database_pipeline
+
+        original_historise = database_pipeline.DataBasePipeline.historise_table
+
+        def patched_historise_table(self, conn, query_params: dict):
+            table_name = query_params.get("table", "")
+
+            # If the table looks like a history table already, do not historise again.
+            # Covers both naming styles observed in the wild: `zsa_*` and `z_sa_*`.
+            if isinstance(table_name, str) and (table_name.startswith("z_") or table_name.startswith("zsa_") or table_name.startswith("zz_") or table_name.startswith("zzsa_")):
+                self.logger.info(f"⏭️  Skipping historisation for already historised table: {table_name}")
+                return
+
+            return original_historise(self, conn, query_params)
+
+        database_pipeline.DataBasePipeline.historise_table = patched_historise_table
+        logger.info("✅ Historisation safety patch applied successfully")
+
+    except ImportError as e:
+        logger.error(f"❌ Failed to apply historisation safety patch: {e}")
+        raise
+    except Exception as e:
+        logger.error(f"❌ Unexpected error applying historisation safety patch: {e}")
+        raise
+
+
 def apply_all_patches():
     """
     Apply all monkey patches to the pipeline package.
@@ -149,6 +191,7 @@ def apply_all_patches():
 
     # Apply boolean conversion patch
     patch_boolean_conversion()
+    patch_skip_historisation_for_history_tables()
 
     logger.info("✅ All patches applied successfully")
     logger.info("")

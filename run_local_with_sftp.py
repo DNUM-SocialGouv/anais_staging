@@ -34,6 +34,11 @@ from pipeline.utils.sftp_sync import SFTPSync
 from pipeline.database_management.duckdb_pipeline import DuckDBPipeline
 from pipeline.utils.dbt_tools import dbt_exec
 
+# === File Date Tracking Modules ===
+from filename_parser import FilenameParser
+from file_date_tracker import FileDateTracker
+from sftp_with_tracking import SFTPWithTracking, track_manual_files
+
 # === Constants ===
 ENV_CHOICE = ["local"]  # Only local environment supported
 PROFILE_CHOICE = ["Staging", "CertDC", "Helios", "InspectionControlePA", "InspectionControlePH", "MatricePreciblage"]
@@ -173,6 +178,8 @@ def local_staging_pipeline_with_sftp(
     use_sftp : bool
         If True, download files from SFTP before processing.
     """
+    filename_mapping = {}
+
     # Step 1: SFTP Download (optional)
     if use_sftp:
         logger.info("=" * 80)
@@ -180,7 +187,11 @@ def local_staging_pipeline_with_sftp(
         logger.info("=" * 80)
         try:
             sftp = SFTPSyncWithKey(config["local_directory_input"], logger)
-            sftp.download_all(config["files_to_download"])
+
+            # Use tracking wrapper to capture original filenames
+            tracker_wrapper = SFTPWithTracking(sftp, logger)
+            filename_mapping = tracker_wrapper.download_all_with_tracking(config["files_to_download"])
+
             logger.info("✅ SFTP download complete - files already renamed to sa_*.csv format!")
             logger.info("")
         except Exception as e:
@@ -198,6 +209,71 @@ def local_staging_pipeline_with_sftp(
         csv_count = len([f for f in os.listdir(config['local_directory_input']) if f.endswith('.csv')])
         logger.info(f"Found {csv_count} CSV files")
         logger.info("")
+
+        # Track manual files (use current filenames)
+        filename_mapping = track_manual_files(config['local_directory_input'], logger)
+
+    # Step 1.5: Track input file dates (after files are downloaded/found but before DB loading)
+    if filename_mapping:
+        import duckdb
+        from datetime import datetime
+
+        logger.info("=" * 80)
+        logger.info("📅 Tracking input file dates in database...")
+        logger.info("=" * 80)
+
+        try:
+            # Connect to database temporarily to create tracking table
+            temp_conn = duckdb.connect(db_config["path"])
+
+            # Initialize tracker and create table
+            tracker = FileDateTracker(temp_conn)
+            tracker.create_table()
+
+            # Parse only files we know how to date-extract (avoid noisy warnings for unrelated downloads)
+            supported_mapping = {
+                local_filename: original_filename
+                for local_filename, original_filename in filename_mapping.items()
+                if FilenameParser.get_file_type(local_filename)
+            }
+            skipped = len(filename_mapping) - len(supported_mapping)
+            if skipped:
+                logger.info(f"ℹ️  Date tracking: ignoring {skipped} unconfigured files (no parser mapping).")
+
+            parsed_files = FilenameParser.parse_all_files(supported_mapping)
+
+            if parsed_files:
+                # Prepare batch insert
+                pipeline_run_id = f"run_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+                batch_data = []
+
+                for local_filename, file_info in parsed_files.items():
+                    source_system, file_type, extracted_date = file_info
+                    original_filename = supported_mapping[local_filename]
+
+                    batch_data.append((
+                        source_system,
+                        file_type,
+                        original_filename,
+                        local_filename,
+                        extracted_date,
+                        pipeline_run_id
+                    ))
+
+                # Insert all at once
+                tracker.insert_batch(batch_data)
+
+                # Print summary
+                tracker.print_summary()
+
+            temp_conn.close()
+            logger.info("✅ File date tracking complete")
+            logger.info("")
+
+        except Exception as e:
+            logger.error(f"❌ File date tracking failed: {e}")
+            logger.warning("Pipeline will continue without date tracking")
+            logger.info("")
 
     # Step 2: Initialize DuckDB loader
     logger.info("=" * 80)

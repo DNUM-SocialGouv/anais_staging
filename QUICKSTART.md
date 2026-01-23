@@ -15,6 +15,8 @@ SFTP_HOST="your.sftp.host"
 SFTP_PORT=22
 SFTP_USERNAME="your_username"
 SFTP_PRIVATE_KEY_PATH="~/.ssh/id_rsa"
+# Optional: SFTP_PRIVATE_KEY_PASSPHRASE="your_passphrase"
+# Alternative: SFTP_PASSWORD="your_password"
 EOF
 chmod 600 .env
 
@@ -28,10 +30,12 @@ uv run run_local_with_sftp.py --env "local" --profile "Staging" --use-sftp
 **What it does:**
 - ✅ Downloads 25 CSV files from SFTP
 - ✅ Renames files automatically (e.g., `sirec_20251026.csv` → `sa_sirec.csv`)
+- ✅ Tracks input file dates in `input_files_date` table
+- ✅ Applies pipeline patches (boolean conversion, historisation safety)
 - ✅ Loads data into DuckDB (`data/staging/duckdb_database.duckdb`)
 - ✅ Runs DBT transformations
 
-**Files downloaded:** See [SFTP_FILENAME_MAPPING.md](SFTP_FILENAME_MAPPING.md) for complete list
+**Files downloaded:** Configured in `metadata.yml` under `files_to_download`
 
 ### Option 2: With Manual Files
 
@@ -40,23 +44,26 @@ Use CSV files you've copied manually:
 ```bash
 cd DBT/anais_staging
 
-# 1. Copy and rename CSV files
+# 1. Copy and rename CSV files to input/staging/
 cp /path/to/sirec_*.csv input/staging/sa_sirec.csv
 cp /path/to/SIVSS_*.csv input/staging/sa_sivss.csv
 cp /path/to/SIICEA_DECISIONS_*.csv input/staging/sa_siicea_decisions.csv
-# ... copy all needed files
+# ... copy all needed files (see metadata.yml for expected filenames)
 
 # 2. Install dependencies
 uv sync
 
-# 3. Run pipeline
+# 3. Run pipeline (without --use-sftp)
 uv run run_local_with_sftp.py --env "local" --profile "Staging"
 ```
 
 **What it does:**
 - ✅ Uses files from `input/staging/`
+- ✅ Applies pipeline patches (boolean conversion, historisation safety)
 - ✅ Loads data into DuckDB
 - ✅ Runs DBT transformations
+
+**Note:** Without SFTP, date tracking uses the local filename as-is (cannot extract date from original SFTP filename).
 
 ## Validate CSV Files
 
@@ -74,9 +81,9 @@ This checks:
 
 ## Expected Files
 
-The pipeline expects these files in `input/staging/`:
+The pipeline expects these files in `input/staging/` (configured in `metadata.yml`):
 
-| File | Source | Required |
+| File | Source | Category |
 |------|--------|----------|
 | `sa_sirec.csv` | SIREC | Core |
 | `sa_sivss.csv` | SIVSS | Core |
@@ -84,12 +91,18 @@ The pipeline expects these files in `input/staging/`:
 | `sa_siicea_cibles.csv` | SIICEA | Core |
 | `sa_siicea_missions_prog.csv` | SIICEA | Core |
 | `sa_siicea_missions_real.csv` | SIICEA | Core |
-| `sa_t_finess.csv` | FINESS | Reference |
+| `sa_t_finess.csv` | T_FINESS | Reference |
 | `sa_insern.csv` | INSERN | Health |
-| ... (19 more files) | Various | Optional |
+| `v_commune.csv`, `v_departement.csv`, `v_region.csv` | INSEE | Geographic |
+| `v_comer.csv`, `v_commune_comer.csv`, `v_commune_depuis.csv` | INSEE | Geographic |
+| `cert_dc_insern_n2_n1.csv`, `cert_dc_insern_2023_2024.csv` | INSERN | CertDC |
+| `sa_esms.csv`, `sa_pmsi.csv`, `sa_rpu.csv`, `sa_usld.csv` | DIAMANT | Health |
+| `sa_hubee.csv` | HUBEE | Other |
+| `dc_det.csv`, `sa_insee_histo.csv` | INSEE | Other |
+| `sa_ciblage.csv`, `sa_tdb_esms.csv` | TMP | Temporary |
 
-**With SFTP:** All files downloaded automatically
-**Without SFTP:** Copy at least the 6 core files
+**With SFTP:** All 25 files downloaded automatically
+**Without SFTP:** Copy needed files manually
 
 ## Output
 
@@ -104,6 +117,26 @@ dbtStaging/target/               # DBT artifacts
 logs/
 └── log_local_sftp.log          # Execution logs
 ```
+
+### File Date Tracking
+
+The pipeline automatically tracks input file dates in the `input_files_date` table:
+
+```sql
+-- Query tracked file dates
+SELECT * FROM input_files_date;
+```
+
+| Column | Description |
+|--------|-------------|
+| `source_system` | Source system (SIVSS, SIREC, SIICEA) |
+| `file_type` | File type identifier |
+| `original_filename` | Original filename from SFTP (e.g., `SIVSS_SCN_20251007.csv`) |
+| `local_filename` | Local filename (e.g., `sa_sivss.csv`) |
+| `extracted_date` | Date extracted from original filename |
+| `ingestion_timestamp` | When the file was ingested |
+
+This table is used by the Helios pipeline to generate output filenames with the correct dates.
 
 Query the database:
 
@@ -161,10 +194,9 @@ tail -100 logs/log_local_sftp.log
 
 ## Documentation
 
-- **SFTP Setup:** [PRIVATE_KEY_SETUP_GUIDE.md](PRIVATE_KEY_SETUP_GUIDE.md)
-- **SFTP Files:** [SFTP_FILENAME_MAPPING.md](SFTP_FILENAME_MAPPING.md)
-- **SFTP Usage:** [SFTP_USAGE_GUIDE.md](SFTP_USAGE_GUIDE.md)
-- **Original README:** [README.md](README.md)
+- **Full Documentation:** [README.md](README.md)
+- **SFTP Configuration:** See `metadata.yml` for file download mappings
+- **CSV Validation Tests:** [tests/README.md](tests/README.md)
 
 ## Commands Reference
 
@@ -189,10 +221,15 @@ After staging pipeline completes, run the Helios pipeline:
 ```bash
 cd ../anais_helios
 uv sync
-uv run -m pipeline.main --env "local" --profile "Helios"
+uv run run_local_with_sftp.py --env "local" --profile "Helios"
 ```
 
 Helios will:
 - Copy tables from Staging database
 - Run analytical transformations
-- Export CSV files to `output/helios/`
+- Export CSV files to `output/helios/` (with dates from input files)
+
+**With SFTP upload:**
+```bash
+uv run run_local_with_sftp.py --env "local" --profile "Helios" --use-sftp
+```

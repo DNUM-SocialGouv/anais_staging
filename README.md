@@ -99,10 +99,15 @@ Le fichier `.env` est disponible à la racine du repo.
 
 Il contient les variables suivantes, avec leurs valeurs entre guillement `" "` :
 
+**Connexion SFTP (choisir une méthode d'authentification) :**
 - `SFTP_HOST = "<host du SFTP>"`
 - `SFTP_PORT = <port du SFTP>`
 - `SFTP_USERNAME = "<nom de l'utilisateur>"`
-- `SFTP_PASSWORD = "<Mot de passe du SFTP>"`
+- `SFTP_PRIVATE_KEY_PATH = "~/.ssh/id_rsa"` (authentification par clé privée - recommandé)
+- `SFTP_PRIVATE_KEY_PASSPHRASE = "<passphrase>"` (optionnel, si la clé est chiffrée)
+- `SFTP_PASSWORD = "<Mot de passe du SFTP>"` (alternative : authentification par mot de passe)
+
+**Mots de passe des bases de données :**
 - `STAGING_PASSWORD = "<Mot de passe de la base staging>"`
 - `HELIOS_PASSWORD = "<Mot de passe de la base helios>"`
 - `INSPECTION_CONTROLE_ADMIN_PA_PASSWORD = "<Mot de passe de la base inspection_controle>"`
@@ -222,22 +227,30 @@ La Pipeline exécutée est celle du package `anais_pipeline` dans la branche du 
 # Se placer dans anais_staging
 cd anais_staging
 
-#  Lancer le `main.py`
-uv run -m pipeline.main --env "local" --profile "Staging"
+# Option 1: Avec SFTP (télécharge les fichiers automatiquement)
+uv run run_local_with_sftp.py --env "local" --profile "Staging" --use-sftp
+
+# Option 2: Sans SFTP (fichiers manuels)
+uv run run_local_with_sftp.py --env "local" --profile "Staging"
 ```
-Avec env = 'local' ou 'anais' selon votre environnement de travail
+Avec env = 'local' (DuckDB local)
 et profile = 'Staging'
 
+> **Note:** Le script `run_local_with_sftp.py` remplace l'ancien `pipeline.main` et ajoute le suivi des dates des fichiers d'entrée.
+
 #### Pipeline Staging sur env 'local':
-1. Récupération des fichiers d'input. Ces fichiers doivent être placés manuellement dans le dossier `input/` sous format **.csv** (les délimiteurs sont gérés automatiquement).
-2. Création de la base DuckDB si inexistante.
-3. Connexion à la base DuckDB.
-4. Création des tables, même si déjà existantes. Les fichiers sql de création de table (CREATE TABLE) doivent être placés dans le répertoire indiqué dans le `create_table_directory` de `metadata.yml`.
-5. Lecture des csv avec standardisation des colonnes (ni caractères spéciaux, ni majuscule) -> injection des données dans les tables.
-6. Historisation des données pour chaque table vers les tables `z<nom_de_la_table` avec indication que la date d'injection dans la colonne `date_ingestion`.
-7. Vérification de la réussite de l'injection.
-8. Fermeture de la connexion à la base DuckDB.
-9. Exécution de la commande `run dbt` -> Création des vues relatives au projet.
+1. Récupération des fichiers d'input via SFTP (si `--use-sftp`) ou manuellement dans `input/`.
+2. **Suivi des dates des fichiers** : Extraction et stockage des dates des fichiers d'entrée dans la table `input_files_date` (utilisé par Helios pour nommer les fichiers de sortie).
+3. Création de la base DuckDB si inexistante.
+4. Connexion à la base DuckDB.
+5. Création des tables, même si déjà existantes. Les fichiers sql de création de table (CREATE TABLE) doivent être placés dans le répertoire indiqué dans le `create_table_directory` de `metadata.yml`.
+6. Lecture des csv avec standardisation des colonnes (ni caractères spéciaux, ni majuscule) -> injection des données dans les tables.
+7. Historisation des données pour chaque table vers les tables `z<nom_de_la_table` avec indication que la date d'injection dans la colonne `date_ingestion`.
+8. Vérification de la réussite de l'injection.
+9. Fermeture de la connexion à la base DuckDB.
+10. Exécution de la commande `run dbt` -> Création des vues relatives au projet.
+
+> **Table `input_files_date`** : Cette table stocke les dates extraites des noms de fichiers SFTP (ex: `SIVSS_SCN_20251007.csv` → date `2025-10-07`). Elle est utilisée par Helios pour générer les noms de fichiers de sortie.
 
 
 #### Pipeline Staging sur env 'anais':
@@ -395,22 +408,38 @@ En cours
 ├── poetry.lock
 ├── profiles.yml
 ├── pyproject.toml
-└── README.md
+├── README.md
+├── QUICKSTART.md
+├── run_local_with_sftp.py        # Script principal avec support SFTP
+├── file_date_tracker.py          # Suivi des dates des fichiers d'entrée
+├── filename_parser.py            # Extraction des dates des noms de fichiers
+├── sftp_with_tracking.py         # Wrapper SFTP avec suivi des fichiers
+└── pipeline_patches.py           # Correctifs pour la pipeline
 ```
 
 ## 3. Utilités des fichiers
 ### 3.1 Fichiers à la racine `./`
 Répertoire d'orchestration de la pipeline Python.
 
-- `.env `: Fichier secret contenant le paramétrage vers le SFTP et les mots de passe des bases de données postgres.
-- `metadata.yml` : Contient les configurations du projets et la liste des fichiers .csv provenant du SFTP.
+**Configuration :**
+- `.env` : Fichier secret contenant le paramétrage vers le SFTP et les mots de passe des bases de données postgres.
+- `metadata.yml` : Contient les configurations du projet et la liste des fichiers .csv provenant du SFTP.
+- `profiles.yml` : Contient les informations relatives aux bases des différents projets.
+- `pyproject.toml` : Fichier contenant les dépendances et packages nécessaires pour le lancement de la pipeline.
+
+**Scripts Python :**
+- `run_local_with_sftp.py` : Script principal pour exécuter la pipeline avec support SFTP optionnel.
+- `pipeline_patches.py` : Correctifs pour la pipeline (conversion booléens, sécurité historisation).
+- `file_date_tracker.py` : Suivi des dates des fichiers d'entrée dans la table `input_files_date`.
+- `filename_parser.py` : Extraction des dates à partir des noms de fichiers SFTP.
+- `sftp_with_tracking.py` : Wrapper SFTP avec suivi des noms de fichiers originaux.
+
+**Répertoires :**
 - `output_sql/` : Répertoire qui contient les fichiers .sql de création de table (CREATE TABLE).
 - `logs/` : Répertoire des logs local et anais.
 - `data/` : Répertoire des bases de données DuckDB.
 - `input/` : Répertoire de stockage des fichiers .csv en entrée.
 - `output/` : Répertoire de stockage des fichiers .csv en sortie.
-- `profiles.yml` : Contient les informations relatives aux bases des différents projets.
-- `pyproject.toml` : Fichier contenant les dépendances et packages nécessaires pour le lancement de la pipeline.
 
 ### 3.2 Fichiers dans dbtStaging `./dbtStaging/`
 Répertoire de fonctionnement des modèles DBT -> création de vues SQL.
