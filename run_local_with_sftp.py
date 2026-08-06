@@ -362,8 +362,8 @@ def main():
 
     # Load logger and config
     logger = setup_logger(args.env, f"logs/log_{args.env}_sftp.log")
-    config = load_metadata_YAML(METADATA_YML, args.profile, logger, ".")
-    db_config = load_metadata_YAML(PROFILE_YML, args.profile, logger, ".")["outputs"][args.env]
+    config = load_metadata_YAML(METADATA_YML, args.profile, ".")
+    db_config = load_metadata_YAML(PROFILE_YML, args.profile, ".")["outputs"][args.env]
 
     # Print execution info
     logger.info("=" * 80)
