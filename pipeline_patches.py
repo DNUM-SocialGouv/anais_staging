@@ -60,39 +60,66 @@ def patch_boolean_conversion():
                 if col_name in self.df.columns and col_type in self.type_mapping:
                     try:
                         if self.type_mapping[col_type] in ["int", "float"]:
-                            self.df[col_name] = self.df[col_name].replace(
-                                {None: 0, "": 0, pd.NA: 0, "nan": 0}
-                            ).astype(float).astype(self.type_mapping[col_type])
+                            self.df[col_name] = (
+                                self.df[col_name]
+                                .replace({None: 0, "": 0, pd.NA: 0, "nan": 0})
+                                .astype(float)
+                                .astype(self.type_mapping[col_type])
+                            )
 
                         elif self.type_mapping[col_type] == "bool":
                             # === PATCHED BOOLEAN CONVERSION ===
                             # Create comprehensive mapping for string boolean values
                             bool_map = {
                                 # String representations
-                                'true': True, 'True': True, 'TRUE': True,
-                                'false': False, 'False': False, 'FALSE': False,
+                                "true": True,
+                                "True": True,
+                                "TRUE": True,
+                                "false": False,
+                                "False": False,
+                                "FALSE": False,
                                 # Numeric representations
-                                '1': True, 1: True, 1.0: True,
-                                '0': False, 0: False, 0.0: False,
+                                "1": True,
+                                1: True,
+                                1.0: True,
+                                "0": False,
+                                0: False,
+                                0.0: False,
                                 # NULL/empty representations
-                                None: False, '': False, pd.NA: False,
-                                'nan': False, 'NaN': False, 'NAN': False,
+                                None: False,
+                                "": False,
+                                pd.NA: False,
+                                "nan": False,
+                                "NaN": False,
+                                "NAN": False,
                                 # Additional common formats
-                                'yes': True, 'Yes': True, 'YES': True,
-                                'no': False, 'No': False, 'NO': False,
-                                'y': True, 'Y': True,
-                                'n': False, 'N': False,
-                                't': True, 'T': True,
-                                'f': False, 'F': False,
+                                "yes": True,
+                                "Yes": True,
+                                "YES": True,
+                                "no": False,
+                                "No": False,
+                                "NO": False,
+                                "y": True,
+                                "Y": True,
+                                "n": False,
+                                "N": False,
+                                "t": True,
+                                "T": True,
+                                "f": False,
+                                "F": False,
                             }
 
                             # Map values using the dictionary
                             mapped_values = self.df[col_name].map(bool_map)
 
                             # Check for unmapped values and log warnings
-                            unmapped_mask = mapped_values.isna() & self.df[col_name].notna()
+                            unmapped_mask = (
+                                mapped_values.isna() & self.df[col_name].notna()
+                            )
                             if unmapped_mask.any():
-                                unmapped_values = self.df.loc[unmapped_mask, col_name].unique()
+                                unmapped_values = self.df.loc[
+                                    unmapped_mask, col_name
+                                ].unique()
                                 logger.warning(
                                     f"⚠️  Column '{col_name}': Found unmapped boolean values: {list(unmapped_values)}. "
                                     f"These will be converted to False."
@@ -100,7 +127,9 @@ def patch_boolean_conversion():
 
                             # Fill unmapped values with False and convert to boolean
                             self.df[col_name] = mapped_values.fillna(False).astype(bool)
-                            logger.debug(f"✅ Column '{col_name}': Boolean conversion successful")
+                            logger.debug(
+                                f"✅ Column '{col_name}': Boolean conversion successful"
+                            )
                             # === END PATCHED BOOLEAN CONVERSION ===
 
                         elif self.type_mapping[col_type] == "datetime64":
@@ -109,9 +138,11 @@ def patch_boolean_conversion():
                             )
 
                         elif self.type_mapping[col_type] == "string":
-                            self.df[col_name] = self.df[col_name].astype(
-                                self.type_mapping[col_type]
-                            ).fillna('')
+                            self.df[col_name] = (
+                                self.df[col_name]
+                                .astype(self.type_mapping[col_type])
+                                .fillna("")
+                            )
                             if not pd.isna(col_length):
                                 self.df[col_name] = self.df[col_name].str[:col_length]
 
@@ -124,12 +155,16 @@ def patch_boolean_conversion():
                         logger.warning(f"Erreur de conversion pour {col_name}: {e}")
 
         # Apply the patch
-        csv_management.ColumnsManagement.convert_columns_type = patched_convert_columns_type
+        csv_management.ColumnsManagement.convert_columns_type = (
+            patched_convert_columns_type
+        )
         logger.info("✅ Boolean conversion patch applied successfully")
 
     except ImportError as e:
         logger.error(f"❌ Failed to apply boolean conversion patch: {e}")
-        logger.error("Pipeline package not found. Make sure dependencies are installed.")
+        logger.error(
+            "Pipeline package not found. Make sure dependencies are installed."
+        )
         raise
     except Exception as e:
         logger.error(f"❌ Unexpected error applying boolean conversion patch: {e}")
@@ -158,4 +193,6 @@ if __name__ == "__main__":
     # Test the patch
     logging.basicConfig(level=logging.INFO)
     apply_all_patches()
-    print("\n✅ Patches applied successfully. Import this module in your pipeline script.")
+    print(
+        "\n✅ Patches applied successfully. Import this module in your pipeline script."
+    )
