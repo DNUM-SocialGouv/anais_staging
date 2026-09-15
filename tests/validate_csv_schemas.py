@@ -6,10 +6,10 @@ Validates CSV files in input/staging/ directory against expected schemas from SQ
 
 import csv
 import re
+import sys
+from collections import defaultdict
 from pathlib import Path
 from typing import Dict, List, Tuple
-from collections import defaultdict
-import sys
 
 
 # ANSI color codes for terminal output
