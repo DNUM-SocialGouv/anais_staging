@@ -18,25 +18,34 @@ Usage:
 import argparse
 import os
 from logging import Logger
-from dotenv import load_dotenv
-from paramiko import Transport, SFTPClient, RSAKey, Ed25519Key, ECDSAKey
 from typing import Optional
+
+from dotenv import load_dotenv
+from paramiko import ECDSAKey, Ed25519Key, RSAKey, SFTPClient, Transport
 
 # === Apply Pipeline Patches (MUST BE BEFORE OTHER PIPELINE IMPORTS) ===
 from pipeline_patches import apply_all_patches
+
 apply_all_patches()
 
 # === Modules ===
+from pipeline.database_management.duckdb_pipeline import DuckDBPipeline
 from pipeline.utils.config import setup_config
+from pipeline.utils.dbt_tools import dbt_exec
 from pipeline.utils.load_yml import load_metadata_YAML
 from pipeline.utils.logging_management import setup_logger
 from pipeline.utils.sftp_sync import SFTPSync
-from pipeline.database_management.duckdb_pipeline import DuckDBPipeline
-from pipeline.utils.dbt_tools import dbt_exec
 
 # === Constants ===
 ENV_CHOICE = ["local"]  # Only local environment supported
-PROFILE_CHOICE = ["Staging", "CertDC", "Helios", "InspectionControlePA", "InspectionControlePH", "MatricePreciblage"]
+PROFILE_CHOICE = [
+    "Staging",
+    "CertDC",
+    "Helios",
+    "InspectionControlePA",
+    "InspectionControlePH",
+    "MatricePreciblage",
+]
 METADATA_YML = "metadata.yml"
 PROFILE_YML = "profiles.yml"
 
@@ -88,16 +97,22 @@ class SFTPSyncWithKey(SFTPSync):
 
         for key_class, key_name in key_types:
             try:
-                self.logger.info(f"Trying to load {key_name} private key from {key_path}")
+                self.logger.info(
+                    f"Trying to load {key_name} private key from {key_path}"
+                )
                 if passphrase:
-                    return key_class.from_private_key_file(key_path, password=passphrase)
+                    return key_class.from_private_key_file(
+                        key_path, password=passphrase
+                    )
                 else:
                     return key_class.from_private_key_file(key_path)
             except Exception as e:
                 self.logger.debug(f"Failed to load as {key_name}: {e}")
                 continue
 
-        raise ValueError(f"Could not load private key from {key_path}. Tried RSA, Ed25519, and ECDSA formats.")
+        raise ValueError(
+            f"Could not load private key from {key_path}. Tried RSA, Ed25519, and ECDSA formats."
+        )
 
     def connect(self):
         """
@@ -115,8 +130,7 @@ class SFTPSyncWithKey(SFTPSync):
                 self.logger.info("Connecting with private key authentication...")
                 try:
                     private_key = self._load_private_key(
-                        self.private_key_path,
-                        self.private_key_passphrase
+                        self.private_key_path, self.private_key_passphrase
                     )
                     self.transport.connect(username=self.username, pkey=private_key)
                     self.sftp = SFTPClient.from_transport(self.transport)
@@ -145,11 +159,7 @@ class SFTPSyncWithKey(SFTPSync):
 
 
 def local_staging_pipeline_with_sftp(
-    profile: str,
-    config: dict,
-    db_config: dict,
-    logger: Logger,
-    use_sftp: bool = False
+    profile: str, config: dict, db_config: dict, logger: Logger, use_sftp: bool = False
 ):
     """
     Pipeline for Staging in local environment with optional SFTP download.
@@ -181,21 +191,31 @@ def local_staging_pipeline_with_sftp(
         try:
             sftp = SFTPSyncWithKey(config["local_directory_input"], logger)
             sftp.download_all(config["files_to_download"])
-            logger.info("✅ SFTP download complete - files already renamed to sa_*.csv format!")
+            logger.info(
+                "✅ SFTP download complete - files already renamed to sa_*.csv format!"
+            )
             logger.info("")
         except Exception as e:
             logger.error(f"❌ SFTP download failed: {e}")
             logger.error("Make sure .env file contains SFTP credentials:")
             logger.error("  Required: SFTP_HOST, SFTP_PORT, SFTP_USERNAME")
             logger.error("  Authentication: SFTP_PRIVATE_KEY_PATH or SFTP_PASSWORD")
-            logger.error("  Optional: SFTP_PRIVATE_KEY_PASSPHRASE (if key is encrypted)")
+            logger.error(
+                "  Optional: SFTP_PRIVATE_KEY_PASSPHRASE (if key is encrypted)"
+            )
             raise
     else:
         logger.info("=" * 80)
         logger.info("📂 STEP 1: Using manual CSV files (no SFTP download)")
         logger.info("=" * 80)
         logger.info(f"Looking for files in: {config['local_directory_input']}")
-        csv_count = len([f for f in os.listdir(config['local_directory_input']) if f.endswith('.csv')])
+        csv_count = len(
+            [
+                f
+                for f in os.listdir(config["local_directory_input"])
+                if f.endswith(".csv")
+            ]
+        )
         logger.info(f"Found {csv_count} CSV files")
         logger.info("")
 
@@ -203,11 +223,7 @@ def local_staging_pipeline_with_sftp(
     logger.info("=" * 80)
     logger.info("🦆 STEP 2: Initializing DuckDB connection...")
     logger.info("=" * 80)
-    loader = DuckDBPipeline(
-        db_config=db_config,
-        config=config,
-        logger=logger
-    )
+    loader = DuckDBPipeline(db_config=db_config, config=config, logger=logger)
 
     # Step 3: Load data into DuckDB
     loader.connect()
@@ -216,7 +232,9 @@ def local_staging_pipeline_with_sftp(
         logger.info("📊 STEP 3: Loading CSV data into DuckDB...")
         logger.info("=" * 80)
         # Check if we have files and SQL schemas
-        if os.listdir(config["local_directory_input"]) and os.listdir(config["create_table_directory"]):
+        if os.listdir(config["local_directory_input"]) and os.listdir(
+            config["create_table_directory"]
+        ):
             loader.run()
             logger.info("✅ Data loading complete")
             logger.info("")
@@ -238,7 +256,15 @@ def local_staging_pipeline_with_sftp(
         logger.info("🔄 STEP 4: Running DBT transformations...")
         logger.info("=" * 80)
         # Create views
-        dbt_exec("run", profile, "local", config["models_directory"], ".", logger, install_deps=False)
+        dbt_exec(
+            "run",
+            profile,
+            "local",
+            config["models_directory"],
+            ".",
+            logger,
+            install_deps=False,
+        )
         # Run tests
         dbt_exec("test", profile, "local", config["models_directory"], ".", logger)
         logger.info("")
@@ -260,18 +286,18 @@ def main():
         "--env",
         choices=ENV_CHOICE,
         default=ENV_CHOICE[0],
-        help="Execution environment (only 'local' supported)"
+        help="Execution environment (only 'local' supported)",
     )
     parser.add_argument(
         "--profile",
         choices=PROFILE_CHOICE,
         default=PROFILE_CHOICE[0],
-        help="DBT profile to execute"
+        help="DBT profile to execute",
     )
     parser.add_argument(
         "--use-sftp",
         action="store_true",
-        help="Download files from SFTP before running pipeline (requires .env with SFTP credentials)"
+        help="Download files from SFTP before running pipeline (requires .env with SFTP credentials)",
     )
     args = parser.parse_args()
 
@@ -281,13 +307,15 @@ def main():
         "profile_choice": PROFILE_CHOICE,
         "env": args.env,
         "profile": args.profile,
-        "use_sftp": args.use_sftp
+        "use_sftp": args.use_sftp,
     }
 
     # Load logger and config
     logger = setup_logger(args.env, f"logs/log_{args.env}_sftp.log")
     config = load_metadata_YAML(METADATA_YML, args.profile, logger, ".")
-    db_config = load_metadata_YAML(PROFILE_YML, args.profile, logger, ".")["outputs"][args.env]
+    db_config = load_metadata_YAML(PROFILE_YML, args.profile, logger, ".")["outputs"][
+        args.env
+    ]
 
     # Print execution info
     logger.info("=" * 80)
@@ -295,7 +323,9 @@ def main():
     logger.info("=" * 80)
     logger.info(f"Environment: {args.env}")
     logger.info(f"Profile: {args.profile}")
-    logger.info(f"SFTP Download: {'✅ Enabled' if args.use_sftp else '❌ Disabled (using manual files)'}")
+    logger.info(
+        f"SFTP Download: {'✅ Enabled' if args.use_sftp else '❌ Disabled (using manual files)'}"
+    )
     logger.info(f"Database: {db_config['path']}")
     logger.info("")
 
@@ -305,7 +335,7 @@ def main():
         config=config,
         db_config=db_config,
         logger=logger,
-        use_sftp=args.use_sftp
+        use_sftp=args.use_sftp,
     )
 
 
